@@ -6,8 +6,8 @@ import { components } from "vuetify/dist/vuetify-labs.js";
 
 const routes = [
     {path: '/', component: Home},
-    {path: '/', component: Login},
-    // {path: '/', component: Register},
+    {path: '/login', component: Login},
+    // {path: '/register', component: Register},
 
 ]
 
