@@ -19,9 +19,23 @@ class User extends Authenticatable
      */
     protected $fillable = [
         'name',
+        'apellido',
         'email',
+        'telefono',
         'password',
+        'rol',
     ];
+
+    // Relaciones de tablas
+    public function tickets()
+    {
+        return $this->hasMany(Ticket::class);
+    }
+
+    public function payments()
+    {
+        return $this->hasMany(Payment::class);
+    }
 
     /**
      * The attributes that should be hidden for serialization.
