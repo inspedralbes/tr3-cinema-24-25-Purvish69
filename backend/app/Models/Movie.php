@@ -21,7 +21,7 @@ class Movie extends Model
         'lenguaje',
         'imagen',
         'trailer',
-        // 'omdb_id',
+        'omdb_id',
     ];
 
     protected $casts = [
