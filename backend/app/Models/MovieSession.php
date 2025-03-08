@@ -9,6 +9,8 @@ class MovieSession extends Model
 {
     use HasFactory;
 
+    protected $table = 'movieSessions';
+
     protected $fillable = [
         'movie_id',
         'fecha',
@@ -30,14 +32,15 @@ class MovieSession extends Model
     {
         return $this->belongsTo(Movie::class);
     }
+    
+    public function tickets()
+    {
+        return $this->hasMany(Ticket::class , 'movieSession_id');
+    }
 
     public function seats()
     {
         return $this->hasMany(Seat::class);
-    }
-    public function tickets()
-    {
-        return $this->hasMany(Ticket::class);
     }
 
 }

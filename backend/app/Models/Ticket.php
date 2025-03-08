@@ -14,16 +14,12 @@ class Ticket extends Model
         'movieSession_id',
         'seat_id',
         'precio',
-        'codigo_confirmacion',
+        'codigo_entrada',
     ];
-    public function user()
-    {
-        return $this->belongsTo(User::class);
-    }
 
     public function movieSession()
     {
-        return $this->belongsTo(MovieSession::class);
+        return $this->belongsTo(MovieSession::class, 'movieSession_id'); // Especificar la clave foránea
     }
 
     public function seat()
@@ -31,8 +27,8 @@ class Ticket extends Model
         return $this->belongsTo(Seat::class);
     }
 
-    public function payment()
+    public function user()
     {
-        return $this->hasOne(Payment::class);
+        return $this->belongsTo(User::class);
     }
 }
