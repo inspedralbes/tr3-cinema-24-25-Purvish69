@@ -15,7 +15,7 @@ return new class extends Migration
             $table->id();
             $table->foreignId('user_id')->constrained()->onDelete('cascade');
             $table->foreignId('ticket_id')->constrained()->onDelete('cascade');
-            $table->enum('metodo_pago', ['tarjeta', 'paypal', 'efectivo'])->default('tarjeta');
+            $table->string('metodo_pago')->default('tarjeta');
             $table->enum('estado', ['pagado', 'pendiente', 'rechazado'])->default('pendiente');
             $table->decimal('importe_total', 8, 2);
             $table->timestamps();

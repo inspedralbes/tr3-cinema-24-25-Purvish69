@@ -21,7 +21,7 @@ return new class extends Migration
             $table->string('clasificacion');
             $table->string('genero');
             $table->string('lenguaje');
-            $table->string('imagen');
+            $table->string('imagen')->nullable();
             $table->string('trailer')->nullable();
             $table->string('omdb_id')->nullable();
             $table->timestamps();
