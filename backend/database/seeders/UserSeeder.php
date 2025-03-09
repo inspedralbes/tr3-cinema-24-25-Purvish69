@@ -1,0 +1,56 @@
+<?php
+
+namespace Database\Seeders;
+
+use Illuminate\Database\Seeder;
+use Illuminate\Support\Facades\Hash;
+use App\Models\User;
+
+class UserSeeder extends Seeder
+{
+    /**
+     * Run the database seeds.
+     */
+    public function run(): void
+    {
+        // Crear 4 usuarios regulares
+        $users = [
+            [
+                'nombre' => 'aaa',
+                'apellido' => 'aaa',
+                'email' => 'aaa@example.com',
+                'telefono' => '612345678',
+                'password' => Hash::make('1234'),
+                'rol' => 'user',
+            ],
+            [
+                'nombre' => 'María',
+                'apellido' => 'González',
+                'email' => 'maria@example.com',
+                'telefono' => '623456789',
+                'password' => Hash::make('12345678'),
+                'rol' => 'user',
+            ],
+            [
+                'nombre' => 'Carlos',
+                'apellido' => 'Rodríguez',
+                'email' => 'carlos@example.com',
+                'telefono' => '634567890',
+                'password' => Hash::make('12345678'),
+                'rol' => 'user',
+            ],
+            [
+                'nombre' => 'Ana',
+                'apellido' => 'Martínez',
+                'email' => 'ana@example.com',
+                'telefono' => '645678901',
+                'password' => Hash::make('12345678'),
+                'rol' => 'user',
+            ],
+        ];
+
+        foreach ($users as $user) {
+            User::create($user);
+        }
+    }
+}
