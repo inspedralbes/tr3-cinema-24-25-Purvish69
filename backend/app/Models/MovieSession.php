@@ -40,7 +40,7 @@ class MovieSession extends Model
 
     public function seats()
     {
-        return $this->hasMany(Seat::class);
+        return $this->hasMany(Seat::class , 'movieSession_id');
     }
 
 }

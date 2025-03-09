@@ -42,8 +42,7 @@ class MovieSessionsController extends Controller
 
         // Verificar que no exista ya una sesión con la misma fecha y hora
         $exists = MovieSession::where('fecha', $data['fecha'])
-            ->where('hora', $data['hora'])
-            ->first();
+            ->where('hora', $data['hora'])->first();
         if ($exists) {
             return response()->json([
                 'message' => 'Ya existe una sesión programada para esta fecha y hora'
