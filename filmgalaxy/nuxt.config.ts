@@ -1,4 +1,4 @@
-// https://nuxt.com/docs/api/configuration/nuxt-config
+// nuxt.config.ts
 import { defineNuxtConfig } from 'nuxt/config';
 
 export default defineNuxtConfig({
@@ -9,10 +9,20 @@ export default defineNuxtConfig({
     '~/plugins/vuetify.js'
   ],
   css: [
-    'vuetify/styles'
+    'vuetify/styles', // Importar estilos de Vuetify
+    '@mdi/font/css/materialdesignicons.css' 
   ],
+
+  build: {
+    transpile: ['vuetify']
+  },
 
   modules: [
     '@pinia/nuxt',
-  ]
-})
+  ],
+  
+  // Enable pages directory for file-based routing
+  experimental: {
+    payloadExtraction: false
+  }
+});

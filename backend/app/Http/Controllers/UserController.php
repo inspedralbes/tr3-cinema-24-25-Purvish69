@@ -77,7 +77,13 @@ class UserController extends Controller
         $request->user()->currentAccessToken()->delete();
         return response()->json(['message' => 'La sesión se ha cerrado correctamente.']);
     }
-
+    // Mostrar todos los usuarios
+    public function index()
+    {
+        $users = User::all();
+        return response()->json(['users' => $users]);
+    }
+    
     // Mostrar usuario por ID
     public function show($id)
     {
