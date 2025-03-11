@@ -1,6 +1,6 @@
 <template>
     <!-- Desktop Navigation Bar -->
-    <v-app-bar color="primary" elevation="4" height="70" class="hidden-sm-and-down">
+    <v-app-bar color="primary" elevation="4" height="80" class="hidden-sm-and-down">
         <v-toolbar-title class="text-cream font-weight-bold">
             <img src="../assets/logo/logofilmgalaxyTransparente.png" alt="Logo" class="logo-image desktop-logo" />
         </v-toolbar-title>
@@ -39,10 +39,8 @@
                 :title="item.title" color="cream"></v-list-item>
             <!-- Mobile-specific drawer items -->
             <v-divider class="my-2" color="cream" opacity="0.5"></v-divider>
-            <v-list-item 
-                :title="isUserLoggedIn ? 'Mi Perfil' : 'Login'" 
-                :prepend-icon="isUserLoggedIn ? 'mdi-account-circle' : 'mdi-login'" 
-                @click="handleProfileClick" 
+            <v-list-item :title="isUserLoggedIn ? 'Mi Perfil' : 'Login'"
+                :prepend-icon="isUserLoggedIn ? 'mdi-account-circle' : 'mdi-login'" @click="handleProfileClick"
                 color="cream">
             </v-list-item>
         </v-list>
@@ -64,7 +62,7 @@ const desktopMenuItems = [
     { title: 'Home', icon: 'mdi-home', to: '/' },
     { title: 'Movies', icon: 'mdi-movie', to: '/movies' },
     { title: 'Billetes Comprados', icon: 'mdi-ticket-confirmation', to: '/billetes' },
-    { title: 'Contact', icon: 'mdi-phone', to: '/contact' }
+    { title: 'informacion', icon: 'mdi-phone', to: '/informacion' }
 ]
 
 // Mobile-specific menu items - simplified
@@ -72,7 +70,7 @@ const mobileMenuItems = [
     { title: 'Home', icon: 'mdi-home', to: '/' },
     { title: 'Movies', icon: 'mdi-movie', to: '/movies' },
     { title: 'Billetes Comprados', icon: 'mdi-ticket-confirmation', to: '/billetes' },
-    { title: 'Contact', icon: 'mdi-phone', to: '/contact' }
+    { title: 'informacion', icon: 'mdi-phone', to: '/informacion' }
 ]
 
 const handleProfileClick = () => {
@@ -99,10 +97,10 @@ const handleProfileClick = () => {
 }
 
 .mobile-logo {
-    height: 60px;
+    height: 70px;
     position: absolute;
-    left: 160px;
-    top: 2px;
+    left: 200px;
+    top: -5px;
     /* margin-top: 10px; */
 }
 
@@ -110,7 +108,7 @@ const handleProfileClick = () => {
     z-index: 2000;
     top: 0;
     position: fixed;
-    margin-top: -70px;
+    margin-top: -80px;
 }
 
 .mobile-drawer {

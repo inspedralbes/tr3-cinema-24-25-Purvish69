@@ -35,7 +35,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::delete('/movies/{id}', [MovieController::class, 'destroy']);
 });
 
-// Rutas de películas
+// Rutas de películas de cine - sesiones
 Route::get('/sessions', [MovieSessionsController::class, 'index']);
 Route::get('/sessions/{id}', [MovieSessionsController::class, 'show']);
 Route::get('/sessions/{id}/seats', [MovieSessionsController::class, 'getSeats']);
