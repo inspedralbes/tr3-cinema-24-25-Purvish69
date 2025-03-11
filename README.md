@@ -1,7 +1,7 @@
 # FilmGalaxy
 
 ## Integrants
-- *[Escriviu aquí els noms dels membres de l'equip]*
+- Purvish Patel
 
 ## Descripció del projecte
 FilmGalaxy és una plataforma que permet als usuaris comprar entrades de cinema, tant normals com VIP, per a les pel·lícules en cartellera. A més, ofereix una vista prèvia de les pel·lícules que es podran veure en el futur, adaptant-se a diferents dispositius mòbils i escriptori per a una experiència òptima.
