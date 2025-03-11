@@ -3,6 +3,33 @@ export const useAuth = () => {
   const userId = useCookie('userId')
   const API_URL = 'http://localhost:8000/api'
 
+
+  const register = async (nombre, apellido, email, telefono, password) => {
+    const response = await fetch(`${API_URL}/register`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json'
+      },
+      credentials: 'include',
+      body: JSON.stringify({ nombre, apellido, email, telefono, password })
+    })
+
+    const data = await response.json()
+
+    if (!response.ok) {
+      console.error('Server validation error:', data)
+      return { error: data.message || 'Error de autenticación' }
+    }
+
+    if (data.token) {
+      token.value = data.token
+    }
+
+    console.log('Datos recibidos:', data)
+    return data
+  }
+
   const login = async (email, password) => {
     try {
       const response = await fetch(`${API_URL}/login`, {
@@ -14,7 +41,7 @@ export const useAuth = () => {
         credentials: 'include',
         body: JSON.stringify({ email, password })
       })
-      
+
       const data = await response.json()
 
       if (!response.ok) {
@@ -70,12 +97,12 @@ export const useAuth = () => {
         },
         credentials: 'include'
       })
-      
+
       if (!response.ok) {
         console.error('Error al obtener datos de usuario:', response.status)
         return null
       }
-      
+
       const data = await response.json()
       console.log('Datos recibidos para profile:', data)
       return data
@@ -88,7 +115,7 @@ export const useAuth = () => {
   // Check if user is authenticated
   const isAuthenticated = computed(() => !!token.value)
 
-  return { login, logout, token, userId, getUserData, isAuthenticated }
+  return { register, login, logout, token, userId, getUserData, isAuthenticated }
 }
 
 export default useAuth

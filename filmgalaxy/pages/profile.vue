@@ -108,7 +108,6 @@ const loadUserData = async () => {
     const cookieUserId = getCookie('userId')
     if (!cookieUserId) {
       console.error("No se encontró la cookie userId o es inválida")
-      // Por desarrollo, si no existe, usamos el primer usuario
       const response = await getUserData()
       if (response && response.users && response.users.length > 0) {
         console.warn('Usando el primer usuario por defecto (solo para desarrollo)')
@@ -140,7 +139,6 @@ const loadUserData = async () => {
 
 const handleLogout = async () => {
   try {
-    // Eliminar la cookie userId manualmente
     document.cookie = "userId=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;"
     await logout()
     userData.value = null
@@ -183,7 +181,6 @@ onMounted(() => {
 .profile-header {
   padding: 2rem 1.5rem;
   background-color: #EAE0D5;
-  /* background: linear-gradient(135deg, #22223B, #4A4E69); */
   display: flex;
   justify-content: center;
 }
@@ -194,7 +191,6 @@ onMounted(() => {
   background-color: #4A4E69;
 }
 
-/* Sección de detalles del usuario */
 .user-details {
   padding: 1.5rem;
 }
@@ -224,7 +220,6 @@ onMounted(() => {
   border-left: 4px solid #4A4E69;
 }
 
-/* Ícono y etiquetas */
 .info-icon {
   margin-right: 0.5rem;
   font-size: 1.2rem;
