@@ -1,16 +1,15 @@
-# transversals
-Esquema mínim de carpetes pels projectes transversals
+# FilmGalaxy
 
-És obligatori seguir aquesta estructura tot i que la podeu ampliar.
+## Integrants
+- *[Escriviu aquí els noms dels membres de l'equip]*
 
-## Atenció
-Un cop comenceu heu de canviar aquesta explicació amb la corresponent al vostre projecte (utilitzant markdown)
+## Descripció del projecte
+FilmGalaxy és una plataforma que permet als usuaris comprar entrades de cinema, tant normals com VIP, per a les pel·lícules en cartellera. A més, ofereix una vista prèvia de les pel·lícules que es podran veure en el futur, adaptant-se a diferents dispositius mòbils i escriptori per a una experiència òptima.
 
-# Aquest fitxer ha de contenir com a mínim:
- * Nom dels integrants
- * Nom del projecte
- * Petita descripció
- * Adreça del gestor de tasques (taiga, jira, trello...)
- * Adreça del prototip gràfic del projecte (Penpot, figma, moqups...)
- * URL de producció (quan la tingueu)
- * Estat: (explicació d'en quin punt està)
+## Recursos del projecte
+- **Gestor de tasques (Taiga):** [Accés al Taiga](https://tree.taiga.io/project/purvish69-dawtr3cinemapurvish/taskboard/sprint-2-14091)
+- **Prototip gràfic (Penpot):** [Accés al Penpot](https://design.penpot.app/#/workspace?team-id=f5fe9278-89db-81e9-8004-faf25f3561fd&file-id=456eee66-5663-80cb-8005-d362338816a6&page-id=456eee66-5663-80cb-8005-d362338816a7)
+- **URL de producció:** [FilmGalaxy](http://filmgalaxy.daw.inspedralbes.cat/)
+
+## Estat del projecte
+Actualment, el projecte es troba en desenvolupament actiu.
