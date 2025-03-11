@@ -18,7 +18,7 @@ class UserSeeder extends Seeder
             [
                 'nombre' => 'aaa',
                 'apellido' => 'aaa',
-                'email' => 'aaa@example.com',
+                'email' => 'aaa@gmail.com',
                 'telefono' => '612345678',
                 'password' => Hash::make('1234'),
                 'rol' => 'user',
@@ -26,7 +26,7 @@ class UserSeeder extends Seeder
             [
                 'nombre' => 'María',
                 'apellido' => 'González',
-                'email' => 'maria@example.com',
+                'email' => 'maria@gmail.com',
                 'telefono' => '623456789',
                 'password' => Hash::make('12345678'),
                 'rol' => 'user',
@@ -34,7 +34,7 @@ class UserSeeder extends Seeder
             [
                 'nombre' => 'Carlos',
                 'apellido' => 'Rodríguez',
-                'email' => 'carlos@example.com',
+                'email' => 'carlos@gmail.com',
                 'telefono' => '634567890',
                 'password' => Hash::make('12345678'),
                 'rol' => 'user',
@@ -42,7 +42,7 @@ class UserSeeder extends Seeder
             [
                 'nombre' => 'Ana',
                 'apellido' => 'Martínez',
-                'email' => 'ana@example.com',
+                'email' => 'ana@gmail.com',
                 'telefono' => '645678901',
                 'password' => Hash::make('12345678'),
                 'rol' => 'user',

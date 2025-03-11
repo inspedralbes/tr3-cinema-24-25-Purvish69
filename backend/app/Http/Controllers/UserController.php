@@ -49,27 +49,36 @@ class UserController extends Controller
 
     // Login: valida credenciales y genera token
     public function login(Request $request)
-    {
+{
+    try {
         $request->validate([
             'email'    => 'required|email',
             'password' => 'required',
         ]);
 
         if (!Auth::attempt($request->only('email', 'password'))) {
-            throw ValidationException::withMessages([
-                'email' => ['Las credenciales proporcionadas son incorrectas.'],
-            ]);
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Las credenciales proporcionadas son incorrectas.'
+            ], 401);
         }
 
-        $user  = User::where('email', $request->email)->firstOrFail();
+        $user = User::where('email', $request->email)->firstOrFail();
         $token = $user->createToken('auth_token')->plainTextToken;
 
         return response()->json([
-            'user'       => $user,
-            'token'      => $token,
+            'status' => 'success',
+            'user'   => $user,
+            'token'  => $token,
             'token_type' => 'Bearer',
         ]);
+    } catch (\Exception $e) {
+        return response()->json([
+            'status' => 'error',
+            'message' => $e->getMessage()
+        ], 500);
     }
+}
 
     // Logout: elimina el token actual
     public function logout(Request $request)

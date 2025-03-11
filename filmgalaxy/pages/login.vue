@@ -10,14 +10,28 @@
             </div>
             <v-card-text>
               <v-form @submit.prevent="handleLogin" ref="form">
-                <v-text-field v-model="email" label="Email" prepend-inner-icon="mdi-email" variant="outlined"
-                  color="secondary" :rules="[rules.required, rules.email]" class="mb-4"></v-text-field>
+                <v-text-field
+                  v-model="email"
+                  label="Email"
+                  prepend-inner-icon="mdi-email"
+                  variant="outlined"
+                  color="secondary"
+                  :rules="[rules.required, rules.email]"
+                  class="mb-4"
+                ></v-text-field>
 
-                <v-text-field v-model="password" label="Password" prepend-inner-icon="mdi-lock"
+                <v-text-field
+                  v-model="password"
+                  label="Password"
+                  prepend-inner-icon="mdi-lock"
                   :append-inner-icon="showPassword ? 'mdi-eye-off' : 'mdi-eye'"
-                  @click:append-inner="showPassword = !showPassword" :type="showPassword ? 'text' : 'password'"
-                  variant="outlined" color="secondary" :rules="[rules.required, rules.password]"
-                  class="mb-6"></v-text-field>
+                  @click:append-inner="showPassword = !showPassword"
+                  :type="showPassword ? 'text' : 'password'"
+                  variant="outlined"
+                  color="secondary"
+                  :rules="[rules.required, rules.password]"
+                  class="mb-6"
+                ></v-text-field>
 
                 <v-btn block color="gold" size="large" type="submit" :loading="loading" class="mb-4">
                   Sign In
@@ -48,12 +62,10 @@
 import { ref } from 'vue'
 import { useAuth } from '~/composables/useAuth'
 
-// From the new code
 const email = ref('')
 const password = ref('')
 const { login } = useAuth()
 
-// From the original code
 const form = ref(null)
 const showPassword = ref(false)
 const loading = ref(false)
@@ -63,10 +75,9 @@ const rules = {
     const pattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
     return pattern.test(value) || 'Invalid email format'
   },
-  // password: value => value?.length >= 8 || 'Contraseña debe tener al menos 8 caracteres'
+  // password: value => value?.length >= 8 || 'La contraseña debe tener al menos 8 caracteres'
 }
 
-// Updated login handler using the new authentication logic
 const handleLogin = async () => {
   const { valid } = await form.value.validate()
   if (valid) {
@@ -97,7 +108,6 @@ const navigateToRegister = () => {
 <style scoped>
 .login-container {
   min-height: 100vh;
-  /* background-color: var(--v-primary-base); */
   background-image: linear-gradient(120deg, #22223B 33%, #C8A96E 100%);
 }
 

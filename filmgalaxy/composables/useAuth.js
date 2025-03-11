@@ -1,37 +1,53 @@
-// ~/composables/useAuth.js
 export const useAuth = () => {
   const token = useCookie('token')
   const userId = useCookie('userId')
+  const API_URL = 'http://localhost:8000/api'
 
   const login = async (email, password) => {
     try {
-      const { data } = await useFetch('http://localhost:8000/api/login', {
+      const response = await fetch(`${API_URL}/login`, {
         method: 'POST',
-        body: { email, password }
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json'
+        },
+        credentials: 'include',
+        body: JSON.stringify({ email, password })
       })
+      
+      const data = await response.json()
 
-      if (data.value?.token) {
-        token.value = data.value.token
+      if (!response.ok) {
+        console.error('Server validation error:', data)
+        return { error: data.message || 'Error de autenticación' }
+      }
+
+      if (data.token) {
+        token.value = data.token
 
         // Guarda el ID del usuario en la cookie 
-        if (data.value.user && data.value.user.id) {
-          userId.value = data.value.user.id
+        if (data.user && data.user.id) {
+          userId.value = data.user.id
         }
       }
-      console.log('Datos recibidos:', data.value);
-
-      return data.value
+      console.log('Datos recibidos:', data)
+      return data
     } catch (error) {
       console.error('Error en login:', error)
-      return null
+      return { error: 'Error de conexión' }
     }
   }
 
   const logout = async () => {
     try {
-      await useFetch('http://localhost:8000/api/logout', {
+      await fetch(`${API_URL}/logout`, {
         method: 'POST',
-        headers: { Authorization: `Bearer ${token.value}` }
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+          'Authorization': `Bearer ${token.value}`
+        },
+        credentials: 'include'
       })
       token.value = null
       userId.value = null
@@ -40,21 +56,28 @@ export const useAuth = () => {
       token.value = null
       userId.value = null
     }
-    console.log('Sesión cerrada', token.value);
+    console.log('Sesión cerrada', token.value)
   }
 
-  // Obtener info de user - Modificado para usar $fetch
   const getUserData = async () => {
     try {
-      // Usado $fetch en lugar de useFetch para componentes ya montados
-      const data = await $fetch('http://localhost:8000/api/user', {
+      const response = await fetch(`${API_URL}/user`, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
+          'Accept': 'application/json',
           'Authorization': `Bearer ${token.value}`
-        }
+        },
+        credentials: 'include'
       })
-      console.log('Datos recibidos para profile:', data);
+      
+      if (!response.ok) {
+        console.error('Error al obtener datos de usuario:', response.status)
+        return null
+      }
+      
+      const data = await response.json()
+      console.log('Datos recibidos para profile:', data)
       return data
     } catch (error) {
       console.error("Error al obtener los datos del usuario", error)
@@ -63,9 +86,7 @@ export const useAuth = () => {
   }
 
   // Check if user is authenticated
-  const isAuthenticated = computed(() => {
-    return !!token.value
-  })
+  const isAuthenticated = computed(() => !!token.value)
 
   return { login, logout, token, userId, getUserData, isAuthenticated }
 }

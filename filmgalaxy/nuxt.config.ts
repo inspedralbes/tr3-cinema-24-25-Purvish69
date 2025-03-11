@@ -20,6 +20,7 @@ export default defineNuxtConfig({
   modules: [
     '@pinia/nuxt',
   ],
+
   
   // Enable pages directory for file-based routing
   experimental: {
