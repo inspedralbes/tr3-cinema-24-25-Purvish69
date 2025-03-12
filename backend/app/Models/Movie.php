@@ -13,6 +13,7 @@ class Movie extends Model
     protected $fillable = [
         'titulo',
         'descripcion',
+        'calification',
         'director',
         'actores',
         'duracion',
@@ -20,6 +21,7 @@ class Movie extends Model
         'genero',
         'lenguaje',
         'imagen',
+        'poster',
         'trailer',
         'omdb_id',
     ];

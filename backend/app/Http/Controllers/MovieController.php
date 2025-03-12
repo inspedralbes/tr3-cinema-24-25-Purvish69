@@ -26,6 +26,7 @@ class MovieController extends Controller
         $validator = Validator::make($request->all(), [
             'titulo' => 'required|string|max:255',
             'descripcion' => 'required|string',
+            'calificacion'   => 'sometimes|string|max:10',
             'director' => 'nullable|string|max:255',
             'actores' => 'required|array',
             'duracion' => 'required|integer|min:1',
@@ -33,6 +34,7 @@ class MovieController extends Controller
             'genero' => 'required|string|max:100',
             'lenguaje' => 'required|string|max:100',
             'imagen' => 'nullable|string|max:2048', // Acepta tanto URL como archivo
+            'poster' => 'nullable|string|max:2048',
             'trailer' => 'nullable|string|max:255',
             'omdb_id' => 'nullable|string|max:20',
         ]);
@@ -81,6 +83,7 @@ class MovieController extends Controller
         $data = $request->validate([
             'titulo'         => 'sometimes|string|max:255',
             'descripcion'    => 'sometimes|string',
+            'calificacion'   => 'sometimes|string|max:10',
             'director'       => 'nullable|string|max:255',
             'actores'        => 'sometimes|array',
             'duracion'       => 'sometimes|integer|min:1',
@@ -88,6 +91,7 @@ class MovieController extends Controller
             'genero'         => 'sometimes|string|max:100',
             'lenguaje'       => 'sometimes|string|max:100',
             'imagen'         => 'nullable|image|max:2048',
+            'poster'         => 'nullable|image|max:2048',
             'trailer'        => 'sometimes|string|max:255',
             'omdb_id'        => 'sometimes|string|max:20',
         ]);

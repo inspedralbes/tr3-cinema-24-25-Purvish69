@@ -2,46 +2,78 @@
   <v-app>
     <!-- NavBar -->
     <Navbar />
+    <!-- Página Principal con scroll -->
     <v-main class="pa-0 ma-0 backgroundIndex">
       <v-container fluid class="pa-0 ma-0">
-        <!-- Hero Section with Featured Movies -->
+        <!-- Alerta de error si hay problemas -->
+        <v-alert v-if="movieStore.error" type="error" closable title="Error al cargar películas" class="ma-2 text-caption">
+          {{ movieStore.error }}
+        </v-alert>
+
+        <!-- Indicador de carga -->
+        <v-overlay v-if="movieStore.loading" :value="movieStore.loading" class="align-center justify-center">
+          <v-progress-circular indeterminate color="gold" size="48"></v-progress-circular>
+        </v-overlay>
+
+        <!-- Carousel de películas destacadas -->
         <v-row no-gutters>
           <v-col cols="12">
-            <v-carousel cycle height="600" hide-delimiter-background show-arrows="hover" class="featured-movies">
-              <v-carousel-item v-for="movie in featuredMovies" :key="movie.id" :src="movie.imagen" cover>
+            <v-carousel v-if="movieStore.featuredMovies.length > 0" cycle :height="isMobile ? '400' : '800'" hide-delimiter-background
+              show-arrows="hover" class="featured-movies">
+              <v-carousel-item v-for="movie in movieStore.featuredMovies" :key="movie.id" :src="movie.poster" cover>
                 <div class="featured-overlay">
-                  <h2 class="text-h2 font-weight-bold mb-2">{{ movie.titulo }}</h2>
-                  <p class="text-h6 mb-6 font-weight-regular">{{ movie.descripcion }}</p>
-                  <v-btn color="gold" size="x-large" class="text-dark font-weight-bold px-8" elevation="4">
-                    Comprar Entradas
-                  </v-btn>
+                  <h2 class="featured-title">{{ movie.titulo }}</h2>
+                  <div class="featured-rating">
+                    <span class="rating-number">{{ movie.calificacion }}/10</span>
+                    <div class="star-rating">
+                      <v-icon v-for="n in Math.floor(movie.calificacion / 2)" :key="n" color="gold" size="24">mdi-star</v-icon>
+                      <v-icon v-if="movie.calificacion % 2 >= 1" color="gold" size="24">mdi-star-half</v-icon>
+                      <v-icon v-for="n in (5 - Math.ceil(movie.calificacion / 2))" :key="`empty-${n}`" color="gold" size="24">mdi-star-outline</v-icon>
+                    </div>
+                  </div>
+                  <div class="featured-buttons">
+                    <v-btn color="gold" :size="isMobile ? 'small' : 'x-large'" class="text-dark font-weight-bold px-4 me-2" elevation="4">
+                      Comprar Entradas
+                    </v-btn>
+                    <v-btn color="grey-lighten-1" :size="isMobile ? 'small' : 'x-large'" class="font-weight-bold px-4" elevation="4">
+                      Ver Info
+                    </v-btn>
+                  </div>
                 </div>
               </v-carousel-item>
             </v-carousel>
           </v-col>
         </v-row>
 
-        <!-- Now Playing Section -->
-        <v-row class="py-12 px-4">
+        <!-- Sección de Películas en cartelera -->
+        <v-row class="py-6 px-2">
           <v-col cols="12">
-            <h2 class="text-h3 mb-8 text-dark text-center font-weight-bold">Películas de Hoy</h2>
+            <div class="d-flex flex-column flex-sm-row justify-space-between align-center mb-4">
+              <h2 class="text-eae0d5 font-weight-bold movies-section-title">Películas de Hoy</h2>
+              <v-btn color="gold" :size="isMobile ? 'small' : 'large'" class="text-dark font-weight-bold mt-2 mt-sm-0" to="/peliculas" elevation="4">
+                Ver Más Películas
+              </v-btn>
+            </div>
             <v-row>
-              <v-col v-for="movie in nowPlayingMovies" :key="movie.id" cols="12" sm="6" md="3">
+              <v-col v-for="movie in movieStore.nowPlayingMovies" :key="movie.id" cols="6" sm="4" md="3">
                 <v-card class="mx-auto movie-card" color="white" elevation="8">
-                  <v-img :src="movie.imagen" height="400" cover class="movie-poster">
+                  <v-img :src="movie.imagen" :height="isMobile ? '200' : '400'" cover class="movie-poster">
                     <template v-slot:placeholder>
                       <v-row class="fill-height ma-0" align="center" justify="center">
-                        <v-progress-circular indeterminate color="gold"></v-progress-circular>
+                        <v-progress-circular indeterminate color="gold" :size="isMobile ? 24 : 36"></v-progress-circular>
                       </v-row>
                     </template>
                   </v-img>
-                  <v-card-title class="text-dark pt-4 text-h5">{{ movie.titulo }}</v-card-title>
-                  <v-card-text class="text-accent pb-0">
+                  <v-card-title class="text-dark pt-2 movie-title">{{ movie.titulo }}</v-card-title>
+                  <v-card-text class="text-accent pb-0 movie-details">
                     {{ formatDuration(movie.duracion) }} • {{ movie.genero }}
                   </v-card-text>
-                  <v-card-actions class="pa-4">
-                    <v-btn color="gold" variant="elevated" block size="large" class="text-dark font-weight-bold">
-                      Comprar Entradas
+                  <v-card-actions class="pa-2">
+                    <v-btn color="gold" variant="elevated" :size="isMobile ? 'small' : 'default'" class="text-dark font-weight-bold me-1">
+                      Comprar
+                    </v-btn>
+                    <v-btn color="grey-lighten-1" variant="elevated" :size="isMobile ? 'small' : 'default'" class="font-weight-bold">
+                      Info
                     </v-btn>
                   </v-card-actions>
                 </v-card>
@@ -50,20 +82,20 @@
           </v-col>
         </v-row>
 
-        <!-- Coming Soon Section -->
-        <v-row class="py-12 px-4">
+        <!-- Sección de Próximos estrenos -->
+        <v-row class="py-6 px-2">
           <v-col cols="12">
-            <h2 class="text-h3 mb-8 text-dark text-center font-weight-bold">Próximamente</h2>
+            <h2 class="movies-section-title text-eae0d5 text-center font-weight-bold mb-4">Próximamente</h2>
             <v-row>
-              <v-col v-for="movie in comingSoonMovies" :key="movie.id" cols="12" sm="6" md="3">
+              <v-col v-for="movie in movieStore.comingSoonMovies" :key="movie.id" cols="6" sm="4" md="3">
                 <v-card class="mx-auto movie-card" color="white" elevation="8">
-                  <v-img :src="movie.imagen" height="400" cover class="movie-poster">
+                  <v-img :src="movie.imagen" :height="isMobile ? '200' : '400'" cover class="movie-poster">
                     <div class="release-date-badge">
                       {{ formatReleaseDate(movie.fecha_estreno) }}
                     </div>
                   </v-img>
-                  <v-card-title class="text-dark pt-4 text-h5">{{ movie.titulo }}</v-card-title>
-                  <v-card-text class="text-accent">
+                  <v-card-title class="text-dark pt-2 movie-title">{{ movie.titulo }}</v-card-title>
+                  <v-card-text class="text-accent movie-details">
                     {{ movie.genero }}
                   </v-card-text>
                 </v-card>
@@ -73,134 +105,46 @@
         </v-row>
 
         <Footer />
-
       </v-container>
     </v-main>
   </v-app>
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue';
+import { onMounted, ref, computed, onBeforeMount } from 'vue';
 import Navbar from '../components/Navbar.vue';
 import Footer from '../components/Footer.vue';
-import { useAuth } from '../composables/communicationManagerPelicula';
+import { useMovieStore } from '../stores/movieStore';
+import { useDisplay } from 'vuetify';
 
-const featuredMovies = ref([]);
-const nowPlayingMovies = ref([]);
-const comingSoonMovies = ref([]);
-const allMovies = ref([]);
+// Declarar la variable para el entorno de desarrollo
+const isDev = import.meta.env.DEV;
 
-// Formatear fecha de estreno
+// Inicializar el store de películas
+const movieStore = useMovieStore();
+
+// Detectar tamaño de pantalla para responsive
+const { mobile, xs, sm } = useDisplay();
+const isMobile = computed(() => mobile.value || xs.value);
+
+// Función para formatear la fecha de estreno
 const formatReleaseDate = (dateString) => {
   if (!dateString) return '';
   const date = new Date(dateString);
   return date.toLocaleDateString('es-ES', { day: '2-digit', month: 'short', year: 'numeric' });
 };
 
-// Cargar películas desde la API
-const loadMovies = async () => {
-  try {
-    const auth = useAuth();
-    const response = await auth.getPeliculas();
-    
-    if (response && !response.error && response.movies) {
-      allMovies.value = response.movies;
-      console.log('Películas cargadas:', allMovies.value);
-      
-      // Separar películas en categorías
-      categorizeMovies();
-    } else {
-      console.error('Error al cargar películas:', response?.error || 'No se encontraron películas');
-    }
-  } catch (error) {
-    console.error('Error en la carga de películas:', error);
-  }
-};
-
-// Categorizar películas en destacadas, en cartelera y próximamente
-const categorizeMovies = () => {
-  if (!allMovies.value || allMovies.value.length === 0) {
-    console.error('No hay películas para categorizar');
-    return;
-  }
-  
-  // Convertir string JSON de calificación a número si es necesario
-  const processedMovies = allMovies.value.map(movie => {
-    let rating = movie.calificacion;
-    if (typeof rating === 'string') {
-      try {
-        rating = parseFloat(rating);
-      } catch (e) {
-        rating = 0;
-      }
-    }
-    return { ...movie, calificacionNum: rating || 0 };
-  });
-  
-  // Seleccionar películas destacadas (las 3 con mejores ratings)
-  featuredMovies.value = [...processedMovies]
-    .sort((a, b) => b.calificacionNum - a.calificacionNum)
-    .slice(0, 3);
-  
-  const currentDate = new Date();
-  
-  // Películas en cartelera (con fecha de estreno pasada o reciente)
-  nowPlayingMovies.value = processedMovies
-    .filter(movie => {
-      if (!movie.fecha_estreno) return true; // Incluir películas sin fecha como en cartelera
-      
-      const releaseDate = new Date(movie.fecha_estreno);
-      if (isNaN(releaseDate.getTime())) return true; // Fecha inválida, mostrar como en cartelera
-      
-      const diffTime = currentDate - releaseDate;
-      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-      return diffDays >= 0 && diffDays <= 30; // Películas estrenadas en el último mes
-    })
-    .slice(0, 4);
-  
-  // Películas próximamente (con fecha de estreno futura)
-  comingSoonMovies.value = processedMovies
-    .filter(movie => {
-      if (!movie.fecha_estreno) return false;
-      
-      const releaseDate = new Date(movie.fecha_estreno);
-      if (isNaN(releaseDate.getTime())) return false;
-      
-      return releaseDate > currentDate;
-    })
-    .sort((a, b) => new Date(a.fecha_estreno) - new Date(b.fecha_estreno)) // Ordenar por fecha más cercana
-    .slice(0, 4);
-  
-  // Si no hay suficientes películas próximas, llenar con las restantes
-  if (comingSoonMovies.value.length < 4) {
-    const remainingMovies = processedMovies
-      .filter(movie => !featuredMovies.value.some(fm => fm.id === movie.id) && 
-                      !nowPlayingMovies.value.some(npm => npm.id === movie.id) &&
-                      !comingSoonMovies.value.some(csm => csm.id === movie.id))
-      .slice(0, 4 - comingSoonMovies.value.length);
-    
-    comingSoonMovies.value = [...comingSoonMovies.value, ...remainingMovies];
-  }
-  
-  console.log('Categorización completada:', {
-    featured: featuredMovies.value.length,
-    nowPlaying: nowPlayingMovies.value.length,
-    comingSoon: comingSoonMovies.value.length
-  });
-};
-
-// Formatear duración
+// Función para formatear la duración
 const formatDuration = (minutes) => {
-  if (!minutes) return '2h 00min'; // Valor por defecto
-  
-  // Convertir string a número si es necesario
+  if (!minutes) return '2h 00min';
+
   let mins = minutes;
   if (typeof minutes === 'string') {
     mins = parseInt(minutes);
   }
-  
+
   if (isNaN(mins)) return '2h 00min';
-  
+
   const hours = Math.floor(mins / 60);
   const remainingMins = mins % 60;
   return `${hours}h ${remainingMins}min`;
@@ -208,7 +152,7 @@ const formatDuration = (minutes) => {
 
 // Cargar películas al montar el componente
 onMounted(() => {
-  loadMovies();
+  movieStore.fetchMovies();
 });
 </script>
 
@@ -218,27 +162,64 @@ onMounted(() => {
   background-color: white;
 }
 
-.backgroundIndex{
-  /* background-color: #EAE0D5 ; */
-  background: linear-gradient(135deg, #22223B 0%, #EAE0D5 100%);
+.backgroundIndex {
+  background: linear-gradient(135deg, #22223B 20%, #EAE0D5 100%);
+}
+
+.text-eae0d5 {
+  color: #EAE0D5 !important;
 }
 
 .rojo-bg {
-  background-color: #f8d7da; /* Esto es un rojo claro, cámbialo por el color que necesites */
+  background-color: #f8d7da;
 }
 
 /* Featured Movies Carousel */
+.featured-movies {
+  margin-top: -64px;
+  /* Ajusta según la altura de tu navbar */
+}
+
 .featured-movies .featured-overlay {
   position: absolute;
   bottom: 0;
   left: 0;
   right: 0;
-  padding: 4rem;
+  padding: 6rem;
   background: linear-gradient(transparent, rgba(28, 28, 28, 0.95));
-  color: var(--v-light-base);
+  color: #EAE0D5;
 }
 
-/* Remove any spacing between Navbar and content */
+.featured-title {
+  font-size: 55px !important;
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+}
+
+/* Estilos para la calificación y estrellas */
+.featured-rating {
+  display: flex;
+  align-items: center;
+  margin-bottom: 2rem;
+}
+
+.rating-number {
+  font-size: 2rem;
+  font-weight: bold;
+  margin-right: 1rem;
+  color: #FFD700;
+}
+
+.star-rating {
+  display: flex;
+  align-items: center;
+}
+
+.featured-buttons {
+  display: flex;
+  gap: 1rem;
+}
+
+/* Quitar márgenes y padding entre Navbar y contenido */
 .v-application {
   margin: 0 !important;
   padding: 0 !important;
@@ -249,11 +230,14 @@ onMounted(() => {
   margin: 0 !important;
 }
 
-/* Movie Card Styles */
+/* Estilos de las tarjetas de películas */
 .movie-card {
   transition: all 0.3s ease;
   overflow: hidden;
   border-radius: 12px;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
 }
 
 .movie-card:hover {
@@ -269,7 +253,7 @@ onMounted(() => {
   transform: scale(1.05);
 }
 
-/* Release Date Badge */
+/* Badge para la fecha de estreno */
 .movie-card .release-date-badge {
   position: absolute;
   top: 16px;
@@ -280,5 +264,91 @@ onMounted(() => {
   border-radius: 20px;
   font-weight: bold;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+/* Botón de recarga */
+.reload-btn {
+  position: fixed;
+  top: 80px;
+  right: 20px;
+  z-index: 999;
+}
+
+/* Responsive Grid */
+@media (max-width: 600px) {
+  .featured-rating {
+    flex-direction: column;
+    align-items: flex-start;
+    margin-bottom: 1rem;
+  }
+
+  .rating-number {
+    font-size: 1.2rem;
+    margin-bottom: 0.2rem;
+  }
+
+  .star-rating {
+    margin-bottom: 0.5rem;
+  }
+
+  .featured-title {
+    font-size: 1.5rem !important;
+    margin-bottom: 0.5rem !important;
+  }
+
+  .featured-movies .featured-overlay {
+    padding: 1.5rem;
+  }
+
+  .featured-buttons {
+    flex-direction: row;
+    gap: 0.5rem;
+  }
+
+  .movies-section-title {
+    font-size: 1.5rem !important;
+    margin-bottom: 0.5rem !important;
+  }
+
+  .movie-title {
+    font-size: 0.875rem !important;
+    line-height: 1.2;
+    padding: 8px 8px 0 8px !important;
+  }
+
+  .movie-details {
+    font-size: 0.75rem !important;
+    padding: 4px 8px !important;
+  }
+
+  .release-date-badge {
+    font-size: 0.7rem !important;
+    padding: 4px 8px !important;
+    top: 8px !important;
+    right: 8px !important;
+  }
+
+  .v-card-actions {
+    padding: 4px !important;
+  }
+}
+
+/* Tablet adjustments */
+@media (min-width: 601px) and (max-width: 960px) {
+  .featured-title {
+    font-size: 2.5rem !important;
+  }
+
+  .rating-number {
+    font-size: 1.5rem;
+  }
+
+  .featured-movies .featured-overlay {
+    padding: 3rem;
+  }
+
+  .movies-section-title {
+    font-size: 2rem !important;
+  }
 }
 </style>

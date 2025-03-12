@@ -99,7 +99,7 @@ const handleProfileClick = () => {
 .mobile-logo {
     height: 70px;
     position: absolute;
-    left: 200px;
+    left: 170px;
     top: -5px;
     /* margin-top: 10px; */
 }
