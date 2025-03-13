@@ -6,7 +6,8 @@
     <v-main class="pa-0 ma-0 backgroundIndex">
       <v-container fluid class="pa-0 ma-0">
         <!-- Alerta de error si hay problemas -->
-        <v-alert v-if="movieStore.error" type="error" closable title="Error al cargar películas" class="ma-2 text-caption">
+        <v-alert v-if="movieStore.error" type="error" closable title="Error al cargar películas"
+          class="ma-2 text-caption">
           {{ movieStore.error }}
         </v-alert>
 
@@ -18,24 +19,28 @@
         <!-- Carousel de películas destacadas -->
         <v-row no-gutters>
           <v-col cols="12">
-            <v-carousel v-if="movieStore.featuredMovies.length > 0" cycle :height="isMobile ? '400' : '800'" hide-delimiter-background
-              show-arrows="hover" class="featured-movies">
+            <v-carousel v-if="movieStore.featuredMovies.length > 0" cycle :height="isMobile ? '420' : '600'"
+              hide-delimiter-background show-arrows="hover" class="featured-movies">
               <v-carousel-item v-for="movie in movieStore.featuredMovies" :key="movie.id" :src="movie.poster" cover>
                 <div class="featured-overlay">
                   <h2 class="featured-title">{{ movie.titulo }}</h2>
                   <div class="featured-rating">
                     <span class="rating-number">{{ movie.calificacion }}/10</span>
                     <div class="star-rating">
-                      <v-icon v-for="n in Math.floor(movie.calificacion / 2)" :key="n" color="gold" size="24">mdi-star</v-icon>
+                      <v-icon v-for="n in Math.floor(movie.calificacion / 2)" :key="n" color="gold"
+                        size="24">mdi-star</v-icon>
                       <v-icon v-if="movie.calificacion % 2 >= 1" color="gold" size="24">mdi-star-half</v-icon>
-                      <v-icon v-for="n in (5 - Math.ceil(movie.calificacion / 2))" :key="`empty-${n}`" color="gold" size="24">mdi-star-outline</v-icon>
+                      <v-icon v-for="n in (5 - Math.ceil(movie.calificacion / 2))" :key="`empty-${n}`" color="gold"
+                        size="24">mdi-star-outline</v-icon>
                     </div>
                   </div>
                   <div class="featured-buttons">
-                    <v-btn color="gold" :size="isMobile ? 'small' : 'x-large'" class="text-dark font-weight-bold px-4 me-2" elevation="4">
+                    <v-btn color="gold" :size="isMobile ? 'small' : 'x-large'"
+                      class="text-dark font-weight-bold px-4 me-2" elevation="4">
                       Comprar Entradas
                     </v-btn>
-                    <v-btn color="grey-lighten-1" :size="isMobile ? 'small' : 'x-large'" class="font-weight-bold px-4" elevation="4">
+                    <v-btn color="grey-lighten-1" :size="isMobile ? 'small' : 'x-large'" class="font-weight-bold px-4"
+                      elevation="4">
                       Ver Info
                     </v-btn>
                   </div>
@@ -49,18 +54,24 @@
         <v-row class="py-6 px-2">
           <v-col cols="12">
             <div class="d-flex flex-column flex-sm-row justify-space-between align-center mb-4">
-              <h2 class="text-eae0d5 font-weight-bold movies-section-title">Películas de Hoy</h2>
-              <v-btn color="gold" :size="isMobile ? 'small' : 'large'" class="text-dark font-weight-bold mt-2 mt-sm-0" to="/peliculas" elevation="4">
+              <h2 class="text-h4 text-eae0d5 font-weight-bold movies-section-title">
+                Películas de Hoy
+              </h2>
+              <v-btn color="gold" :size="isMobile ? 'medium' : 'large'"
+                class="text-dark font-weight-bold mt-2 mt-sm-0" to="/peliculas" elevation="4">
                 Ver Más Películas
               </v-btn>
             </div>
+
+
             <v-row>
               <v-col v-for="movie in movieStore.nowPlayingMovies" :key="movie.id" cols="6" sm="4" md="3">
                 <v-card class="mx-auto movie-card" color="white" elevation="8">
                   <v-img :src="movie.imagen" :height="isMobile ? '200' : '400'" cover class="movie-poster">
                     <template v-slot:placeholder>
                       <v-row class="fill-height ma-0" align="center" justify="center">
-                        <v-progress-circular indeterminate color="gold" :size="isMobile ? 24 : 36"></v-progress-circular>
+                        <v-progress-circular indeterminate color="gold"
+                          :size="isMobile ? 24 : 36"></v-progress-circular>
                       </v-row>
                     </template>
                   </v-img>
@@ -69,10 +80,12 @@
                     {{ formatDuration(movie.duracion) }} • {{ movie.genero }}
                   </v-card-text>
                   <v-card-actions class="pa-2">
-                    <v-btn color="gold" variant="elevated" :size="isMobile ? 'small' : 'default'" class="text-dark font-weight-bold me-1">
+                    <v-btn color="gold" variant="elevated" :size="isMobile ? 'small' : 'default'"
+                      class="text-dark font-weight-bold me-1">
                       Comprar
                     </v-btn>
-                    <v-btn color="grey-lighten-1" variant="elevated" :size="isMobile ? 'small' : 'default'" class="font-weight-bold">
+                    <v-btn color="grey-lighten-1" variant="elevated" :size="isMobile ? 'small' : 'default'"
+                      class="font-weight-bold">
                       Info
                     </v-btn>
                   </v-card-actions>
@@ -85,7 +98,8 @@
         <!-- Sección de Próximos estrenos -->
         <v-row class="py-6 px-2">
           <v-col cols="12">
-            <h2 class="movies-section-title text-eae0d5 text-center font-weight-bold mb-4">Próximamente</h2>
+            <h2 class="movies-section-title text-h3 text-eae0d5 text-center font-weight-bold mb-10">Próximamente</h2>
+
             <v-row>
               <v-col v-for="movie in movieStore.comingSoonMovies" :key="movie.id" cols="6" sm="4" md="3">
                 <v-card class="mx-auto movie-card" color="white" elevation="8">
@@ -274,8 +288,52 @@ onMounted(() => {
   z-index: 999;
 }
 
-/* Responsive Grid */
+/* ===== Personalización del Scrollbar (global) ===== */
+/* Para navegadores basados en WebKit (Chrome, Safari, etc.) */
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+::-webkit-scrollbar-track {
+  background: #EAE0D5;
+  margin: 5px;
+  border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #22223B;
+  border-radius: 10px;
+  border: 2px solid #EAE0D5;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #555;
+}
+
+/* Para Firefox */
+html {
+  scrollbar-width: thin;
+  scrollbar-color: #22223B #EAE0D5;
+}
+
+/* ===== Responsive ajustes para Móvil y Desktop ===== */
+
+/* Móvil (hasta 600px) */
 @media (max-width: 600px) {
+  .v-main {
+    margin: 10px;
+  }
+
+  .featured-title {
+    font-size: 1.5rem !important;
+    margin-bottom: 0.5rem !important;
+  }
+
+  .featured-movies .featured-overlay {
+    padding: 1.5rem;
+  }
+
   .featured-rating {
     flex-direction: column;
     align-items: flex-start;
@@ -291,20 +349,6 @@ onMounted(() => {
     margin-bottom: 0.5rem;
   }
 
-  .featured-title {
-    font-size: 1.5rem !important;
-    margin-bottom: 0.5rem !important;
-  }
-
-  .featured-movies .featured-overlay {
-    padding: 1.5rem;
-  }
-
-  .featured-buttons {
-    flex-direction: row;
-    gap: 0.5rem;
-  }
-
   .movies-section-title {
     font-size: 1.5rem !important;
     margin-bottom: 0.5rem !important;
@@ -313,7 +357,7 @@ onMounted(() => {
   .movie-title {
     font-size: 0.875rem !important;
     line-height: 1.2;
-    padding: 8px 8px 0 8px !important;
+    padding: 8px;
   }
 
   .movie-details {
@@ -333,22 +377,11 @@ onMounted(() => {
   }
 }
 
-/* Tablet adjustments */
-@media (min-width: 601px) and (max-width: 960px) {
-  .featured-title {
-    font-size: 2.5rem !important;
+/* Desktop (desde 601px en adelante) */
+@media (min-width: 601px) {
+  .v-main {
+    margin: 20px;
   }
 
-  .rating-number {
-    font-size: 1.5rem;
-  }
-
-  .featured-movies .featured-overlay {
-    padding: 3rem;
-  }
-
-  .movies-section-title {
-    font-size: 2rem !important;
-  }
 }
 </style>

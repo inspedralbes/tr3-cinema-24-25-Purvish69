@@ -33,7 +33,7 @@
 
     <!-- Mobile Navigation Drawer fixed to top -->
     <v-navigation-drawer v-model="drawer" temporary color="primary" location="start" position="fixed"
-        class="mobile-drawer" :style="{ top: '60px', height: 'calc(100% - 60px)' }">
+        class="mobile-drawer" :style="{ top: '54px', height: 'calc(100% - 53px)' }">
         <v-list color="cream">
             <v-list-item v-for="(item, i) in mobileMenuItems" :key="i" :to="item.to" :prepend-icon="item.icon"
                 :title="item.title" color="cream"></v-list-item>
@@ -108,12 +108,13 @@ const handleProfileClick = () => {
     z-index: 2000;
     top: 0;
     position: fixed;
-    margin-top: -80px;
+    margin-top: -85px;
 }
 
 .mobile-drawer {
     z-index: 1999 !important;
     overflow-y: auto;
+    
 }
 
 /* Asegurar que el diseño general sea correcto para el drawer */
