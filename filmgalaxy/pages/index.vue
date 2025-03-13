@@ -58,7 +58,7 @@
                 Películas de Hoy
               </h2>
               <v-btn color="gold" :size="isMobile ? 'medium' : 'large'"
-                class="text-dark font-weight-bold mt-2 mt-sm-0" to="/peliculas" elevation="4">
+                class="text-dark font-weight-bold mt-2 mt-sm-0" to="/movies" elevation="4">
                 Ver Más Películas
               </v-btn>
             </div>

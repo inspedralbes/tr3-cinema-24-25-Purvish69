@@ -72,7 +72,7 @@ export const useAuth = () => {
         headers: {
           'Content-Type': 'application/json',
           'Accept': 'application/json',
-          'Authorization': `Bearer ${token.value}`
+          'Authorization': `Bearer ${token.value}`  
         },
         credentials: 'include'
       })

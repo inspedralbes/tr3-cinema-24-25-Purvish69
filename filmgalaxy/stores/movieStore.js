@@ -1,6 +1,5 @@
-// stores/movieStore.js
 import { defineStore } from 'pinia';
-import { useAuth } from '../composables/communicationManagerPelicula';
+import { usePeliculas } from '../composables/communicationManagerPelicula';
 
 export const useMovieStore = defineStore('movies', {
   state: () => ({
@@ -19,8 +18,8 @@ export const useMovieStore = defineStore('movies', {
       this.error = null;
       
       try {
-        const auth = useAuth();
-        const response = await auth.getPeliculas();
+        const peliculasManager = usePeliculas();
+        const response = await peliculasManager.getPeliculas();
         
         if (response && !response.error && response.movies) {
           this.allMovies = response.movies;
