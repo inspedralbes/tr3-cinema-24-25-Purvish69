@@ -264,7 +264,7 @@ class MovieSeeder extends Seeder
                 'clasificacion' => '+13',
                 'genero' => 'Acción, Aventura, Drama',
                 'lenguaje' => 'Francés',
-                'imagen' => 'https://pics.filmaffinity.com/Los_tres_mosqueteros_D_Artagnan-865440685-large.jpg',
+                'imagen' => 'https://pics.filmaffinity.com/Los_tres_mosqueteros_D_Artagnan-668782629-large.jpg',
                 'poster' => 'https://upload.wikimedia.org/wikipedia/en/6/6e/Les_Trois_Mousquetaires_D%27Artagnan_poster.jpg',
                 'trailer' => 'https://youtu.be/rdulTOz1wy8?si=PLb3wVtVPq-LdbCQ',
                 'omdb_id' => 'tt1234567'

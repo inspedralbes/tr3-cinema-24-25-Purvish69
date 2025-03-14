@@ -3,7 +3,7 @@
     <Navbar />
     <br><br>
     <div class="min-h-screen bg-gradient-to-br from-primary to-secondary">
-      <div class="container mx-auto px-4 py-8 animate-fade-in">
+      <div class="container mx-auto px-3 py-8 animate-fade-in">
         <div v-if="loading" class="flex justify-center items-center h-[70vh]">
           <div class="animate-pulse-slow">
             <div class="w-16 h-16 border-4 border-gold border-t-transparent rounded-full animate-spin"></div>
@@ -16,7 +16,7 @@
 
         <div v-else class="space-y-8 animate-slide-up">
           <!-- Movie Details Section -->
-          <div class="relative">
+          <div class="relative mt-10">
             <!-- Background Image -->
             <div class="absolute inset-0 h-full bg-cover bg-center opacity-20 rounded-xl overflow-hidden"
               :style="{ backgroundImage: `url(${movie.imagen || 'https://via.placeholder.com/400x600?text=No+Poster'})` }">
@@ -27,7 +27,7 @@
               <div class="lg:w-1/3">
                 <div class="movie-card overflow-hidden">
                   <img :src="movie.imagen || 'https://via.placeholder.com/400x600?text=No+Poster'" :alt="movie.titulo"
-                    class="w-full h-auto object-cover transition-transform duration-300 hover:brightness-110" />
+                    class="w-full h-auto object-cover rounded-xl transition-transform duration-300 hover:brightness-110" />
                 </div>
               </div>
 
@@ -40,11 +40,7 @@
 
                   <!-- Rating -->
                   <div class="mb-6 flex items-center space-x-4">
-                    <div class="flex">
-                      <span v-for="i in 5" :key="i" class="text-3xl">
-                        <span v-if="i <= Math.round(parseFloat(movie.calificacion) / 2)" class="text-gold">★</span>
-                        <span v-else class="text-gray-400">★</span>
-                      </span>
+                    <div class="flex">  
                     </div>
                     <span class="text-2xl font-bold text-gold">
                       {{ movie.calificacion }}/10
@@ -60,11 +56,6 @@
                     <p class="flex items-center">
                       <span class="font-semibold w-32">Director:</span>
                       <span>{{ movie.director || 'N/A' }}</span>
-                    </p>
-
-                    <p class="flex items-center">
-                      <span class="font-semibold w-32">Reparto:</span>
-                      <span>{{ actorsList.length ? actorsList.join(', ') : 'N/A' }}</span>
                     </p>
 
                     <p class="flex items-center">
