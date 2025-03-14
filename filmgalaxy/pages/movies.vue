@@ -35,13 +35,11 @@
               <div class="md:w-48">
                 <label class="block text-light text-sm font-medium mb-2">Idioma</label>
                 <select v-model="filterLenguaje"
-                  class="w-full p-3 rounded-lg bg-light/5 border-2 border-accent/30 text-light focus:border-accent focus:ring-2 focus:ring-accent/50 transition-all duration-300">
-                  <div class="SelectColor">
+                  class="w-full p-3 rounded-lg bg-light/5 border-2 border-accent/30 text-black focus:border-accent focus:ring-2 focus:ring-accent/50 transition-all duration-300">
                     <option value="">Todos los idiomas</option>
                     <option value="Español">Español</option>
                     <option value="Inglés">Inglés</option>
                     <option value="Subtitulada">Subtitulada</option>
-                  </div>
                 </select>
               </div>
 
@@ -49,8 +47,7 @@
               <div class="md:w-48">
                 <label class="block text-light text-sm font-medium mb-2">Género</label>
                 <select v-model="filterGenero"
-                  class="w-full p-3 rounded-lg bg-light/5 border-2 border-accent/30 text-light focus:border-accent focus:ring-2 focus:ring-accent/50 transition-all duration-300">
-                  <div class="SelectColor">
+                  class="w-full p-3 rounded-lg bg-light/5 border-2 border-accent/30 text-black focus:border-accent focus:ring-2 focus:ring-accent/50 transition-all duration-300">
                     <option value="">Todos los géneros</option>
                     <option value="Accion">Acción</option>
                     <option value="Drama">Drama</option>
@@ -59,7 +56,6 @@
                     <option value="Terror">Terror</option>
                     <option value="Aventura">Aventura</option>
                     <option value="Animacion">Animación</option>
-                  </div>
                 </select>
               </div>
 
@@ -79,10 +75,7 @@
           </div>
         </div>
 
-        <!-- Mostramos la cantidad de películas encontradas -->
-        <div class="text-center text-light/80 mt-8 mb-6">
-          {{ filteredMovies.length }} películas encontradas
-        </div>
+      
 
         <!-- Indicador mientras se cargan los datos -->
         <div v-if="movieStore.loading" class="flex justify-center items-center py-12">
@@ -139,10 +132,10 @@
               </p>
 
               <!-- Botones para ver detalles o comprar entradas -->
-              <div class="flex gap-2 pt-1 md:pt-2">
+              <div class="flex gap-2 pt-1 md:pt-1">
                 <button @click="goToDetails(movie.id)"
-                  class="flex-1 bg-gold hover:bg-gold/80 text-primary font-medium py-1 md:py-2 px-2 md:px-3 rounded-lg text-xs md:text-sm transition-colors duration-300">
-                  Detalles
+                  class="flex-1 bg-gold hover:bg-gold/80 text-primary font-medium py-4 md:py-2 px-2 md:px-3 rounded-lg text-xs md:text-sm transition-colors duration-300">
+                  Detalls
                 </button>
                 <button @click="goToBuy(movie.id)"
                   class="flex-1 bg-accent hover:bg-accent/80 text-light font-medium py-1 md:py-2 px-2 md:px-3 rounded-lg text-xs md:text-sm transition-colors duration-300">
@@ -233,10 +226,6 @@ const goToBuy = (id) => {
 /* Clase para el gradiente de fondo */
 .custom-bg {
   background: linear-gradient(135deg, #22223B 10%, #EAE0D5 100%);
-}
-
-.SelectColor {
-  color: black;
 }
 
 

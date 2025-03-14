@@ -1,5 +1,5 @@
 import { defineStore } from 'pinia';
-import { usePeliculas } from '../composables/communicationManagerPelicula';
+import { usePeliculas } from '~/composables/communicationManagerPelicula';
 
 export const useMovieStore = defineStore('movies', {
   state: () => ({
@@ -8,7 +8,8 @@ export const useMovieStore = defineStore('movies', {
     nowPlayingMovies: [],
     comingSoonMovies: [],
     loading: false,
-    error: null
+    error: null,
+    currentMovie: null
   }),
   
   actions: {
@@ -70,7 +71,7 @@ export const useMovieStore = defineStore('movies', {
       
       const currentDate = new Date();
       
-      // Películas en cartelera
+      // Películas en cartelera (lanzadas en los últimos 30 días)
       this.nowPlayingMovies = processedMovies
         .filter(movie => {
           if (!movie.fecha_estreno) return true;
@@ -84,7 +85,7 @@ export const useMovieStore = defineStore('movies', {
         })
         .slice(0, 4);
       
-      // Películas próximamente
+      // Películas próximamente (lanzamientos futuros)
       this.comingSoonMovies = processedMovies
         .filter(movie => {
           if (!movie.fecha_estreno) return false;
@@ -97,11 +98,14 @@ export const useMovieStore = defineStore('movies', {
         .sort((a, b) => new Date(a.fecha_estreno) - new Date(b.fecha_estreno))
         .slice(0, 4);
       
+      // Si no hay suficientes próximas, se agregan algunas de las restantes
       if (this.comingSoonMovies.length < 4) {
         const remainingMovies = processedMovies
-          .filter(movie => !this.featuredMovies.some(fm => fm.id === movie.id) && 
-                          !this.nowPlayingMovies.some(npm => npm.id === movie.id) &&
-                          !this.comingSoonMovies.some(csm => csm.id === movie.id))
+          .filter(movie => 
+            !this.featuredMovies.some(fm => fm.id === movie.id) &&
+            !this.nowPlayingMovies.some(npm => npm.id === movie.id) &&
+            !this.comingSoonMovies.some(csm => csm.id === movie.id)
+          )
           .slice(0, 4 - this.comingSoonMovies.length);
         
         this.comingSoonMovies = [...this.comingSoonMovies, ...remainingMovies];
@@ -112,6 +116,27 @@ export const useMovieStore = defineStore('movies', {
         nowPlaying: this.nowPlayingMovies.length,
         comingSoon: this.comingSoonMovies.length
       });
+    },
+    
+    // Obtener detalles de una película por ID
+    getMovieById(id) {
+      return this.allMovies.find(movie => movie.id === id);
+    },
+    
+    // Establecer la película actual para ver detalles
+    setCurrentMovie(movie) {
+      this.currentMovie = movie;
+    },
+    
+    navigateToMovieDetails(movie, router) {
+      console.log('Navegando a detalles de la película:', JSON.stringify(movie));
+      if (!movie || !movie.id) {
+        console.error('El objeto película no contiene el id esperado:', movie);
+        return;
+      }
+      this.setCurrentMovie(movie);
+      router.push(`/movieDetails/${movie.id}`);
     }
+
   }
 });

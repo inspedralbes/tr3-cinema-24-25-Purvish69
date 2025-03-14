@@ -85,7 +85,7 @@ class MovieController extends Controller
             'descripcion'    => 'sometimes|string',
             'calificacion'   => 'sometimes|string|max:10',
             'director'       => 'nullable|string|max:255',
-            'actores'        => 'sometimes|array',
+            'actores'        => 'sometimes|string',
             'duracion'       => 'sometimes|integer|min:1',
             'clasificacion'  => 'sometimes|string|max:10',
             'genero'         => 'sometimes|string|max:100',

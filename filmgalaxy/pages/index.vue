@@ -1,13 +1,13 @@
 <template>
   <v-app>
-    <div class="min-h-screen bg-gradient-to-br from-primary via-secondary to-cream custom-bg ">
-      <!-- NavBar -->
+    <div class="min-h-screen bg-gradient-to-br from-primary via-secondary to-cream custom-bg">
+      <!-- Navbar -->
       <Navbar />
 
-      <main class="relative pt-16"> <!-- Added pt-16 for navbar spacing -->
+      <main class="relative pt-16">
         <!-- Error Alert -->
         <div v-if="movieStore.error"
-          class="fixed top-4 right-4 z-50 max-w-md bg-red-500/90 text-light p-4 rounded-lg backdrop-blur-sm animate-fade-in">
+          class="fixed top-4 right-4 z-50 max-w-md bg-red-500/90 text-light py-36 rounded-lg backdrop-blur-sm animate-fade-in">
           <p class="font-medium">{{ movieStore.error }}</p>
         </div>
 
@@ -53,8 +53,9 @@
                       <button class="btn-primary">
                         Comprar Entradas
                       </button>
-                      <button class="btn-secondary">
-                        Ver Info
+                      <button class="btn-secondary"
+                        @click="movieStore.navigateToMovieDetails(movieStore.featuredMovies[currentSlide], router)">
+                        Detalls
                       </button>
                     </div>
                   </div>
@@ -67,8 +68,7 @@
           <div class="absolute bottom-4 left-1/2 -translate-x-1/2 flex space-x-2">
             <button v-for="(_, index) in movieStore.featuredMovies" :key="index" @click="currentSlide = index"
               class="w-2 h-2 rounded-full transition-all duration-300"
-              :class="currentSlide === index ? 'bg-gold w-8' : 'bg-light/50 hover:bg-light'">
-            </button>
+              :class="currentSlide === index ? 'bg-gold w-8' : 'bg-light/50 hover:bg-light'"></button>
           </div>
         </section>
 
@@ -112,8 +112,9 @@
                     Comprar
                   </button>
                   <button
-                    class="flex-1 bg-accent hover:bg-accent/80 text-light font-medium py-2 px-3 rounded-lg text-sm transition-colors duration-300">
-                    Info
+                    class="flex-1 bg-accent hover:bg-accent/80 text-light font-medium py-2 px-3 rounded-lg text-sm transition-colors duration-300"
+                    @click="movieStore.navigateToMovieDetails(movie, router)">
+                    Detalls
                   </button>
                 </div>
               </div>
@@ -121,7 +122,7 @@
           </div>
         </section>
 
-        <!-- Sessions de Películas futuras -->
+        <!-- Próximamente -->
         <section class="container mx-auto px-4 py-12">
           <h2 class="text-3xl md:text-4xl font-bold text-light text-center mb-8">
             Próximamente
@@ -146,11 +147,15 @@
                 </div>
               </div>
 
-              <!-- Movie Info -->
               <div class="p-4">
                 <h3 class="text-lg font-bold text-light line-clamp-2">
                   {{ movie.titulo }}
                 </h3>
+                <button
+                  class="w-full mt-3 bg-accent hover:bg-accent/80 text-light font-medium py-2 px-3 rounded-lg text-sm transition-colors duration-300"
+                  @click="movieStore.navigateToMovieDetails(movie, router)">
+                  Detalls
+                </button>
               </div>
             </div>
           </div>
@@ -165,7 +170,7 @@
 <script setup>
 import { ref, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
-import { useMovieStore } from '../stores/movieStore';
+import { useMovieStore } from '~/stores/movieStore';
 
 const router = useRouter();
 const movieStore = useMovieStore();
@@ -180,11 +185,13 @@ onMounted(() => {
 
 function startCarousel() {
   carouselInterval = setInterval(() => {
-    currentSlide.value = (currentSlide.value + 1) % movieStore.featuredMovies.length;
+    if (movieStore.featuredMovies.length > 0) {
+      currentSlide.value = (currentSlide.value + 1) % movieStore.featuredMovies.length;
+    }
   }, 5000);
 }
 
-// Format helpers
+// Helpers para formatear fechas y duración
 const formatReleaseDate = (dateString) => {
   if (!dateString) return '';
   const date = new Date(dateString);
@@ -197,10 +204,8 @@ const formatReleaseDate = (dateString) => {
 
 const formatDuration = (minutes) => {
   if (!minutes) return '2h 00min';
-
   let mins = typeof minutes === 'string' ? parseInt(minutes) : minutes;
   if (isNaN(mins)) return '2h 00min';
-
   const hours = Math.floor(mins / 60);
   const remainingMins = mins % 60;
   return `${hours}h ${remainingMins}min`;
@@ -244,19 +249,17 @@ const formatDuration = (minutes) => {
   animation: fade-in 0.3s ease-out forwards;
 }
 
-/* Barra de desplazamiento personalizada para WebKit */
+/* Barra de desplazamiento personalizada */
 ::-webkit-scrollbar {
   width: 10px;
 }
 
 ::-webkit-scrollbar-track {
   background: #1a202c;
-  /* Color primario, ajústalo según tu tema */
 }
 
 ::-webkit-scrollbar-thumb {
   background: #d4af37;
-  /* Color gold */
   border-radius: 5px;
 }
 
@@ -264,7 +267,6 @@ const formatDuration = (minutes) => {
   background: rgba(212, 175, 55, 0.8);
 }
 
-/* Configuración de la barra de desplazamiento para Firefox */
 * {
   scrollbar-width: thin;
   scrollbar-color: #d4af37 #1a202c;

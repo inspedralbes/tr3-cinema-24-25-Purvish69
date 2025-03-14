@@ -11,16 +11,17 @@
 
           <v-form @submit.prevent="handleLogin" ref="form" class="login-form">
             <v-text-field v-model="email" label="Email" type="email" :rules="[rules.required, rules.email]"
-              variant="outlined" density="comfortable" class="mb-4 input-field" prepend-inner-icon="mdi-email">
-            </v-text-field>
+              variant="outlined" density="comfortable" class="mb-4 custom-input" prepend-inner-icon="mdi-email"
+              bg-color="transparent" color="#4A4E69" hide-details="auto"></v-text-field>
 
             <v-text-field v-model="password" label="Contraseña" :type="showPassword ? 'text' : 'password'"
               :append-inner-icon="showPassword ? 'mdi-eye-off' : 'mdi-eye'"
               @click:append-inner="showPassword = !showPassword" :rules="[rules.required]" variant="outlined"
-              density="comfortable" class="mb-6 input-field" prepend-inner-icon="mdi-lock">
-            </v-text-field>
+              density="comfortable" class="mb-6 custom-input" prepend-inner-icon="mdi-lock" bg-color="transparent"
+              color="#4A4E69" hide-details="auto"></v-text-field>
 
-            <v-btn type="submit" block size="large" :loading="loading" class="mb-4 login-btn" elevation="2" v-motion-pop>
+            <v-btn type="submit" block size="large" :loading="loading" class="mb-4 login-btn" elevation="2"
+              v-motion-pop>
               <v-icon start icon="mdi-login"></v-icon>
               Iniciar Sesión
             </v-btn>
@@ -112,10 +113,14 @@ const forgotPassword = () => {
   background-color: #F2E9E4;
   max-width: 500px;
   width: 100%;
+  border-radius: 16px !important;
+  box-shadow: 0 15px 25px rgba(0, 0, 0, 0.15) !important;
 }
 
 .card-title {
   color: #22223B;
+  margin-bottom: 1rem;
+  letter-spacing: 0.5px;
 }
 
 /* Animación del icono */
@@ -127,7 +132,7 @@ const forgotPassword = () => {
 /* Animación de flotamiento del icono */
 @keyframes float {
   0% {
-    transform: translateY(20px);
+    transform: translateY(0);
   }
 
   50% {
@@ -135,53 +140,85 @@ const forgotPassword = () => {
   }
 
   100% {
-    transform: translateY(20px);
+    transform: translateY(0);
   }
 }
 
 /* Estilos de los campos de entrada */
-.input-field {
-  --v-field-border-opacity: 1;
+:deep(.custom-input) {
+  margin-bottom: 1rem;
 }
 
-.input-field .v-field__outline__start,
-.input-field .v-field__outline__end,
-.input-field .v-field__outline {
-  border-color: #9A8C98;
+:deep(.custom-input .v-field__outline) {
+  color: #9A8C98 !important;
+  opacity: 0.7;
+}
+
+:deep(.custom-input .v-field) {
+  border-radius: 8px;
+  transition: all 0.3s ease;
+  background-color: transparent !important;
+}
+
+:deep(.custom-input .v-field--focused) {
+  box-shadow: 0 0 0 2px rgba(74, 78, 105, 0.4) !important;
+}
+
+:deep(.custom-input .v-field--focused .v-field__outline) {
+  color: #4A4E69 !important;
+  opacity: 1;
+}
+
+:deep(.custom-input .v-field__input) {
+  color: #22223B;
+  padding: 16px 12px;
+}
+
+:deep(.custom-input .v-label) {
+  color: #4A4E69;
+  opacity: 0.8;
+}
+
+:deep(.custom-input .v-field--focused .v-label) {
+  color: #4A4E69;
+  opacity: 1;
+}
+
+:deep(.custom-input .v-icon) {
   color: #9A8C98;
 }
 
-.input-field .v-label {
+:deep(.custom-input .v-field--focused .v-icon) {
   color: #4A4E69;
 }
 
-.input-field .v-field--variant-outlined {
+/* Elimina el focus outline predeterminado */
+:deep(.custom-input .v-field__outline) {
   --v-field-border-opacity: 1;
 }
 
-.input-field .v-field__input {
-  color: #22223B;
-}
-
-.input-field .v-icon {
-  color: #4A4E69;
-}
-
-.input-field .v-field {
-  background-color: #F2E9E4;
+/* Quitar el background blanco al focus */
+:deep(.custom-input .v-field--focused) {
+  background-color: transparent !important;
 }
 
 /* Estilos del botón de login */
 .login-btn {
-  background-color: #C8A96E;
-  color: #1C1C1C;
-  transition: transform 0.2s ease;
+  background-color: #C8A96E !important;
+  color: #1C1C1C !important;
+  transition: all 0.3s ease;
   text-transform: none;
   letter-spacing: 0.5px;
+  height: 48px;
+  font-weight: 600;
+  border-radius: 8px;
+  margin-top: 1rem;
 }
 
 .login-btn:hover {
   transform: translateY(-2px);
+  background-color: #d6b77f !important;
+  box-shadow: 0 8px 15px rgba(200, 169, 110, 0.3) !important;
 }
 
 /* Botón de contraseña olvidada */
@@ -189,30 +226,51 @@ const forgotPassword = () => {
   color: #4A4E69;
   opacity: 0.8;
   transition: opacity 0.2s ease;
+  font-size: 0.9rem;
 }
 
 .forgot-password-btn:hover {
   opacity: 1;
+  background-color: rgba(74, 78, 105, 0.1);
 }
 
 /* Divider */
 .divider {
-  color: #9A8C98;
+  opacity: 0.6;
+  margin: 1.5rem 0;
 }
 
 /* Enlace de registro */
 .register-link {
   color: #4A4E69;
-  transition: color 0.2s ease;
+  transition: all 0.2s ease;
+  font-weight: 500;
 }
 
 .register-link:hover {
   color: #C8A96E;
+  text-decoration: underline !important;
 }
 
 /* Estilos generales de botones */
 .v-btn {
   text-transform: none;
   letter-spacing: 0.5px;
+}
+
+/* Responsive adjustments */
+@media (max-width: 600px) {
+  .login-card {
+    padding: 1.5rem !important;
+    border-radius: 12px !important;
+  }
+
+  .card-title {
+    font-size: 1.5rem;
+  }
+
+  .v-icon.icon-animation {
+    font-size: 48px !important;
+  }
 }
 </style>
