@@ -109,25 +109,19 @@ const loadUserData = async () => {
     if (!cookieUserId) {
       console.error("No se encontró la cookie userId o es inválida")
       const response = await getUserData()
-      if (response && response.users && response.users.length > 0) {
+      if (response ) {
         console.warn('Usando el primer usuario por defecto (solo para desarrollo)')
-        userData.value = response.users[0]
+        userData.value = response
       }
       return
     }
-    
-    const currentUserId = parseInt(cookieUserId)
+
     const response = await getUserData()
-    if (response && response.users) {
-      const currentUser = response.users.find(user => user.id === currentUserId)
-      if (currentUser) {
-        userData.value = currentUser
-        console.log('Usuario logueado encontrado:', currentUser)
-      } else {
-        console.error('Usuario no encontrado en la lista de usuarios')
-      }
-    } else {
-      console.error('Respuesta de usuario inesperada:', response)
+    if (response ) {
+      userData.value = response
+      console.log('Usuario logueado encontrado:', response)
+    }else{
+      console.error('Usuario no encontrado')
     }
   } catch (error) {
     console.error('Error al cargar los datos del usuario:', error)

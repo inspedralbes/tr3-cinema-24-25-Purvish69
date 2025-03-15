@@ -87,8 +87,13 @@ export const useAuth = () => {
   }
 
   const getUserData = async () => {
+    if (!userId.value) {
+      console.error("No se encontró el userId en las cookies.");
+      return null;
+    }
+  
     try {
-      const response = await fetch(`${API_URL}/user`, {
+      const response = await fetch(`${API_URL}/user/${userId.value}`, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
@@ -96,21 +101,21 @@ export const useAuth = () => {
           'Authorization': `Bearer ${token.value}`
         },
         credentials: 'include'
-      })
-
+      });
+  
       if (!response.ok) {
-        console.error('Error al obtener datos de usuario:', response.status)
-        return null
+        console.error('Error fetching user info:', await response.text());
+        return null;
       }
-
-      const data = await response.json()
-      console.log('Datos recibidos para profile:', data)
-      return data
+  
+      const data = await response.json();
+      console.log('Datos recibidos para profile:', data);
+      return data.user;
     } catch (error) {
-      console.error("Error al obtener los datos del usuario", error)
-      return null
+      console.error("Error al obtener los datos del usuario", error);
+      return null;
     }
-  }
+  };
 
   // Check if user is authenticated
   const isAuthenticated = computed(() => !!token.value)
