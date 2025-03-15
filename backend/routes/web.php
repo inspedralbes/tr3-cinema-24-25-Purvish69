@@ -26,9 +26,17 @@ Route::middleware('auth')->group(function () {
     Route::get('/users/{id}/delete', [UserController::class, 'confirmDelete'])->name('users.delete');
     Route::delete('/users/{id}', [UserController::class, 'destroy'])->name('users.destroy');
 
-    // Rutas para Movies y Session (ajusta según corresponda)
-    Route::resource('movies', MovieController::class);
-    Route::get('/session/create', function () {
-        return view('session.create');
-    })->name('session.create');
+    // Rutas protegidas, Rutas para el CRUD de peliculas
+
+    Route::get('/movies/create', [MovieController::class, 'create'])->name('movies.create');
+    Route::post('/movies', [MovieController::class, 'store'])->name('movies.store');
+    Route::get('/movies', [MovieController::class, 'index'])->name('movies.index');
+    Route::get('/movies/{id}', [MovieController::class, 'show'])->name('movies.show');
+    Route::get('/movies/{movie}/edit', [MovieController::class, 'edit'])->name('movies.edit');
+    Route::put('/movies/{movie}', [MovieController::class, 'update'])->name('movies.update');
+    Route::get('/movies/{movie}/delete', [MovieController::class, 'delete'])->name('movies.delete');
+    Route::delete('/movies/{movie}', [MovieController::class, 'destroy'])->name('movies.destroy');
+
+
+    Route::get('/session/create', [App\Http\Controllers\MovieSessionsController::class, 'create'])->name('session.create');
 });
