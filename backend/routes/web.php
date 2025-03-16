@@ -38,5 +38,15 @@ Route::middleware('auth')->group(function () {
     Route::delete('/movies/{movie}', [MovieController::class, 'destroy'])->name('movies.destroy');
 
 
-    Route::get('/session/create', [App\Http\Controllers\MovieSessionsController::class, 'create'])->name('session.create');
+    // Rutas para movieSessions (Sesiones de Películas)
+    Route::get('/movieSessions', [App\Http\Controllers\MovieSessionsController::class, 'index'])->name('movieSessions.index');
+    Route::get('/movieSessions/create', [App\Http\Controllers\MovieSessionsController::class, 'create'])->name('movieSessions.create');
+    Route::post('/movieSessions', [App\Http\Controllers\MovieSessionsController::class, 'store'])->name('movieSessions.store');
+    Route::get('/movieSessions/{id}', [App\Http\Controllers\MovieSessionsController::class, 'show'])->name('movieSessions.show');
+    Route::get('/movieSessions/{id}/edit', [App\Http\Controllers\MovieSessionsController::class, 'edit'])->name('movieSessions.edit');
+    Route::put('/movieSessions/{id}', [App\Http\Controllers\MovieSessionsController::class, 'update'])->name('movieSessions.update');
+    Route::get('/movieSessions/{id}/delete', [App\Http\Controllers\MovieSessionsController::class, 'delete'])->name('movieSessions.delete');
+    Route::delete('/movieSessions/{id}', [App\Http\Controllers\MovieSessionsController::class, 'destroy'])->name('movieSessions.destroy');
+
+    
 });

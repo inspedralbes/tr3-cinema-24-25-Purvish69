@@ -101,7 +101,7 @@
             <a class="nav-link" href="{{ route('movies.index') }}">Movies</a>
           </li>
           <li class="nav-item">
-            <a class="nav-link" href="{{ route('session.create') }}">Crear Session</a>
+            <a class="nav-link" href="{{ route('movieSessions.create') }}">Crear Session</a>
           </li>
         </ul>
         <ul class="navbar-nav">

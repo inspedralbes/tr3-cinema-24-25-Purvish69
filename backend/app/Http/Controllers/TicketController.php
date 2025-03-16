@@ -12,6 +12,27 @@ use Illuminate\Support\Str;
 
 class TicketController extends Controller
 {
+    // Función para calcular el precio basado en el tipo de butaca y el campo dia_espectador
+    private function calcularPrecio($sessionId, $seatId)
+    {
+        $session = MovieSession::findOrFail($sessionId);
+        $seat = Seat::findOrFail($seatId);
+        
+        // Precios según el campo dia_espectador de la sesión
+        if ($session->dia_espectador) {
+            // Precios reducidos para día del espectador
+            $precioNormal = 4; // Precio butaca normal
+            $precioVIP = 6;    // Precio butaca VIP
+        } else {
+            // Precios normales
+            $precioNormal = 6; // Precio butaca normal
+            $precioVIP = 8;    // Precio butaca VIP
+        }
+        
+        // Devolvemos el precio según el tipo de butaca
+        return ($seat->tipo === 'vip') ? $precioVIP : $precioNormal;
+    }
+
     // Muestra todos los tickets 
     public function index(Request $request)
     {
@@ -34,19 +55,19 @@ class TicketController extends Controller
             'user_id' => 'required|exists:users,id',
             'movieSession_id' => 'required|exists:movieSessions,id',
             'seat_id' => 'required|exists:seats,id',
-            'precio' => 'required|numeric',
         ]);
 
         if ($validator->fails()) {
             return response()->json([
                 'status' => 'error',
-                'message' => 'Error al crear el ticket'
+                'message' => 'Error al crear el ticket',
+                'errors' => $validator->errors()
             ], 422);
         }
 
         // Verificar que la butaca pertenezca a la sesión y esté libre
         $seat = Seat::findOrFail($request->seat_id);
-        if ($seat->session_id != $request->movieSession_id) {
+        if ($seat->movieSession_id != $request->movieSession_id) {
             return response()->json([
                 'error' => 'La butaca seleccionada no pertenece a la sesión indicada'
             ], 422);
@@ -80,9 +101,13 @@ class TicketController extends Controller
             ], 422);
         }
 
+        // Calcular el precio automáticamente según el tipo de butaca y dia_espectador
+        $precio = $this->calcularPrecio($request->movieSession_id, $request->seat_id);
+
         // Crear ticket con un código único de confirmación
         $data = $request->all();
         $data['codigo_confirmacion'] = Str::uuid();
+        $data['precio'] = $precio; // Asignar el precio calculado
         $ticket = Ticket::create($data);
 
         // Marcar la butaca como ocupada
@@ -109,35 +134,44 @@ class TicketController extends Controller
             'user_id' => 'sometimes|required|exists:users,id',
             'movieSession_id' => 'sometimes|required|exists:movieSessions,id',
             'seat_id' => 'sometimes|required|exists:seats,id',
-            'precio' => 'sometimes|required|numeric|min:0',
         ]);
 
         if ($validator->fails()) {
             return response()->json(['errors' => $validator->errors()], 422);
         }
 
-        // Si se cambia la butaca, se libera la anterior y se valida la nueva
-        if ($request->has('seat_id') && $request->seat_id != $ticket->seat_id) {
-            $oldSeat = Seat::findOrFail($ticket->seat_id);
-            $oldSeat->update(['estado' => 'libre']);
-
-            $newSeat = Seat::findOrFail($request->seat_id);
-            // Usamos la sesión nueva si se envía o la ya asignada al ticket
+        $data = $request->all();
+        
+        // Si se cambia la butaca o la sesión, recalculamos el precio
+        if ($request->has('seat_id') || $request->has('movieSession_id')) {
             $sessionId = $request->movieSession_id ?? $ticket->movieSession_id;
-            if ($newSeat->session_id != $sessionId) {
-                return response()->json([
-                    'error' => 'La butaca seleccionada no corresponde a la sesión'
-                ], 422);
+            $seatId = $request->seat_id ?? $ticket->seat_id;
+            
+            // Si se cambia la butaca, se libera la anterior y se valida la nueva
+            if ($request->has('seat_id') && $request->seat_id != $ticket->seat_id) {
+                $oldSeat = Seat::findOrFail($ticket->seat_id);
+                $oldSeat->update(['estado' => 'libre']);
+
+                $newSeat = Seat::findOrFail($request->seat_id);
+                // Usamos la sesión nueva si se envía o la ya asignada al ticket
+                if ($newSeat->movieSession_id != $sessionId) {
+                    return response()->json([
+                        'error' => 'La butaca seleccionada no corresponde a la sesión'
+                    ], 422);
+                }
+                if ($newSeat->estado !== 'libre') {
+                    return response()->json([
+                        'error' => 'La butaca seleccionada ya está ocupada'
+                    ], 422);
+                }
+                $newSeat->update(['estado' => 'ocupada']);
             }
-            if ($newSeat->estado !== 'libre') {
-                return response()->json([
-                    'error' => 'La butaca seleccionada ya está ocupada'
-                ], 422);
-            }
-            $newSeat->update(['estado' => 'ocupada']);
+            
+            // Recalcular precio
+            $data['precio'] = $this->calcularPrecio($sessionId, $seatId);
         }
 
-        $ticket->update($request->all());
+        $ticket->update($data);
         return response()->json([
             'status' => 'success',
             'message' => 'Ticket actualizado exitosamente',
@@ -156,5 +190,31 @@ class TicketController extends Controller
             'status' => 'success',
             'message' => 'Ticket eliminado exitosamente'
         ], 200);
+    }
+    
+    // Nueva función para obtener los precios actuales según una sesión
+    public function getPreciosSesion($sessionId)
+    {
+        $session = MovieSession::findOrFail($sessionId);
+        
+        // Precios según valor de dia_espectador
+        if ($session->dia_espectador) {
+            $precios = [
+                'normal' => 4,
+                'vip' => 6
+            ];
+        } else {
+            $precios = [
+                'normal' => 6,
+                'vip' => 8
+            ];
+        }
+        
+        return response()->json([
+            'precios' => $precios,
+            'dia_espectador' => $session->dia_espectador,
+            'fecha' => $session->fecha,
+            'pelicula' => $session->movie ? $session->movie->titulo : null
+        ]);
     }
 }
