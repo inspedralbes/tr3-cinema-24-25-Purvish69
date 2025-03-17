@@ -75,8 +75,6 @@
           </div>
         </div>
 
-      
-
         <!-- Indicador mientras se cargan los datos -->
         <div v-if="movieStore.loading" class="flex justify-center items-center py-12">
           <div class="animate-spin rounded-full h-16 w-16 border-4 border-gold border-t-transparent"></div>
@@ -97,22 +95,21 @@
           </button>
         </div>
 
-        <!-- Cuadrícula de películas (responsive: 2 columnas en móviles) -->
-        <div v-else class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 md:gap-6 mt-8">
+        <!-- Cuadrícula de películas (tamaño reducido y más columnas) -->
+        <div v-else class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-3 md:gap-4 mt-8">
           <div v-for="movie in filteredMovies" :key="movie.id"
-            class="group relative bg-light/10 rounded-xl overflow-hidden backdrop-blur-sm hover:transform hover:scale-105 transition-all duration-300 animate-fade-in">
-            <!-- Póster de la película -->
+            class="group relative bg-light/10 rounded-lg overflow-hidden backdrop-blur-sm hover:scale-105 transition-all duration-300 animate-fade-in">
+            <!-- Póster de la película (sin animación en hover) -->
             <div class="relative aspect-[2/3] overflow-hidden">
               <img :src="movie.imagen || 'https://via.placeholder.com/400x600?text=No+Poster'" :alt="movie.titulo"
-                class="w-full h-full object-cover transform group-hover:scale-110 transition-transform duration-500" />
-              <div
-                class="absolute inset-0 bg-gradient-to-t from-primary/90 via-primary/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                <div
-                  class="absolute bottom-0 left-0 right-0 p-4 transform translate-y-4 group-hover:translate-y-0 transition-transform duration-300">
-                  <p class="text-light text-sm mb-2">{{ movie.duracion || 'N/A' }} min | {{ movie.genero || 'Sin género'
-                  }}</p>
-                  <p class="text-gold text-sm flex items-center">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" viewBox="0 0 20 20"
+                class="w-full h-full object-cover" />
+              
+              <!-- Duración y calificación superpuestas en la parte inferior de la imagen -->
+              <div class="absolute bottom-0 left-0 right-0 p-2 bg-primary/80">
+                <div class="flex justify-between">
+                  <p class="text-light text-xs">{{ movie.duracion || 'N/A' }} min</p>
+                  <p class="text-gold text-xs flex items-center">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 mr-1" viewBox="0 0 20 20"
                       fill="currentColor">
                       <path
                         d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
@@ -123,22 +120,20 @@
               </div>
             </div>
 
-            <!-- Información de la película -->
-            <div class="p-3 md:p-4 space-y-2 md:space-y-3">
-              <h2 class="text-base md:text-lg font-bold text-light line-clamp-2">{{ movie.titulo }}</h2>
-              <p class="text-xs md:text-sm text-gray-300">{{ movie.lenguaje || 'Idioma no especificado' }}</p>
-              <p v-if="movie.fecha_estreno" class="text-xs text-gray-400">
-                Estreno: {{ formatDate(movie.fecha_estreno) }}
-              </p>
+            <!-- Información de la película (simplificada) -->
+            <div class="p-2 space-y-1">
+              <h2 class="text-sm font-bold text-light line-clamp-2">{{ movie.titulo }}</h2>
+              <p class="text-xs text-gray-300">{{ movie.lenguaje || 'Idioma no especificado' }}</p>
+              <p v-if="movie.genero" class="text-xs text-gray-400">{{ movie.genero }}</p>
 
               <!-- Botones para ver detalles o comprar entradas -->
-              <div class="flex gap-2 pt-1 md:pt-1">
+              <div class="flex gap-1 pt-1">
                 <button @click="goToDetails(movie.id)"
-                  class="flex-1 bg-gold hover:bg-gold/80 text-primary font-medium py-4 md:py-2 px-2 md:px-3 rounded-lg text-xs md:text-sm transition-colors duration-300">
+                  class="flex-1 bg-gold hover:bg-gold/80 text-primary font-medium py-1 px-2 rounded text-xs transition-colors duration-300">
                   Detalls
                 </button>
                 <button @click="goToBuy(movie.id)"
-                  class="flex-1 bg-accent hover:bg-accent/80 text-light font-medium py-1 md:py-2 px-2 md:px-3 rounded-lg text-xs md:text-sm transition-colors duration-300">
+                  class="flex-1 bg-accent hover:bg-accent/80 text-light font-medium py-1 px-2 rounded text-xs transition-colors duration-300">
                   Comprar
                 </button>
               </div>
@@ -228,7 +223,6 @@ const goToBuy = (id) => {
   background: linear-gradient(135deg, #22223B 10%, #EAE0D5 100%);
 }
 
-
 /* Estilos de animación y transiciones */
 @keyframes fade-in {
   from {
@@ -252,15 +246,6 @@ const goToBuy = (id) => {
   transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-/* Efecto de escalado al pasar el cursor */
-.hover-scale {
-  transition: transform 0.3s ease;
-}
-
-.hover-scale:hover {
-  transform: scale(1.02);
-}
-
 /* Manejo de la truncación de texto */
 .line-clamp-2 {
   display: -webkit-box;
@@ -273,7 +258,7 @@ const goToBuy = (id) => {
 /* Estilos específicos para dispositivos móviles */
 @media (max-width: 640px) {
   .grid-cols-2>* {
-    margin-bottom: 0.75rem;
+    margin-bottom: 0.5rem;
   }
 
   .line-clamp-2 {
@@ -281,4 +266,5 @@ const goToBuy = (id) => {
     line-clamp: 1;
   }
 }
+
 </style>

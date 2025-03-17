@@ -71,6 +71,8 @@ export const usePeliculas = () => {
         },
         credentials: 'include'
       })
+      console.log('Datos de la sesion', response);
+      
       
       if (!response.ok) {
         const data = await response.json()

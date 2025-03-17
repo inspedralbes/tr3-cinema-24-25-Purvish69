@@ -6,13 +6,13 @@
 
       <main class="relative pt-16">
         <!-- Error Alert -->
-        <div v-if="movieStore.error"
+        <div v-if="movieStore.error || sessionsStore.error"
           class="fixed top-4 right-4 z-50 max-w-md bg-red-500/90 text-light py-36 rounded-lg backdrop-blur-sm animate-fade-in">
-          <p class="font-medium">{{ movieStore.error }}</p>
+          <p class="font-medium">{{ movieStore.error || sessionsStore.error }}</p>
         </div>
 
         <!-- Loading Overlay -->
-        <div v-if="movieStore.loading"
+        <div v-if="movieStore.loading || sessionsStore.loading"
           class="fixed inset-0 bg-primary/50 backdrop-blur-sm flex items-center justify-center z-50">
           <div class="animate-spin rounded-full h-16 w-16 border-4 border-gold border-t-transparent"></div>
         </div>
@@ -72,53 +72,65 @@
           </div>
         </section>
 
-        <!-- Now Playing Movies -->
+        <!-- Películas en Cartelera agrupadas por día -->
         <section class="container mx-auto px-4 py-12">
           <div class="flex flex-col md:flex-row justify-between items-center mb-8">
             <h2 class="text-2xl md:text-4xl font-bold text-light mb-4 md:mb-0">
-              Películas de Hoy
+              Películas en Cartelera
             </h2>
             <button class="btn-primary" @click="$router.push('/movies')">
               Ver Más Películas
             </button>
           </div>
 
-          <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6">
-            <div v-for="movie in movieStore.nowPlayingMovies" :key="movie.id"
-              class="group relative bg-light/10 rounded-xl overflow-hidden backdrop-blur-sm transition-transform duration-300 hover:scale-105">
-              <!-- Movie Poster -->
-              <div class="relative aspect-[2/3]">
-                <img :src="movie.imagen" :alt="movie.titulo" class="w-full h-full object-cover" />
+          <div v-if="Object.keys(sessionsByDay).length > 0">
+            <div v-for="(sessions, day) in sessionsByDay" :key="day" class="mb-8">
+              <h3 class="text-xl font-bold text-light mb-4">{{ formatDate(day) }}</h3>
+              <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6">
+                <div v-for="session in sessions" :key="session.id"
+                  class="group relative bg-light/10 rounded-xl overflow-hidden backdrop-blur-sm transition-transform duration-300 hover:scale-105">
+                  <!-- Movie Poster -->
+                  <div class="relative aspect-[2/3]">
+                    <img :src="session.movie.imagen" :alt="session.movie.titulo" class="w-full h-full object-cover" />
+                    <div
+                      class="absolute inset-0 bg-gradient-to-t from-primary/90 via-primary/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                      <div class="absolute bottom-0 left-0 right-0 p-4">
+                        <p class="text-light text-sm mb-2">
+                          {{ formatDuration(session.movie.duracion) }} • {{ session.movie.genero }}
+                        </p>
+                        <p class="text-light text-sm">
+                          {{ session.hora }}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
 
-                <div
-                  class="absolute inset-0 bg-gradient-to-t from-primary/90 via-primary/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                  <div class="absolute bottom-0 left-0 right-0 p-4">
-                    <p class="text-light text-sm mb-2">
-                      {{ formatDuration(movie.duracion) }} • {{ movie.genero }}
-                    </p>
+                  <!-- Movie Info -->
+                  <div class="p-4 space-y-3">
+                    <h3 class="text-lg font-bold text-light line-clamp-2">
+                      {{ session.movie.titulo }}
+                    </h3>
+
+                    <div class="flex gap-2">
+                      <button
+                        @click="goToSession(session.id)"
+                        class="flex-1 bg-gold hover:bg-gold/80 text-primary font-medium py-2 px-3 rounded-lg text-sm transition-colors duration-300">
+                        Comprar
+                      </button>
+                      <button
+                        class="flex-1 bg-accent hover:bg-accent/80 text-light font-medium py-2 px-3 rounded-lg text-sm transition-colors duration-300"
+                        @click="movieStore.navigateToMovieDetails(session.movie, router)">
+                        Detalls
+                      </button>
+                    </div>
                   </div>
                 </div>
               </div>
-
-              <!-- Movie Info -->
-              <div class="p-4 space-y-3">
-                <h3 class="text-lg font-bold text-light line-clamp-2">
-                  {{ movie.titulo }}
-                </h3>
-
-                <div class="flex gap-2">
-                  <button
-                    class="flex-1 bg-gold hover:bg-gold/80 text-primary font-medium py-2 px-3 rounded-lg text-sm transition-colors duration-300">
-                    Comprar
-                  </button>
-                  <button
-                    class="flex-1 bg-accent hover:bg-accent/80 text-light font-medium py-2 px-3 rounded-lg text-sm transition-colors duration-300"
-                    @click="movieStore.navigateToMovieDetails(movie, router)">
-                    Detalls
-                  </button>
-                </div>
-              </div>
             </div>
+          </div>
+
+          <div v-else-if="!movieStore.loading && !sessionsStore.loading" class="text-center py-12">
+            <p class="text-light text-xl">No hay películas programadas para los próximos días</p>
           </div>
         </section>
 
@@ -134,7 +146,6 @@
               <!-- Movie Poster -->
               <div class="relative aspect-[2/3]">
                 <img :src="movie.imagen" :alt="movie.titulo" class="w-full h-full object-cover" />
-
                 <div class="absolute top-4 right-4 bg-gold text-primary px-3 py-1 rounded-full text-sm font-medium">
                   {{ formatReleaseDate(movie.fecha_estreno) }}
                 </div>
@@ -168,21 +179,83 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, computed } from 'vue';
 import { useRouter } from 'vue-router';
 import { useMovieStore } from '~/stores/movieStore';
+import { useSessionsStore } from '~/stores/sessionsStore';
 
 const router = useRouter();
 const movieStore = useMovieStore();
+const sessionsStore = useSessionsStore();
 const currentSlide = ref(0);
-
-// Auto advance carousel
 let carouselInterval;
-onMounted(() => {
-  movieStore.fetchMovies();
-  startCarousel();
+
+// Agrupar sesiones por día para los próximos 4 días
+const sessionsByDay = computed(() => {
+  const today = new Date();
+  // Array con las próximas 4 fechas (formato YYYY-MM-DD)
+  const nextDays = Array.from({ length: 4 }, (_, i) => {
+    const date = new Date(today);
+    date.setDate(today.getDate() + i);
+    return date.toISOString().split('T')[0];
+  });
+
+  // Filtrar las sesiones que correspondan a alguno de esos días
+  const filteredSessions = sessionsStore.availableSessions.filter(session => {
+    const sessionDate = session.fecha.split('T')[0];
+    return nextDays.includes(sessionDate);
+  });
+
+  // Agrupar sesiones por fecha
+  const groups = {};
+  filteredSessions.forEach(session => {
+    const sessionDate = session.fecha.split('T')[0];
+    if (!groups[sessionDate]) {
+      groups[sessionDate] = [];
+    }
+    groups[sessionDate].push(session);
+  });
+
+  // Ordenar cada grupo por la hora de la sesión
+  Object.keys(groups).forEach(day => {
+    groups[day].sort((a, b) => a.hora.localeCompare(b.hora));
+  });
+
+  // Asegurar el orden de los días según nextDays
+  const sortedGroups = {};
+  nextDays.forEach(day => {
+    if (groups[day]) {
+      sortedGroups[day] = groups[day];
+    }
+  });
+  return sortedGroups;
 });
 
+// Función para formatear la fecha en el encabezado de cada grupo
+const formatDate = (dateStr) => {
+  const date = new Date(dateStr);
+  return date.toLocaleDateString('es-ES', {
+    weekday: 'long',
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric'
+  });
+};
+
+onMounted(async () => {
+  try {
+    // Cargar películas y sesiones
+    await Promise.all([
+      movieStore.fetchMovies(),
+      sessionsStore.fetchSessions()
+    ]);
+    startCarousel();
+  } catch (error) {
+    console.error('Error loading initial data:', error);
+  }
+});
+
+// Inicia el carrusel de películas destacadas
 function startCarousel() {
   carouselInterval = setInterval(() => {
     if (movieStore.featuredMovies.length > 0) {
@@ -191,7 +264,12 @@ function startCarousel() {
   }, 5000);
 }
 
-// Helpers para formatear fechas y duración
+// Navegar a la compra de billetes para una sesión específica
+const goToSession = (sessionId) => {
+  router.push(`/billets/${sessionId}`);
+};
+
+// Helper para formatear la fecha de estreno en "Próximamente"
 const formatReleaseDate = (dateString) => {
   if (!dateString) return '';
   const date = new Date(dateString);
@@ -202,6 +280,7 @@ const formatReleaseDate = (dateString) => {
   });
 };
 
+// Helper para formatear la duración de la película
 const formatDuration = (minutes) => {
   if (!minutes) return '2h 00min';
   let mins = typeof minutes === 'string' ? parseInt(minutes) : minutes;
@@ -223,7 +302,6 @@ const formatDuration = (minutes) => {
     opacity: 0;
     transform: translateY(20px);
   }
-
   to {
     opacity: 1;
     transform: translateY(0);
@@ -239,7 +317,6 @@ const formatDuration = (minutes) => {
   from {
     opacity: 0;
   }
-
   to {
     opacity: 1;
   }
