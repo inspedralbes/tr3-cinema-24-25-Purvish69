@@ -86,7 +86,7 @@
           <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6">
             <div v-for="session in combinedSessions" :key="session.id"
               class="group relative bg-light/10 rounded-xl overflow-hidden backdrop-blur-sm transition-transform duration-300 hover:scale-105"
-              :class="{'animate-pulse-subtle': isSessionStartingSoon(session)}">
+              :class="{ 'animate-pulse-subtle': isSessionStartingSoon(session) }">
               <!-- Movie Poster -->
               <div class="relative aspect-[2/3]">
                 <img :src="session.movie.imagen" :alt="session.movie.titulo" class="w-full h-full object-cover" />
@@ -94,7 +94,7 @@
                   {{ session.hora }}
                 </div>
                 <!-- Indicador de estado (próximo a terminar) -->
-                <div v-if="isSessionEndingSoon(session)" 
+                <div v-if="isSessionEndingSoon(session)"
                   class="absolute top-4 left-4 bg-red-500 text-white px-3 py-1 rounded-full text-sm font-medium animate-pulse">
                   Terminando Pronto
                 </div>
@@ -118,8 +118,7 @@
                 </h3>
 
                 <div class="flex gap-2">
-                  <button
-                    @click="router.push(`/billets/${session.id}`)"
+                  <button @click="router.push(`/billets/${session.id}`)"
                     class="flex-1 bg-gold hover:bg-gold/80 text-primary font-medium py-2 px-3 rounded-lg text-sm transition-colors duration-300">
                     Comprar
                   </button>
@@ -134,11 +133,16 @@
           </div>
         </section>
 
-        <!-- Próximamente -->
+        <!-- Próximamente Info de Películas -->
         <section class="container mx-auto px-4 py-12">
-          <h2 class="text-3xl md:text-4xl font-bold text-light text-center mb-8">
-            Próximamente
-          </h2>
+          <div class="flex flex-col md:flex-row justify-between items-center mb-8">
+            <h2 class="text-2xl md:text-4xl font-bold text-light mb-4 md:mb-0">
+              Próximamente
+            </h2>
+            <button class="btn-primary" @click="$router.push('/movies')">
+              Ver Más Películas
+            </button>
+          </div>
 
           <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6">
             <div v-for="movie in movieStore.comingSoonMovies" :key="movie.id"
@@ -211,11 +215,11 @@ const combinedSessions = computed(() => {
   const now = new Date();
   const today = new Date(now);
   today.setHours(0, 0, 0, 0);
-  
+
   // Inicialmente buscar en los próximos 4 días
   let maxDate = new Date(today);
   maxDate.setDate(maxDate.getDate() + 4);
-  
+
   let sessions = sessionsStore.availableSessions.filter(session => {
     // Convertir la fecha y hora de la sesión a un objeto Date
     const sessionDate = new Date(session.fecha);
@@ -226,12 +230,12 @@ const combinedSessions = computed(() => {
       parseInt(sessionTime[1]),
       0, 0
     );
-    
+
     // Verificar si la sesión ya ha terminado
     const movieDurationMinutes = session.movie?.duracion ? parseInt(session.movie.duracion) : 120;
     const sessionEndTime = new Date(sessionDateTime);
     sessionEndTime.setMinutes(sessionEndTime.getMinutes() + movieDurationMinutes);
-    
+
     // Solo mostrar sesiones que no han terminado
     return sessionEndTime > now && sessionDate <= maxDate;
   });
@@ -242,7 +246,7 @@ const combinedSessions = computed(() => {
     while (sessions.length < 4 && extendedDays <= 30) { // Limitar a 30 días
       maxDate = new Date(today);
       maxDate.setDate(maxDate.getDate() + extendedDays);
-      
+
       sessions = sessionsStore.availableSessions.filter(session => {
         const sessionDate = new Date(session.fecha);
         const sessionTime = session.hora.split(':');
@@ -252,14 +256,14 @@ const combinedSessions = computed(() => {
           parseInt(sessionTime[1]),
           0, 0
         );
-        
+
         const movieDurationMinutes = session.movie?.duracion ? parseInt(session.movie.duracion) : 120;
         const sessionEndTime = new Date(sessionDateTime);
         sessionEndTime.setMinutes(sessionEndTime.getMinutes() + movieDurationMinutes);
-        
+
         return sessionEndTime > now && sessionDate <= maxDate;
       });
-      
+
       extendedDays++;
     }
   }
@@ -268,12 +272,12 @@ const combinedSessions = computed(() => {
   sessions.sort((a, b) => {
     const dateA = new Date(a.fecha);
     const dateB = new Date(b.fecha);
-    
+
     // Si las fechas son diferentes, ordenar por fecha
     if (dateA.getTime() !== dateB.getTime()) {
       return dateA - dateB;
     }
-    
+
     // Si las fechas son iguales, ordenar por hora
     return a.hora.localeCompare(b.hora);
   });
@@ -285,7 +289,7 @@ const combinedSessions = computed(() => {
 // Chequear periódicamente si hay sesiones que han terminado y actualizar la lista
 const checkExpiredSessions = () => {
   const now = new Date();
-  
+
   // Verificar cuántas sesiones han terminado
   const expiredSessionsCount = sessionsStore.sessions.filter(session => {
     const sessionDate = new Date(session.fecha);
@@ -296,14 +300,14 @@ const checkExpiredSessions = () => {
       parseInt(sessionTime[1]),
       0, 0
     );
-    
+
     const movieDurationMinutes = session.movie?.duracion ? parseInt(session.movie.duracion) : 120;
     const sessionEndTime = new Date(sessionDateTime);
     sessionEndTime.setMinutes(sessionEndTime.getMinutes() + movieDurationMinutes);
-    
+
     return sessionEndTime <= now;
   }).length;
-  
+
   // Si más del 50% de las sesiones han terminado o no hay sesiones visibles, recargar
   if (expiredSessionsCount > sessionsStore.sessions.length / 2 || combinedSessions.value.length === 0) {
     console.log('Actualizando sesiones de películas automáticamente...');
@@ -317,10 +321,10 @@ onMounted(() => {
   movieStore.fetchMovies();
   sessionsStore.fetchSessions();
   startCarousel();
-  
+
   // Verificar periódicamente si hay sesiones expiradas (cada 5 minutos)
   checkSessionsInterval = setInterval(checkExpiredSessions, 300000);
-  
+
   // También verificar al cargar la página
   checkExpiredSessions();
 });
@@ -343,21 +347,21 @@ const formatReleaseDate = (dateString) => {
 const formatDateHeader = (dateString) => {
   // La fecha ya viene en formato "yyyy-mmm-dd" (ej: "2025-mar.-18")
   const date = new Date(dateString);
-  
+
   // Verificar si es hoy, mañana o pasado mañana
   const today = new Date();
   today.setHours(0, 0, 0, 0);
-  
+
   const tomorrow = new Date(today);
   tomorrow.setDate(tomorrow.getDate() + 1);
-  
+
   const dayAfterTomorrow = new Date(today);
   dayAfterTomorrow.setDate(dayAfterTomorrow.getDate() + 2);
-  
+
   // Convertir a fechas sin hora para comparación
   const dateOnly = new Date(date);
   dateOnly.setHours(0, 0, 0, 0);
-  
+
   if (dateOnly.getTime() === today.getTime()) {
     return 'Hoy - ' + date.toLocaleDateString('es-ES', {
       weekday: 'long', day: 'numeric', month: 'long'
@@ -397,13 +401,13 @@ const isSessionEndingSoon = (session) => {
     parseInt(sessionTime[1]),
     0, 0
   );
-  
+
   const movieDurationMinutes = session.movie?.duracion ? parseInt(session.movie.duracion) : 120;
   const sessionEndTime = new Date(sessionDateTime);
   sessionEndTime.setMinutes(sessionEndTime.getMinutes() + movieDurationMinutes);
-  
+
   const timeDiff = (sessionEndTime - now) / 1000 / 60; // minutos
-  
+
   return timeDiff < 30; // menos de 30 minutos para terminar
 };
 
@@ -418,9 +422,9 @@ const isSessionStartingSoon = (session) => {
     parseInt(sessionTime[1]),
     0, 0
   );
-  
+
   const timeDiff = (sessionDateTime - now) / 1000 / 60; // minutos
-  
+
   return timeDiff < 30; // menos de 30 minutos para comenzar
 };
 
@@ -435,11 +439,11 @@ const getSessionTimeInfo = (session) => {
     parseInt(sessionTime[1]),
     0, 0
   );
-  
+
   const movieDurationMinutes = session.movie?.duracion ? parseInt(session.movie.duracion) : 120;
   const sessionEndTime = new Date(sessionDateTime);
   sessionEndTime.setMinutes(sessionEndTime.getMinutes() + movieDurationMinutes);
-  
+
   // Si la sesión ya ha comenzado
   if (now > sessionDateTime) {
     const timeDiff = (sessionEndTime - now) / 1000 / 60; // minutos hasta el final
