@@ -1,9 +1,9 @@
 <template>
-    <v-app>
-        <Navbar />
-    <div class="min-h-screen bg-gradient-to-br from-primary via-secondary to-cream custom-bg pt-8">
-      <div class="container mx-auto px-4 py-8">
-        <h1 class="text-4xl md:text-5xl font-bold text-light text-center mb-8 animate-fade-in">
+  <v-app>
+    <Navbar />
+    <div class="min-h-screen bg-gradient-to-br from-primary via-secondary to-cream custom-bg">
+      <div class="container mx-auto px-4 py-16 md:py-24">
+        <h1 class="text-4xl md:text-5xl font-bold text-light text-center mb-12 animate-fade-in">
           Sesiones de Películas
         </h1>
       
@@ -19,60 +19,60 @@
         
         <!-- No sessions available -->
         <div v-else-if="!sessionsStore.sessions.length" class="text-center py-12">
-          <div class="text-light text-xl mb-4">No hay sesiones disponibles en este momento.</div>
-          <button @click="refreshSessions" class="px-6 py-3 bg-gold hover:bg-gold/80 text-primary rounded-lg font-medium transition-colors duration-300">
+          <div class="text-light text-xl mb-6">No hay sesiones disponibles en este momento.</div>
+          <button @click="refreshSessions" class="px-8 py-4 bg-gold hover:bg-gold/80 text-primary rounded-lg font-medium transition-colors duration-300 shadow-lg">
             Actualizar sesiones
           </button>
         </div>
         
         <!-- Sessions list -->
-        <div v-else class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div v-else class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
           <div 
             v-for="session in sessionsStore.sessions" 
             :key="session.id" 
-            class="bg-light/10 backdrop-blur-md rounded-xl overflow-hidden shadow-lg transform hover:scale-105 transition-all duration-300"
+            class="bg-light/10 backdrop-blur-md rounded-xl overflow-hidden shadow-xl transform hover:scale-105 transition-all duration-300"
           >
             <!-- Imagen de la película -->
-            <div class="relative h-48 overflow-hidden">
+            <div class="relative h-56 overflow-hidden">
               <img 
                 :src="session.movie?.imagen || 'https://via.placeholder.com/400x600?text=No+Poster'" 
                 :alt="session.movie?.titulo" 
                 class="w-full h-full object-cover"
               />
-              <div class="absolute bottom-0 left-0 right-0 bg-primary/80 p-3">
+              <div class="absolute bottom-0 left-0 right-0 bg-primary/90 p-4">
                 <h3 class="text-xl font-bold text-light truncate">{{ session.movie?.titulo || 'Película' }}</h3>
               </div>
             </div>
             
             <!-- Información de la sesión -->
-            <div class="p-5 space-y-3 bg-primary/40">
+            <div class="p-6 space-y-4 bg-primary/40">
               <!-- Fecha y Hora -->
-              <div class="flex items-center space-x-2">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gold" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <div class="flex items-center space-x-3">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-gold" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
                 </svg>
-                <p class="text-light">{{ formatDate(session.fecha) }}</p>
+                <p class="text-light text-lg">{{ formatDate(session.fecha) }}</p>
               </div>
               
-              <div class="flex items-center space-x-2">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gold" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <div class="flex items-center space-x-3">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-gold" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
-                <p class="text-light">{{ session.hora }}</p>
+                <p class="text-light text-lg">{{ session.hora }}</p>
               </div>
               
               <!-- Calificación de la película -->
-              <div class="flex items-center space-x-2">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gold" fill="currentColor" viewBox="0 0 24 24">
+              <div class="flex items-center space-x-3">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-gold" fill="currentColor" viewBox="0 0 24 24">
                   <path d="M12 2l2.4 7.4h7.6l-6 4.6 2.3 7.2-6.3-4.2-6.3 4.2 2.3-7.2-6-4.6h7.6z"/>
                 </svg>
-                <p class="text-light">Calificación: <span class="text-gold font-bold">{{ session.movie?.calificacion || 'N/A' }}/10</span></p>
+                <p class="text-light text-lg">Calificación: <span class="text-gold font-bold">{{ session.movie?.calificacion || 'N/A' }}/10</span></p>
               </div>
               
               <!-- Estado de la sesión -->
-              <div class="flex items-center space-x-2">
+              <div class="flex items-center space-x-3 flex-wrap gap-2">
                 <span 
-                  class="px-3 py-1 rounded text-xs font-bold"
+                  class="px-4 py-2 rounded-full text-sm font-bold"
                   :class="{
                     'bg-green-500/30 text-green-300': session.estado === 'disponible',
                     'bg-red-500/30 text-red-300': session.estado === 'cancelada',
@@ -84,26 +84,26 @@
                 
                 <span 
                   v-if="session.dia_espectador" 
-                  class="bg-blue-500/30 text-blue-300 text-xs font-medium px-2 py-1 rounded"
+                  class="bg-blue-500/30 text-blue-300 text-sm font-medium px-4 py-2 rounded-full"
                 >
                   Día del espectador
                 </span>
               </div>
               
               <!-- Botón de compra -->
-              <div class="pt-3">
+              <div class="pt-4">
                 <button 
                   v-if="session.estado === 'disponible' || !session.estado" 
                   @click="comprarEntradas(session)" 
-                  class="w-full bg-gold hover:bg-gold/80 text-primary font-medium py-3 px-4 rounded-lg transition-colors duration-300 flex items-center justify-center space-x-2"
+                  class="w-full bg-gold hover:bg-gold/80 text-primary font-medium py-4 px-6 rounded-lg transition-colors duration-300 flex items-center justify-center space-x-3 shadow-lg"
                 >
-                  <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 5v2m0 4v2m0 4v2M5 5a2 2 0 00-2 2v3a2 2 0 110 4v3a2 2 0 002 2h14a2 2 0 002-2v-3a2 2 0 110-4V7a2 2 0 00-2-2H5z" />
                   </svg>
-                  <span>Comprar Entradas</span>
+                  <span class="text-lg">Comprar Entradas</span>
                 </button>
                 
-                <p v-else class="text-center text-gray-400 py-3">
+                <p v-else class="text-center text-gray-400 py-4 text-lg">
                   Esta sesión no está disponible
                 </p>
               </div>
@@ -113,9 +113,9 @@
       </div>
     </div>
     <Footer />
-    </v-app>
+  </v-app>
 </template>
-  
+
 <script setup>
 import { onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
@@ -186,6 +186,7 @@ onMounted(async () => {
 /* Clase para el gradiente de fondo */
 .custom-bg {
   background: linear-gradient(135deg, #22223B 10%, #EAE0D5 100%);
+  min-height: 100vh;
 }
 
 .animate-fade-in {
@@ -195,9 +196,11 @@ onMounted(async () => {
 @keyframes fadeIn {
   from {
     opacity: 0;
+    transform: translateY(-20px);
   }
   to {
     opacity: 1;
+    transform: translateY(0);
   }
 }
 </style>

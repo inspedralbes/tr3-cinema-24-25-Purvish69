@@ -6,13 +6,13 @@
 
       <main class="relative pt-16">
         <!-- Error Alert -->
-        <div v-if="movieStore.error || sessionsStore.error"
+        <div v-if="movieStore.error"
           class="fixed top-4 right-4 z-50 max-w-md bg-red-500/90 text-light py-36 rounded-lg backdrop-blur-sm animate-fade-in">
-          <p class="font-medium">{{ movieStore.error || sessionsStore.error }}</p>
+          <p class="font-medium">{{ movieStore.error }}</p>
         </div>
 
         <!-- Loading Overlay -->
-        <div v-if="movieStore.loading || sessionsStore.loading"
+        <div v-if="movieStore.loading"
           class="fixed inset-0 bg-primary/50 backdrop-blur-sm flex items-center justify-center z-50">
           <div class="animate-spin rounded-full h-16 w-16 border-4 border-gold border-t-transparent"></div>
         </div>
@@ -72,65 +72,65 @@
           </div>
         </section>
 
-        <!-- Películas en Cartelera agrupadas por día -->
+        <!-- Now Playing Movies -->
         <section class="container mx-auto px-4 py-12">
           <div class="flex flex-col md:flex-row justify-between items-center mb-8">
             <h2 class="text-2xl md:text-4xl font-bold text-light mb-4 md:mb-0">
-              Películas en Cartelera
+              Películas de Session
             </h2>
-            <button class="btn-primary" @click="$router.push('/movies')">
-              Ver Más Películas
+            <button class="btn-primary" @click="$router.push('/')">
+              Ver Más Sessiones
             </button>
           </div>
 
-          <div v-if="Object.keys(sessionsByDay).length > 0">
-            <div v-for="(sessions, day) in sessionsByDay" :key="day" class="mb-8">
-              <h3 class="text-xl font-bold text-light mb-4">{{ formatDate(day) }}</h3>
-              <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6">
-                <div v-for="session in sessions" :key="session.id"
-                  class="group relative bg-light/10 rounded-xl overflow-hidden backdrop-blur-sm transition-transform duration-300 hover:scale-105">
-                  <!-- Movie Poster -->
-                  <div class="relative aspect-[2/3]">
-                    <img :src="session.movie.imagen" :alt="session.movie.titulo" class="w-full h-full object-cover" />
-                    <div
-                      class="absolute inset-0 bg-gradient-to-t from-primary/90 via-primary/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                      <div class="absolute bottom-0 left-0 right-0 p-4">
-                        <p class="text-light text-sm mb-2">
-                          {{ formatDuration(session.movie.duracion) }} • {{ session.movie.genero }}
-                        </p>
-                        <p class="text-light text-sm">
-                          {{ session.hora }}
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-
-                  <!-- Movie Info -->
-                  <div class="p-4 space-y-3">
-                    <h3 class="text-lg font-bold text-light line-clamp-2">
-                      {{ session.movie.titulo }}
-                    </h3>
-
-                    <div class="flex gap-2">
-                      <button
-                        @click="goToSession(session.id)"
-                        class="flex-1 bg-gold hover:bg-gold/80 text-primary font-medium py-2 px-3 rounded-lg text-sm transition-colors duration-300">
-                        Comprar
-                      </button>
-                      <button
-                        class="flex-1 bg-accent hover:bg-accent/80 text-light font-medium py-2 px-3 rounded-lg text-sm transition-colors duration-300"
-                        @click="movieStore.navigateToMovieDetails(session.movie, router)">
-                        Detalls
-                      </button>
-                    </div>
+          <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6">
+            <div v-for="session in combinedSessions" :key="session.id"
+              class="group relative bg-light/10 rounded-xl overflow-hidden backdrop-blur-sm transition-transform duration-300 hover:scale-105"
+              :class="{'animate-pulse-subtle': isSessionStartingSoon(session)}">
+              <!-- Movie Poster -->
+              <div class="relative aspect-[2/3]">
+                <img :src="session.movie.imagen" :alt="session.movie.titulo" class="w-full h-full object-cover" />
+                <div class="absolute top-4 right-4 bg-gold text-primary px-3 py-1 rounded-full text-sm font-medium">
+                  {{ session.hora }}
+                </div>
+                <!-- Indicador de estado (próximo a terminar) -->
+                <div v-if="isSessionEndingSoon(session)" 
+                  class="absolute top-4 left-4 bg-red-500 text-white px-3 py-1 rounded-full text-sm font-medium animate-pulse">
+                  Terminando Pronto
+                </div>
+                <div
+                  class="absolute inset-0 bg-gradient-to-t from-primary/90 via-primary/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                  <div class="absolute bottom-0 left-0 right-0 p-4">
+                    <p class="text-light text-sm mb-2">
+                      {{ formatDuration(session.movie.duracion) }} • {{ session.movie.genero }}
+                    </p>
+                    <p class="text-light text-sm">
+                      {{ formatReleaseDate(session.fecha) }} • {{ getSessionTimeInfo(session) }}
+                    </p>
                   </div>
                 </div>
               </div>
-            </div>
-          </div>
 
-          <div v-else-if="!movieStore.loading && !sessionsStore.loading" class="text-center py-12">
-            <p class="text-light text-xl">No hay películas programadas para los próximos días</p>
+              <!-- Movie Info -->
+              <div class="p-4 space-y-3">
+                <h3 class="text-lg font-bold text-light line-clamp-2">
+                  {{ session.movie.titulo }}
+                </h3>
+
+                <div class="flex gap-2">
+                  <button
+                    @click="router.push(`/billets/${session.id}`)"
+                    class="flex-1 bg-gold hover:bg-gold/80 text-primary font-medium py-2 px-3 rounded-lg text-sm transition-colors duration-300">
+                    Comprar
+                  </button>
+                  <button
+                    class="flex-1 bg-accent hover:bg-accent/80 text-light font-medium py-2 px-3 rounded-lg text-sm transition-colors duration-300"
+                    @click="movieStore.navigateToMovieDetails(session.movie, router)">
+                    Detalls
+                  </button>
+                </div>
+              </div>
+            </div>
           </div>
         </section>
 
@@ -146,6 +146,7 @@
               <!-- Movie Poster -->
               <div class="relative aspect-[2/3]">
                 <img :src="movie.imagen" :alt="movie.titulo" class="w-full h-full object-cover" />
+
                 <div class="absolute top-4 right-4 bg-gold text-primary px-3 py-1 rounded-full text-sm font-medium">
                   {{ formatReleaseDate(movie.fecha_estreno) }}
                 </div>
@@ -179,7 +180,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted, computed } from 'vue';
+import { ref, onMounted, computed, onUnmounted } from 'vue';
 import { useRouter } from 'vue-router';
 import { useMovieStore } from '~/stores/movieStore';
 import { useSessionsStore } from '~/stores/sessionsStore';
@@ -188,74 +189,15 @@ const router = useRouter();
 const movieStore = useMovieStore();
 const sessionsStore = useSessionsStore();
 const currentSlide = ref(0);
+
+// Auto advance carousel
 let carouselInterval;
-
-// Agrupar sesiones por día para los próximos 4 días
-const sessionsByDay = computed(() => {
-  const today = new Date();
-  // Array con las próximas 4 fechas (formato YYYY-MM-DD)
-  const nextDays = Array.from({ length: 4 }, (_, i) => {
-    const date = new Date(today);
-    date.setDate(today.getDate() + i);
-    return date.toISOString().split('T')[0];
-  });
-
-  // Filtrar las sesiones que correspondan a alguno de esos días
-  const filteredSessions = sessionsStore.availableSessions.filter(session => {
-    const sessionDate = session.fecha.split('T')[0];
-    return nextDays.includes(sessionDate);
-  });
-
-  // Agrupar sesiones por fecha
-  const groups = {};
-  filteredSessions.forEach(session => {
-    const sessionDate = session.fecha.split('T')[0];
-    if (!groups[sessionDate]) {
-      groups[sessionDate] = [];
-    }
-    groups[sessionDate].push(session);
-  });
-
-  // Ordenar cada grupo por la hora de la sesión
-  Object.keys(groups).forEach(day => {
-    groups[day].sort((a, b) => a.hora.localeCompare(b.hora));
-  });
-
-  // Asegurar el orden de los días según nextDays
-  const sortedGroups = {};
-  nextDays.forEach(day => {
-    if (groups[day]) {
-      sortedGroups[day] = groups[day];
-    }
-  });
-  return sortedGroups;
+onMounted(() => {
+  movieStore.fetchMovies();
+  sessionsStore.fetchSessions();
+  startCarousel();
 });
 
-// Función para formatear la fecha en el encabezado de cada grupo
-const formatDate = (dateStr) => {
-  const date = new Date(dateStr);
-  return date.toLocaleDateString('es-ES', {
-    weekday: 'long',
-    day: 'numeric',
-    month: 'long',
-    year: 'numeric'
-  });
-};
-
-onMounted(async () => {
-  try {
-    // Cargar películas y sesiones
-    await Promise.all([
-      movieStore.fetchMovies(),
-      sessionsStore.fetchSessions()
-    ]);
-    startCarousel();
-  } catch (error) {
-    console.error('Error loading initial data:', error);
-  }
-});
-
-// Inicia el carrusel de películas destacadas
 function startCarousel() {
   carouselInterval = setInterval(() => {
     if (movieStore.featuredMovies.length > 0) {
@@ -264,30 +206,261 @@ function startCarousel() {
   }, 5000);
 }
 
-// Navegar a la compra de billetes para una sesión específica
-const goToSession = (sessionId) => {
-  router.push(`/billets/${sessionId}`);
+// Upcoming sessions for the next 4 days
+const combinedSessions = computed(() => {
+  const now = new Date();
+  const today = new Date(now);
+  today.setHours(0, 0, 0, 0);
+  
+  // Inicialmente buscar en los próximos 4 días
+  let maxDate = new Date(today);
+  maxDate.setDate(maxDate.getDate() + 4);
+  
+  let sessions = sessionsStore.availableSessions.filter(session => {
+    // Convertir la fecha y hora de la sesión a un objeto Date
+    const sessionDate = new Date(session.fecha);
+    const sessionTime = session.hora.split(':');
+    const sessionDateTime = new Date(sessionDate);
+    sessionDateTime.setHours(
+      parseInt(sessionTime[0]),
+      parseInt(sessionTime[1]),
+      0, 0
+    );
+    
+    // Verificar si la sesión ya ha terminado
+    const movieDurationMinutes = session.movie?.duracion ? parseInt(session.movie.duracion) : 120;
+    const sessionEndTime = new Date(sessionDateTime);
+    sessionEndTime.setMinutes(sessionEndTime.getMinutes() + movieDurationMinutes);
+    
+    // Solo mostrar sesiones que no han terminado
+    return sessionEndTime > now && sessionDate <= maxDate;
+  });
+
+  // Si hay menos de 4 sesiones, aumentar el rango de días hasta encontrar al menos 4
+  if (sessions.length < 4) {
+    let extendedDays = 5; // Empezar con un día adicional
+    while (sessions.length < 4 && extendedDays <= 30) { // Limitar a 30 días
+      maxDate = new Date(today);
+      maxDate.setDate(maxDate.getDate() + extendedDays);
+      
+      sessions = sessionsStore.availableSessions.filter(session => {
+        const sessionDate = new Date(session.fecha);
+        const sessionTime = session.hora.split(':');
+        const sessionDateTime = new Date(sessionDate);
+        sessionDateTime.setHours(
+          parseInt(sessionTime[0]),
+          parseInt(sessionTime[1]),
+          0, 0
+        );
+        
+        const movieDurationMinutes = session.movie?.duracion ? parseInt(session.movie.duracion) : 120;
+        const sessionEndTime = new Date(sessionDateTime);
+        sessionEndTime.setMinutes(sessionEndTime.getMinutes() + movieDurationMinutes);
+        
+        return sessionEndTime > now && sessionDate <= maxDate;
+      });
+      
+      extendedDays++;
+    }
+  }
+
+  // Ordenar sesiones primero por fecha y luego por hora
+  sessions.sort((a, b) => {
+    const dateA = new Date(a.fecha);
+    const dateB = new Date(b.fecha);
+    
+    // Si las fechas son diferentes, ordenar por fecha
+    if (dateA.getTime() !== dateB.getTime()) {
+      return dateA - dateB;
+    }
+    
+    // Si las fechas son iguales, ordenar por hora
+    return a.hora.localeCompare(b.hora);
+  });
+
+  // Devolver máximo 8 sesiones para mostrar
+  return sessions.slice(0, 8);
+});
+
+// Chequear periódicamente si hay sesiones que han terminado y actualizar la lista
+const checkExpiredSessions = () => {
+  const now = new Date();
+  
+  // Verificar cuántas sesiones han terminado
+  const expiredSessionsCount = sessionsStore.sessions.filter(session => {
+    const sessionDate = new Date(session.fecha);
+    const sessionTime = session.hora.split(':');
+    const sessionDateTime = new Date(sessionDate);
+    sessionDateTime.setHours(
+      parseInt(sessionTime[0]),
+      parseInt(sessionTime[1]),
+      0, 0
+    );
+    
+    const movieDurationMinutes = session.movie?.duracion ? parseInt(session.movie.duracion) : 120;
+    const sessionEndTime = new Date(sessionDateTime);
+    sessionEndTime.setMinutes(sessionEndTime.getMinutes() + movieDurationMinutes);
+    
+    return sessionEndTime <= now;
+  }).length;
+  
+  // Si más del 50% de las sesiones han terminado o no hay sesiones visibles, recargar
+  if (expiredSessionsCount > sessionsStore.sessions.length / 2 || combinedSessions.value.length === 0) {
+    console.log('Actualizando sesiones de películas automáticamente...');
+    sessionsStore.fetchSessions();
+  }
 };
 
-// Helper para formatear la fecha de estreno en "Próximamente"
+// Configurar un intervalo para verificar sesiones expiradas cada 5 minutos
+let checkSessionsInterval;
+onMounted(() => {
+  movieStore.fetchMovies();
+  sessionsStore.fetchSessions();
+  startCarousel();
+  
+  // Verificar periódicamente si hay sesiones expiradas (cada 5 minutos)
+  checkSessionsInterval = setInterval(checkExpiredSessions, 300000);
+  
+  // También verificar al cargar la página
+  checkExpiredSessions();
+});
+
+// Limpiar intervalos al desmontar
+onUnmounted(() => {
+  if (carouselInterval) clearInterval(carouselInterval);
+  if (checkSessionsInterval) clearInterval(checkSessionsInterval);
+});
+
+// Helpers para formatear fechas y duración
 const formatReleaseDate = (dateString) => {
   if (!dateString) return '';
   const date = new Date(dateString);
   return date.toLocaleDateString('es-ES', {
-    day: '2-digit',
-    month: 'short',
-    year: 'numeric'
+    day: 'numeric', month: 'short'
   });
 };
 
-// Helper para formatear la duración de la película
+const formatDateHeader = (dateString) => {
+  // La fecha ya viene en formato "yyyy-mmm-dd" (ej: "2025-mar.-18")
+  const date = new Date(dateString);
+  
+  // Verificar si es hoy, mañana o pasado mañana
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  
+  const tomorrow = new Date(today);
+  tomorrow.setDate(tomorrow.getDate() + 1);
+  
+  const dayAfterTomorrow = new Date(today);
+  dayAfterTomorrow.setDate(dayAfterTomorrow.getDate() + 2);
+  
+  // Convertir a fechas sin hora para comparación
+  const dateOnly = new Date(date);
+  dateOnly.setHours(0, 0, 0, 0);
+  
+  if (dateOnly.getTime() === today.getTime()) {
+    return 'Hoy - ' + date.toLocaleDateString('es-ES', {
+      weekday: 'long', day: 'numeric', month: 'long'
+    });
+  } else if (dateOnly.getTime() === tomorrow.getTime()) {
+    return 'Mañana - ' + date.toLocaleDateString('es-ES', {
+      weekday: 'long', day: 'numeric', month: 'long'
+    });
+  } else if (dateOnly.getTime() === dayAfterTomorrow.getTime()) {
+    return 'Pasado mañana - ' + date.toLocaleDateString('es-ES', {
+      weekday: 'long', day: 'numeric', month: 'long'
+    });
+  } else {
+    return date.toLocaleDateString('es-ES', {
+      weekday: 'long', day: 'numeric', month: 'long', year: 'numeric'
+    });
+  }
+};
+
 const formatDuration = (minutes) => {
   if (!minutes) return '2h 00min';
   let mins = typeof minutes === 'string' ? parseInt(minutes) : minutes;
   if (isNaN(mins)) return '2h 00min';
   const hours = Math.floor(mins / 60);
   const remainingMins = mins % 60;
-  return `${hours}h ${remainingMins}min`;
+  return `${hours}h ${remainingMins.toString().padStart(2, '0')}min`;
+};
+
+// Indicar si una sesión está a punto de terminar
+const isSessionEndingSoon = (session) => {
+  const now = new Date();
+  const sessionDate = new Date(session.fecha);
+  const sessionTime = session.hora.split(':');
+  const sessionDateTime = new Date(sessionDate);
+  sessionDateTime.setHours(
+    parseInt(sessionTime[0]),
+    parseInt(sessionTime[1]),
+    0, 0
+  );
+  
+  const movieDurationMinutes = session.movie?.duracion ? parseInt(session.movie.duracion) : 120;
+  const sessionEndTime = new Date(sessionDateTime);
+  sessionEndTime.setMinutes(sessionEndTime.getMinutes() + movieDurationMinutes);
+  
+  const timeDiff = (sessionEndTime - now) / 1000 / 60; // minutos
+  
+  return timeDiff < 30; // menos de 30 minutos para terminar
+};
+
+// Indicar si una sesión está a punto de comenzar
+const isSessionStartingSoon = (session) => {
+  const now = new Date();
+  const sessionDate = new Date(session.fecha);
+  const sessionTime = session.hora.split(':');
+  const sessionDateTime = new Date(sessionDate);
+  sessionDateTime.setHours(
+    parseInt(sessionTime[0]),
+    parseInt(sessionTime[1]),
+    0, 0
+  );
+  
+  const timeDiff = (sessionDateTime - now) / 1000 / 60; // minutos
+  
+  return timeDiff < 30; // menos de 30 minutos para comenzar
+};
+
+// Obtener información del tiempo restante para una sesión
+const getSessionTimeInfo = (session) => {
+  const now = new Date();
+  const sessionDate = new Date(session.fecha);
+  const sessionTime = session.hora.split(':');
+  const sessionDateTime = new Date(sessionDate);
+  sessionDateTime.setHours(
+    parseInt(sessionTime[0]),
+    parseInt(sessionTime[1]),
+    0, 0
+  );
+  
+  const movieDurationMinutes = session.movie?.duracion ? parseInt(session.movie.duracion) : 120;
+  const sessionEndTime = new Date(sessionDateTime);
+  sessionEndTime.setMinutes(sessionEndTime.getMinutes() + movieDurationMinutes);
+  
+  // Si la sesión ya ha comenzado
+  if (now > sessionDateTime) {
+    const timeDiff = (sessionEndTime - now) / 1000 / 60; // minutos hasta el final
+    if (timeDiff <= 0) {
+      return `Sesión finalizada`;
+    } else if (timeDiff < 30) {
+      return `Termina en ${Math.floor(timeDiff)} min`;
+    } else {
+      return `En progreso (${Math.floor(timeDiff)} min restantes)`;
+    }
+  } else {
+    // Si la sesión no ha comenzado
+    const timeDiff = (sessionDateTime - now) / 1000 / 60; // minutos hasta el inicio
+    if (timeDiff < 60) {
+      return `Comienza en ${Math.floor(timeDiff)} min`;
+    } else if (timeDiff < 1440) { // menos de 24 horas
+      return `Comienza a las ${session.hora}`;
+    } else {
+      return `${formatReleaseDate(session.fecha)} a las ${session.hora}`;
+    }
+  }
 };
 </script>
 
@@ -302,6 +475,7 @@ const formatDuration = (minutes) => {
     opacity: 0;
     transform: translateY(20px);
   }
+
   to {
     opacity: 1;
     transform: translateY(0);
@@ -317,6 +491,7 @@ const formatDuration = (minutes) => {
   from {
     opacity: 0;
   }
+
   to {
     opacity: 1;
   }
@@ -324,6 +499,21 @@ const formatDuration = (minutes) => {
 
 .animate-fade-in {
   animation: fade-in 0.3s ease-out forwards;
+}
+
+/* Animación para pulse-subtle */
+@keyframes pulse-subtle {
+  from {
+    transform: scale(1);
+  }
+
+  to {
+    transform: scale(1.05);
+  }
+}
+
+.animate-pulse-subtle {
+  animation: pulse-subtle 1s ease-out infinite;
 }
 
 /* Barra de desplazamiento personalizada */
