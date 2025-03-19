@@ -116,7 +116,10 @@
                 <h3 class="text-lg font-bold text-light line-clamp-2">
                   {{ session.movie.titulo }}
                 </h3>
-
+                <!-- Nueva línea para mostrar día, fecha y hora -->
+                <p class="text-sm text-light">
+                  {{ formatDateHeader(session.fecha) }} - {{ session.hora }}
+                </p>
                 <div class="flex gap-2">
                   <button @click="router.push(`/billets/${session.id}`)"
                     class="flex-1 bg-gold hover:bg-gold/80 text-primary font-medium py-2 px-3 rounded-lg text-sm transition-colors duration-300">

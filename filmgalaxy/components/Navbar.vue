@@ -63,7 +63,7 @@ const desktopMenuItems = [
     { title: 'Pel·lícules', icon: 'mdi-movie', to: '/movies' },
     { title: 'Sessions', icon: 'mdi-ticket', to: '/movieDetails/moviSession' }, 
     { title: 'Billetes Comprados', icon: 'mdi-ticket-confirmation', to: '/billetes' },
-    { title: 'informacion', icon: 'mdi-phone', to: '/informacion' }
+    // { title: 'informacion', icon: 'mdi-phone', to: '/informacion' }
 ]
 
 // Mobile-specific menu items - simplified
@@ -72,7 +72,7 @@ const mobileMenuItems = [
     { title: 'Pel·lícules', icon: 'mdi-movie', to: '/movies' },
     { title: 'Sessions', icon: 'mdi-ticket', to: '/movieDetails/moviSession' }, 
     { title: 'Billetes Comprados', icon: 'mdi-ticket-confirmation', to: '/billetes' },
-    { title: 'informacion', icon: 'mdi-phone', to: '/informacion' }
+    // { title: 'informacion', icon: 'mdi-phone', to: '/informacion' }
 ]
 
 const handleProfileClick = () => {

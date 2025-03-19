@@ -6,14 +6,14 @@
 
       <div class="container mx-auto px-4 py-8">
         <!-- Encabezado principal -->
-        <div class="space-y-6">
-          <h1 class="text-4xl md:text-5xl font-bold text-light text-center mb-8 animate-fade-in">
+        <div class="  container mx-auto px-6" style="padding-top: 60px; padding-bottom: 20px;">
+
+          <h1 class="text-4x1 md:text-5xl font-bold text-light text-center mb-8 animate-fade-in">
             Películas en Cartelera
           </h1>
 
           <!-- Sección para búsqueda y filtros -->
-          <div
-            class="bg-light/10 backdrop-blur-md rounded-xl p-4 max-w-6xl mx-auto transform hover:shadow-2xl transition-all duration-300">
+          <div class="bg-light/10 backdrop-blur-md rounded-xl p-4 max-w-6xl mx-auto transform hover:shadow-2xl transition-all duration-300">
             <div class="flex flex-col md:flex-row md:items-end gap-4">
               <!-- Barra de búsqueda -->
               <div class="flex-grow relative">
@@ -36,10 +36,10 @@
                 <label class="block text-light text-sm font-medium mb-2">Idioma</label>
                 <select v-model="filterLenguaje"
                   class="w-full p-3 rounded-lg bg-light/5 border-2 border-accent/30 text-black focus:border-accent focus:ring-2 focus:ring-accent/50 transition-all duration-300">
-                    <option value="">Todos los idiomas</option>
-                    <option value="Español">Español</option>
-                    <option value="Inglés">Inglés</option>
-                    <option value="Subtitulada">Subtitulada</option>
+                  <option value="">Todos los idiomas</option>
+                  <option value="Español">Español</option>
+                  <option value="Inglés">Inglés</option>
+                  <option value="Subtitulada">Subtitulada</option>
                 </select>
               </div>
 
@@ -48,14 +48,14 @@
                 <label class="block text-light text-sm font-medium mb-2">Género</label>
                 <select v-model="filterGenero"
                   class="w-full p-3 rounded-lg bg-light/5 border-2 border-accent/30 text-black focus:border-accent focus:ring-2 focus:ring-accent/50 transition-all duration-300">
-                    <option value="">Todos los géneros</option>
-                    <option value="Accion">Acción</option>
-                    <option value="Drama">Drama</option>
-                    <option value="Comedia">Comedia</option>
-                    <option value="Ciencia Ficcion">Ciencia Ficción</option>
-                    <option value="Terror">Terror</option>
-                    <option value="Aventura">Aventura</option>
-                    <option value="Animacion">Animación</option>
+                  <option value="">Todos los géneros</option>
+                  <option value="Accion">Acción</option>
+                  <option value="Drama">Drama</option>
+                  <option value="Comedia">Comedia</option>
+                  <option value="Ciencia Ficcion">Ciencia Ficción</option>
+                  <option value="Terror">Terror</option>
+                  <option value="Aventura">Aventura</option>
+                  <option value="Animacion">Animación</option>
                 </select>
               </div>
 
@@ -95,15 +95,15 @@
           </button>
         </div>
 
-        <!-- Cuadrícula de películas (tamaño reducido y más columnas) -->
-        <div v-else class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-3 md:gap-4 mt-8">
+        <!-- Cuadrícula de películas  -->
+        <div v-else class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-4 gap-4 md:gap-4 mt-8">
           <div v-for="movie in filteredMovies" :key="movie.id"
             class="group relative bg-light/10 rounded-lg overflow-hidden backdrop-blur-sm hover:scale-105 transition-all duration-300 animate-fade-in">
             <!-- Póster de la película (sin animación en hover) -->
             <div class="relative aspect-[2/3] overflow-hidden">
               <img :src="movie.imagen || 'https://via.placeholder.com/400x600?text=No+Poster'" :alt="movie.titulo"
                 class="w-full h-full object-cover" />
-              
+
               <!-- Duración y calificación superpuestas en la parte inferior de la imagen -->
               <div class="absolute bottom-0 left-0 right-0 p-2 bg-primary/80">
                 <div class="flex justify-between">
@@ -266,5 +266,4 @@ const goToBuy = (id) => {
     line-clamp: 1;
   }
 }
-
 </style>
