@@ -7,6 +7,7 @@ export const useSessionsStore = defineStore('sessions', () => {
   const currentSession = ref(null)
   const loading = ref(false)
   const error = ref(null)
+  const ticketDetails = ref(null)
 
   // Computed
   const availableSessions = computed(() => {
@@ -130,20 +131,34 @@ export const useSessionsStore = defineStore('sessions', () => {
     error.value = null
   }
 
+  const setTicketDetails = (details) => {
+    ticketDetails.value = details
+  }
+
+  const getTicketDetails = () => {
+    return ticketDetails.value
+  }
+
+  const clearTicketDetails = () => {
+    ticketDetails.value = null
+  }
+
   return {
     // State
     sessions,
     currentSession,
     loading,
     error,
-    
+    ticketDetails,
     // Computed
     availableSessions,
-    
     // Actions
     fetchSessions,
     fetchSessionsByMovieId,
     fetchSessionById,
-    clearSessions
+    clearSessions,
+    setTicketDetails,
+    getTicketDetails,
+    clearTicketDetails
   }
 })

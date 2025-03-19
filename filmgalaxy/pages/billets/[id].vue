@@ -171,7 +171,7 @@ import { useSessionsStore } from '~/stores/sessionsStore'
 // Configuración de rutas y navegación
 const route = useRoute()
 const router = useRouter()
-const { getPeliculaById, getSesiones, getAsientos, createTicket } = usePeliculas()
+const { getPeliculaById, getSesiones, getAsientos, getSessionTickets, createTicket } = usePeliculas()
 const sessionsStore = useSessionsStore()
 
 // Variables de estado
@@ -183,6 +183,8 @@ const sessions = ref([])
 const selectedSession = ref(null)
 const seats = ref([])
 const selectedSeats = ref([])
+const occupiedSeats = ref([])
+
 // Precios de los asientos
 const prices = ref({
   normal: 6,
@@ -211,14 +213,10 @@ const total = computed(() =>
 )
 
 // Función para formatear fechas en español
-const formatDate = (date) => {
-  if (!date) return ''
-  return new Date(date).toLocaleDateString('es-ES', {
-    weekday: 'long',
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric'
-  })
+const formatDate = (dateString) => {
+  if (!dateString) return 'Fecha no disponible'
+  const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }
+  return new Date(dateString).toLocaleDateString('es-ES', options)
 }
 
 // Alterna la selección de un asiento
@@ -227,9 +225,12 @@ const toggleSeat = (seat) => {
 
   const index = selectedSeats.value.findIndex(s => s.id === seat.id)
   if (index === -1) {
-    if (selectedSeats.value.length < 10) {
-      selectedSeats.value.push(seat)
+    // Verifica si ya se ha alcanzado el límite de 10 asientos
+    if (selectedSeats.value.length >= 10) {
+      alert('No puedes seleccionar más de 10 asientos')
+      return
     }
+    selectedSeats.value.push(seat)
   } else {
     selectedSeats.value.splice(index, 1)
   }
@@ -239,25 +240,26 @@ const toggleSeat = (seat) => {
 const purchaseTickets = async () => {
   if (!selectedSeats.value.length) return
 
-  loading.value = true
   try {
-    // Suponemos que el usuario está autenticado; reemplazar con el ID real
-    const userId = 1
+    loading.value = true
 
-    // Crea tickets para cada asiento seleccionado
-    const ticketPromises = selectedSeats.value.map(seat =>
-      createTicket({
-        user_id: userId,
-        movieSession_id: selectedSession.value.id,
-        seat_id: seat.id
-      })
-    )
+    const ticketDetails = {
+      movie: currentMovie.value,
+      session: selectedSession.value,
+      seats: selectedSeats.value,
+      prices: prices.value,
+      total: total.value,
+      normalSeatsCount: normalSeatsCount.value,
+      vipSeatsCount: vipSeatsCount.value
+    }
 
-    await Promise.all(ticketPromises)
-    // Redirige a la página de tickets
+    // Guardar en localStorage para acceder desde la página de tickets
+    localStorage.setItem('ticketPurchaseDetails', JSON.stringify(ticketDetails))
+    
     router.push('/tickets')
   } catch (err) {
     error.value = 'Error al procesar la compra'
+    console.error('Error:', err)
   } finally {
     loading.value = false
   }
@@ -318,7 +320,23 @@ onMounted(async () => {
 
     // Carga los asientos de la sesión
     const seatsData = await getAsientos(sessionId)
-    seats.value = seatsData.seats || []
+    
+    // Intentamos obtener los tickets de la sesión, si falla asumimos que no hay tickets
+    let occupiedSeatIds = []
+    try {
+      const sessionTickets = await getSessionTickets(sessionId)
+      if (sessionTickets && Array.isArray(sessionTickets)) {
+        occupiedSeatIds = sessionTickets.map(ticket => ticket.seat_id)
+      }
+    } catch (err) {
+      console.warn('No se pudieron cargar los tickets de la sesión:', err)
+    }
+
+    // Marca los asientos ocupados
+    seats.value = (seatsData.seats || []).map(seat => ({
+      ...seat,
+      estado: occupiedSeatIds.includes(seat.id) ? 'ocupada' : 'disponible'
+    }))
 
     console.log('Sesión cargada:', selectedSession.value)
     console.log('Película cargada:', currentMovie.value)

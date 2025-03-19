@@ -62,7 +62,7 @@ const desktopMenuItems = [
     { title: 'Inici', icon: 'mdi-home', to: '/' },
     { title: 'Pel·lícules', icon: 'mdi-movie', to: '/movies' },
     { title: 'Sessions', icon: 'mdi-ticket', to: '/movieDetails/moviSession' }, 
-    { title: 'Billetes Comprados', icon: 'mdi-ticket-confirmation', to: '/billetes' },
+    { title: 'Billetes Comprados', icon: 'mdi-ticket-confirmation', to: '/billetesDeUsuario' },
     // { title: 'informacion', icon: 'mdi-phone', to: '/informacion' }
 ]
 

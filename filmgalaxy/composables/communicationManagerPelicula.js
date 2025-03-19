@@ -174,6 +174,91 @@ export const usePeliculas = () => {
     }
   }
 
+  // Get tickets for a specific session
+  const getSessionTickets = async (sessionId) => {
+    try {
+      loading.value = true
+      const response = await fetch(`${API_URL}/sessions/${sessionId}/tickets`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json'
+        },
+        credentials: 'include'
+      })
+      
+      if (!response.ok) {
+        const data = await response.json()
+        throw new Error(data.message || 'Error fetching session tickets')
+      }
+      
+      const data = await response.json()
+      return data
+    } catch (err) {
+      error.value = err.message
+      return { error: err.message }
+    } finally {
+      loading.value = false
+    }
+  }
+
+  // Create payment
+  const createPayment = async (paymentData) => {
+    try {
+      loading.value = true
+      const response = await fetch(`${API_URL}/payments`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json'
+        },
+        credentials: 'include',
+        body: JSON.stringify(paymentData)
+      })
+      
+      if (!response.ok) {
+        const data = await response.json()
+        throw new Error(data.message || 'Error creating payment')
+      }
+      
+      const data = await response.json()
+      return data
+    } catch (err) {
+      error.value = err.message
+      return { error: err.message }
+    } finally {
+      loading.value = false
+    }
+  }
+
+  // Get user tickets
+  const getUserTickets = async (userId) => {
+    try {
+      loading.value = true
+      const response = await fetch(`${API_URL}/users/${userId}/tickets`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json'
+        },
+        credentials: 'include'
+      })
+      
+      if (!response.ok) {
+        const data = await response.json()
+        throw new Error(data.message || 'Error fetching user tickets')
+      }
+      
+      const data = await response.json()
+      return data
+    } catch (err) {
+      error.value = err.message
+      return { error: err.message }
+    } finally {
+      loading.value = false
+    }
+  }
+
   return {
     error,
     loading,
@@ -182,6 +267,9 @@ export const usePeliculas = () => {
     getSesiones,
     getAsientos,
     createTicket,
-    getTickets
+    getTickets,
+    getSessionTickets,
+    createPayment,
+    getUserTickets
   }
 }
