@@ -11,24 +11,35 @@ class Ticket extends Model
 
     protected $fillable = [
         'user_id',
+        'ticket_id',
         'movieSession_id',
         'seat_id',
+        'payment_id',
         'precio',
-        'codigo_entrada',
+        'codigo_confirmacion'
     ];
 
-    public function movieSession()
+    // Relación con el usuario
+    public function user()
     {
-        return $this->belongsTo(MovieSession::class, 'movieSession_id'); // Especificar la clave foránea
+        return $this->belongsTo(User::class);
     }
 
+    // Relación con la sesión de película
+    public function movieSession()
+    {
+        return $this->belongsTo(MovieSession::class);
+    }
+
+    // Relación con la butaca
     public function seat()
     {
         return $this->belongsTo(Seat::class);
     }
 
-    public function user()
+    // Relación con el pago
+    public function payment()
     {
-        return $this->belongsTo(User::class);
+        return $this->belongsTo(Payment::class);
     }
 }

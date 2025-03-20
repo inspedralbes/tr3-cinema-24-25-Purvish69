@@ -18,7 +18,6 @@ export const useSessionsStore = defineStore('sessions', () => {
   const fetchSessions = async () => {
     try {
       loading.value = true
-      console.log('Fetching sessions...')
       const response = await fetch('http://localhost:8000/api/sessions', {
         method: 'GET',
         headers: {
@@ -34,8 +33,6 @@ export const useSessionsStore = defineStore('sessions', () => {
       }
       
       const data = await response.json()
-      console.log('Sessions received:', data)
-      
       // Asegurarse de que cada sesión tenga la información de la película
       const processedSessions = (data.sessions || []).map(session => ({
         ...session,
@@ -44,7 +41,6 @@ export const useSessionsStore = defineStore('sessions', () => {
       }))
       
       sessions.value = processedSessions
-      console.log('Processed sessions:', sessions.value)
       return { sessions: processedSessions }
     } catch (err) {
       console.error('Error in fetchSessions:', err)

@@ -7,17 +7,30 @@ use Illuminate\Http\Request;
 use App\Models\MovieSession;
 use Illuminate\Support\Facades\Validator;
 use App\Models\Seat;
+use App\Models\Payment;
 use App\Models\User;
 use Illuminate\Support\Str;
 
 class TicketController extends Controller
 {
+
+    // Función para obtener los tickets de una sesión
+    public function getSessionTickets($sessionId)
+    {
+        try {
+            $tickets = Ticket::where('movieSession_id', $sessionId)->with(['seat', 'user'])->get();
+            return response()->json($tickets);
+        } catch (\Exception $e) {
+            return response()->json(['message' => 'Error fetching session tickets: ' . $e->getMessage()], 500);
+        }
+    }
+
     // Función para calcular el precio basado en el tipo de butaca y el campo dia_espectador
     private function calcularPrecio($sessionId, $seatId)
     {
         $session = MovieSession::findOrFail($sessionId);
         $seat = Seat::findOrFail($seatId);
-        
+
         // Precios según el campo dia_espectador de la sesión
         if ($session->dia_espectador) {
             // Precios reducidos para día del espectador
@@ -28,7 +41,7 @@ class TicketController extends Controller
             $precioNormal = 6; // Precio butaca normal
             $precioVIP = 8;    // Precio butaca VIP
         }
-        
+
         // Devolvemos el precio según el tipo de butaca
         return ($seat->tipo === 'vip') ? $precioVIP : $precioNormal;
     }
@@ -36,7 +49,7 @@ class TicketController extends Controller
     // Muestra todos los tickets 
     public function index(Request $request)
     {
-        $query = Ticket::with(['user', 'movieSession.movie', 'seat']);
+        $query = Ticket::with(['user', 'movieSession.movie', 'seat', 'payment']);
 
         if ($request->has('user_id')) {
             $query->where('user_id', $request->user_id);
@@ -44,10 +57,12 @@ class TicketController extends Controller
         if ($request->has('movieSession_id')) {
             $query->where('movieSession_id', $request->movieSession_id);
         }
+        if ($request->has('payment_id')) {
+            $query->where('payment_id', $request->payment_id);
+        }
 
         return response()->json($query->get());
     }
-
     // Crea un nuevo ticket
     public function store(Request $request)
     {
@@ -55,6 +70,8 @@ class TicketController extends Controller
             'user_id' => 'required|exists:users,id',
             'movieSession_id' => 'required|exists:movieSessions,id',
             'seat_id' => 'required|exists:seats,id',
+            'payment_id' => 'required|exists:payments,id',
+            'precio' => 'sometimes|numeric',
         ]);
 
         if ($validator->fails()) {
@@ -78,36 +95,22 @@ class TicketController extends Controller
             ], 422);
         }
 
-        // Limitar a 10 tickets por usuario para la misma sesión
-        $countTickets = Ticket::where('user_id', $request->user_id)
-            ->where('movieSession_id', $request->movieSession_id)
-            ->count();
-        if ($countTickets >= 10) {
+        // Verificar que el pago pertenezca al usuario
+        $payment = Payment::findOrFail($request->payment_id);
+        if ($payment->user_id != $request->user_id) {
             return response()->json([
-                'error' => 'El usuario ya ha comprado 10 entradas para esta película'
+                'error' => 'El pago no pertenece al usuario indicado'
             ], 422);
         }
 
-        // Evitar que el usuario tenga tickets para otra sesión futura
-        $futureSessions = MovieSession::where('fecha', '>=', date('Y-m-d'))
-            ->where('id', '!=', $request->movieSession_id)
-            ->pluck('id');
-        $ticketFuturo = Ticket::where('user_id', $request->user_id)
-            ->whereIn('movieSession_id', $futureSessions)
-            ->first();
-        if ($ticketFuturo) {
-            return response()->json([
-                'error' => 'El usuario ya tiene tickets para otra sesión futura'
-            ], 422);
+        // Calcular el precio si no fue proporcionado
+        $data = $request->all();
+        if (!isset($data['precio'])) {
+            $data['precio'] = $this->calcularPrecio($request->movieSession_id, $request->seat_id);
         }
-
-        // Calcular el precio automáticamente según el tipo de butaca y dia_espectador
-        $precio = $this->calcularPrecio($request->movieSession_id, $request->seat_id);
 
         // Crear ticket con un código único de confirmación
-        $data = $request->all();
         $data['codigo_confirmacion'] = Str::uuid();
-        $data['precio'] = $precio; // Asignar el precio calculado
         $ticket = Ticket::create($data);
 
         // Marcar la butaca como ocupada
@@ -119,6 +122,7 @@ class TicketController extends Controller
             'data' => $ticket
         ], 201);
     }
+
 
     // Muestra un ticket específico
     public function show(Ticket $ticket)
@@ -141,12 +145,12 @@ class TicketController extends Controller
         }
 
         $data = $request->all();
-        
+
         // Si se cambia la butaca o la sesión, recalculamos el precio
         if ($request->has('seat_id') || $request->has('movieSession_id')) {
             $sessionId = $request->movieSession_id ?? $ticket->movieSession_id;
             $seatId = $request->seat_id ?? $ticket->seat_id;
-            
+
             // Si se cambia la butaca, se libera la anterior y se valida la nueva
             if ($request->has('seat_id') && $request->seat_id != $ticket->seat_id) {
                 $oldSeat = Seat::findOrFail($ticket->seat_id);
@@ -166,7 +170,7 @@ class TicketController extends Controller
                 }
                 $newSeat->update(['estado' => 'ocupada']);
             }
-            
+
             // Recalcular precio
             $data['precio'] = $this->calcularPrecio($sessionId, $seatId);
         }
@@ -191,12 +195,12 @@ class TicketController extends Controller
             'message' => 'Ticket eliminado exitosamente'
         ], 200);
     }
-    
+
     // Nueva función para obtener los precios actuales según una sesión
     public function getPreciosSesion($sessionId)
     {
         $session = MovieSession::findOrFail($sessionId);
-        
+
         // Precios según valor de dia_espectador
         if ($session->dia_espectador) {
             $precios = [
@@ -209,7 +213,7 @@ class TicketController extends Controller
                 'vip' => 8
             ];
         }
-        
+
         return response()->json([
             'precios' => $precios,
             'dia_espectador' => $session->dia_espectador,

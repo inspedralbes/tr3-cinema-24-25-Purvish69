@@ -52,9 +52,17 @@ export const useAuth = () => {
       if (data.token) {
         token.value = data.token
 
-        // Guarda el ID del usuario en la cookie 
+        // También guarda en localStorage para acceso desde cualquier lugar
+        if (typeof window !== 'undefined') {
+          localStorage.setItem('token', data.token)
+        }
+
+        // Guarda el ID del usuario en la cookie y localStorage
         if (data.user && data.user.id) {
           userId.value = data.user.id
+          if (typeof window !== 'undefined') {
+            localStorage.setItem('userId', data.user.id)
+          }
         }
       }
       console.log('Datos recibidos:', data)
@@ -72,7 +80,7 @@ export const useAuth = () => {
         headers: {
           'Content-Type': 'application/json',
           'Accept': 'application/json',
-          'Authorization': `Bearer ${token.value}`  
+          'Authorization': `Bearer ${token.value}`
         },
         credentials: 'include'
       })
@@ -91,7 +99,7 @@ export const useAuth = () => {
       console.error("No se encontró el userId en las cookies.");
       return null;
     }
-  
+
     try {
       const response = await fetch(`${API_URL}/user/${userId.value}`, {
         method: 'GET',
@@ -102,12 +110,12 @@ export const useAuth = () => {
         },
         credentials: 'include'
       });
-  
+
       if (!response.ok) {
         console.error('Error fetching user info:', await response.text());
         return null;
       }
-  
+
       const data = await response.json();
       console.log('Datos recibidos para profile:', data);
       return data.user;

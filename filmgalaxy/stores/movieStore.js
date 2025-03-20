@@ -111,11 +111,6 @@ export const useMovieStore = defineStore('movies', {
         this.comingSoonMovies = [...this.comingSoonMovies, ...remainingMovies];
       }
       
-      console.log('Categorización completada:', {
-        featured: this.featuredMovies.length,
-        nowPlaying: this.nowPlayingMovies.length,
-        comingSoon: this.comingSoonMovies.length
-      });
     },
     
     // Obtener detalles de una película por ID

@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Payment;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Str;
 
 class PaymentController extends Controller
 {
@@ -26,37 +27,30 @@ class PaymentController extends Controller
     {
         $validator = Validator::make($request->all(), [
             'user_id' => 'required|exists:users,id',
-            'ticket_id' => 'required|exists:tickets,id',
-            'metodo_pago' => 'required|string',
-            'estado' => 'required|in:pagado,pendiente,rechazado',
-            'importe_total' => 'required|numeric',
+            'amount' => 'required|numeric',
+            'payment_method' => 'required|string',
+            'status' => 'required|in:completed,pending,failed',
         ]);
 
         if ($validator->fails()) {
-            return response()->json(['status'  => 'error', 'message' => 'Error al crear el pago', 'errors'  => $validator->errors()], 422);
-        }
-
-        // Verificar que el ticket pertenezca al usuario
-        $ticket = \App\Models\Ticket::findOrFail($request->ticket_id);
-
-        if ($ticket->user_id != $request->user_id) {
             return response()->json([
                 'status' => 'error',
-                'error' => 'El ticket no pertenece al usuario indicado'
-            ], 422);
-        }
-        // Verificar que el ticket no tenga ya un pago
-        $existingPayment = Payment::where('ticket_id', $request->ticket_id)->first();
-
-        if ($existingPayment) {
-            return response()->json([
-                'status' => 'error',
-                'error' => 'Ya existe un pago para este ticket'
+                'message' => 'Error al crear el pago',
+                'errors' => $validator->errors()
             ], 422);
         }
 
-        $payment = Payment::create($request->all());
-        return response()->json($payment, 201);
+        // Generar un ID de transacción único
+        $paymentData = $request->all();
+        $paymentData['transaction_id'] = Str::uuid();
+
+        $payment = Payment::create($paymentData);
+
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Pago creado exitosamente',
+            'data' => $payment
+        ], 201);
     }
 
     // mostrar un pago
@@ -66,46 +60,49 @@ class PaymentController extends Controller
         return response()->json($payment);
     }
 
-    public function update(Request $request,$id)
+    public function update(Request $request, Payment $payment)
     {
-
         $validator = Validator::make($request->all(), [
-            'user_id' => 'sometimes|required|exists:users,id',
-            'ticket_id' => 'sometimes|required|exists:tickets,id',
-            'metodo_pago' => 'sometimes|required|string',
-            'estado' => 'sometimes|required|in:pagado,pendiente,rechazado',
-            'importe_total' => 'sometimes|required|numeric',
+            'user_id' => 'required|exists:users,id',
+            'ticket_id' => 'nullable|exists:tickets,id',
+            'amount' => 'required|numeric',
+            'payment_method' => 'required|string',
+            'status' => 'required|in:completed,pending,failed',
         ]);
 
         if ($validator->fails()) {
-            return response()->json(['status'  => 'error', 'message' => 'Error al actualizar el pago', 'errors'  => $validator->errors()], 422);
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Error al actualizar el pago',
+                'errors' => $validator->errors()
+            ], 422);
         }
 
-        if (($request->has('ticket_id') && $request->ticket_id != $id->ticket_id) ||
-            ($request->has('user_id') && $request->user_id != $id->user_id)
-        ) {
+        $payment->update($request->all());
 
-            // Verificar que el ticket pertenezca al usuario
-            $ticketId = $request->ticket_id ?? $id->ticket_id;
-            $userId = $request->user_id ?? $id->user_id;
-
-            $ticket = \App\Models\Ticket::findOrFail($ticketId);
-
-            if ($ticket->user_id != $userId) {
-                return response()->json([
-                    'status' => 'error',
-                    'message' => 'El ticket no pertenece al usuario indicado'
-                ], 422);
-            }
-        }
-
-        $id->update($request->all());
-        return response()->json($id);
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Pago actualizado exitosamente',
+            'data' => $payment
+        ]);
     }
 
+    // Eliminar un pago
     public function destroy(Payment $payment)
     {
+        // Verificar si hay tickets asociados
+        if ($payment->tickets()->exists()) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'No se puede eliminar el pago porque tiene tickets asociados'
+            ], 422);
+        }
+
         $payment->delete();
-        return response()->json(null, 204);
+
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Pago eliminado exitosamente'
+        ], 200);
     }
 }

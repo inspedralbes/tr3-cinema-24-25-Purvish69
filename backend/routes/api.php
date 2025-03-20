@@ -51,7 +51,8 @@ Route::middleware('auth:sanctum')->group(function () {
 Route::get('/tickets', [TicketController::class, 'index']);
 Route::get('/tickets/{id}', [TicketController::class, 'show']);
 Route::get('tickets/precios-sesion/{sessionId}', [TicketController::class, 'getPreciosSesion']);
-Route::middleware('auth:sanctum')->group(function () {
+Route::get('/sessions/{sessionId}/tickets', [TicketController::class, 'getSessionTickets']); // Añadir esta ruta
+
     Route::post('/tickets', [TicketController::class, 'store']);
     Route::put('/tickets/{id}', [TicketController::class, 'update']);
     Route::delete('/tickets/{id}', [TicketController::class, 'destroy']);
@@ -59,20 +60,13 @@ Route::middleware('auth:sanctum')->group(function () {
     // Rutas de asientos
     Route::get('/seats', [SeatController::class, 'index']);
     Route::get('/seats/{id}', [SeatController::class, 'show']);
-
-    Route::middleware('auth:sanctum')->group(function () {
-        Route::post('/seats', [SeatController::class, 'store']);
-        Route::put('/seats/{id}', [SeatController::class, 'update']);
-        Route::delete('/seats/{id}', [SeatController::class, 'destroy']);
-    });
+    Route::post('/seats', [SeatController::class, 'store']);
+    Route::put('/seats/{id}', [SeatController::class, 'update']);
+    Route::delete('/seats/{id}', [SeatController::class, 'destroy']);
 
     // Rutas de pagos
     Route::get('/payments', [PaymentController::class, 'index']);
     Route::get('/payments/{id}', [PaymentController::class, 'show']);
-
-    Route::middleware('auth:sanctum')->group(function () {
-        Route::post('/payments', [PaymentController::class, 'store']);
-        Route::put('/payments/{id}', [PaymentController::class, 'update']);
-        Route::delete('/payments/{id}', [PaymentController::class, 'destroy']);
-    });
-});
+    Route::post('/payments', [PaymentController::class, 'store']);
+    Route::put('/payments/{id}', [PaymentController::class, 'update']);
+    Route::delete('/payments/{id}', [PaymentController::class, 'destroy']);

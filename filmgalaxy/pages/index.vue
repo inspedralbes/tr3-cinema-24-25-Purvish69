@@ -313,7 +313,6 @@ const checkExpiredSessions = () => {
 
   // Si más del 50% de las sesiones han terminado o no hay sesiones visibles, recargar
   if (expiredSessionsCount > sessionsStore.sessions.length / 2 || combinedSessions.value.length === 0) {
-    console.log('Actualizando sesiones de películas automáticamente...');
     sessionsStore.fetchSessions();
   }
 };

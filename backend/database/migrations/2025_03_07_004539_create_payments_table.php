@@ -15,11 +15,13 @@ return new class extends Migration
             $table->id();
             $table->foreignId('user_id')->constrained()->onDelete('cascade');
             $table->foreignId('ticket_id')->constrained()->onDelete('cascade');
-            $table->string('metodo_pago')->default('tarjeta');
-            $table->enum('estado', ['pagado', 'pendiente', 'rechazado'])->default('pendiente');
-            $table->decimal('importe_total', 8, 2);
+            $table->decimal('amount', 10, 2);
+            $table->string('payment_method')->default('card'); // Actualiza el nombre y el valor por defecto
+            $table->enum('status', ['completed', 'pending', 'failed'])->default('pending');
+            $table->string('transaction_id'); // Si necesitas este campo
             $table->timestamps();
         });
+        ;
     }
 
 

@@ -3,6 +3,14 @@ export const usePeliculas = () => {
   const error = ref('')
   const loading = ref(false)
 
+
+  // Funcion para obtener el token de autenticacion
+  const getAuthToken = () => {
+    if (typeof window !== 'undefined') {
+      return localStorage.getItem('token')
+    }
+  }
+
   // Get all movies
   const getPeliculas = async () => {
     try {
@@ -15,12 +23,12 @@ export const usePeliculas = () => {
         },
         credentials: 'include'
       })
-      
+
       if (!response.ok) {
         const data = await response.json()
         throw new Error(data.message || 'Error fetching movies')
       }
-      
+
       const data = await response.json()
       return data
     } catch (err) {
@@ -43,12 +51,12 @@ export const usePeliculas = () => {
         },
         credentials: 'include'
       })
-      
+
       if (!response.ok) {
         const data = await response.json()
         throw new Error(data.message || 'Error fetching movie details')
       }
-      
+
       const data = await response.json()
       return data
     } catch (err) {
@@ -72,13 +80,13 @@ export const usePeliculas = () => {
         credentials: 'include'
       })
       console.log('Datos de la sesion', response);
-      
-      
+
+
       if (!response.ok) {
         const data = await response.json()
         throw new Error(data.message || 'Error fetching sessions')
       }
-      
+
       const data = await response.json()
       return data
     } catch (err) {
@@ -101,12 +109,12 @@ export const usePeliculas = () => {
         },
         credentials: 'include'
       })
-      
+
       if (!response.ok) {
         const data = await response.json()
         throw new Error(data.message || 'Error fetching seats')
       }
-      
+
       const data = await response.json()
       return data
     } catch (err) {
@@ -117,25 +125,34 @@ export const usePeliculas = () => {
     }
   }
 
-  // Create ticket
+  // fetch para crear el ticket
   const createTicket = async (ticketData) => {
     try {
       loading.value = true
+
+      // Obtener el token desde las cookies o localStorage
+      const token = useCookie('token').value || localStorage.getItem('token')
+
+      if (!token) {
+        throw new Error('No hay token de autenticación disponible')
+      }
+
       const response = await fetch(`${API_URL}/tickets`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Accept': 'application/json'
+          'Accept': 'application/json',
+          'Authorization': `Bearer ${token}`
         },
         credentials: 'include',
         body: JSON.stringify(ticketData)
       })
-      
+
       if (!response.ok) {
         const data = await response.json()
         throw new Error(data.message || 'Error creating ticket')
       }
-      
+
       const data = await response.json()
       return data
     } catch (err) {
@@ -158,12 +175,12 @@ export const usePeliculas = () => {
         },
         credentials: 'include'
       })
-      
+
       if (!response.ok) {
         const data = await response.json()
         throw new Error(data.message || 'Error fetching tickets')
       }
-      
+
       const data = await response.json()
       return data
     } catch (err) {
@@ -186,12 +203,12 @@ export const usePeliculas = () => {
         },
         credentials: 'include'
       })
-      
+
       if (!response.ok) {
         const data = await response.json()
         throw new Error(data.message || 'Error fetching session tickets')
       }
-      
+
       const data = await response.json()
       return data
     } catch (err) {
@@ -202,35 +219,52 @@ export const usePeliculas = () => {
     }
   }
 
-  // Create payment
+  // fetch para crear el pago
+  // Create payment con token de autenticación
   const createPayment = async (paymentData) => {
     try {
       loading.value = true
+
+      const token = getAuthToken()
+
+      const headers = {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json'
+      }
+
+      // Añadir token de autenticación si está disponible
+      if (token) {
+        headers['Authorization'] = `Bearer ${token}`
+      } else {
+        console.warn('No authentication token available')
+      }
+
       const response = await fetch(`${API_URL}/payments`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Accept': 'application/json'
-        },
+        headers,
         credentials: 'include',
         body: JSON.stringify(paymentData)
       })
-      
+
+      console.log('Payment response status:', response.status)
+
       if (!response.ok) {
-        const data = await response.json()
-        throw new Error(data.message || 'Error creating payment')
+        const errorData = await response.json()
+        console.error('Payment error details:', errorData)
+        throw new Error(errorData.message || `Error creating payment: ${response.status}`)
       }
-      
+
       const data = await response.json()
+      console.log('Payment success data:', data)
       return data
     } catch (err) {
+      console.error('Payment error:', err)
       error.value = err.message
       return { error: err.message }
     } finally {
       loading.value = false
     }
   }
-
   // Get user tickets
   const getUserTickets = async (userId) => {
     try {
@@ -243,12 +277,12 @@ export const usePeliculas = () => {
         },
         credentials: 'include'
       })
-      
+
       if (!response.ok) {
         const data = await response.json()
         throw new Error(data.message || 'Error fetching user tickets')
       }
-      
+
       const data = await response.json()
       return data
     } catch (err) {

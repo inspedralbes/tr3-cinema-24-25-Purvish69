@@ -98,19 +98,6 @@
                           <span class="text-light">Tarjeta</span>
                         </div>
                       </label>
-
-                      <label class="relative flex items-center">
-                        <input type="radio" v-model="paymentMethod" value="paypal" class="hidden peer" />
-                        <div
-                          class="w-full p-3 rounded-lg border-2 border-gray-600 peer-checked:border-gold flex items-center gap-3">
-                          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-light" fill="none"
-                            viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                              d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2z" />
-                          </svg>
-                          <span class="text-light">PayPal</span>
-                        </div>
-                      </label>
                     </div>
                   </div>
 
@@ -147,16 +134,6 @@
                     </div>
                   </div>
 
-                  <!-- Formulario de PayPal -->
-                  <div v-else-if="paymentMethod === 'paypal'" class="space-y-4">
-                    <div class="space-y-2">
-                      <label for="email" class="block text-light text-sm font-medium">Correo electrónico de PayPal</label>
-                      <input id="email" v-model="paypalInfo.email" type="email"
-                        :class="['w-full p-3 bg-gray-700 text-light rounded-lg focus:outline-none', paypalEmailError ? 'border-red-500' : 'border border-gray-600 focus:border-gold']"
-                        placeholder="correo@ejemplo.com" required />
-                    </div>
-                  </div>
-
                   <!-- Botón de pago -->
                   <div class="text-center mt-8">
                     <button type="submit" class="bg-gold text-dark px-8 py-3 rounded-full font-semibold transition-all"
@@ -186,7 +163,7 @@ import { useAuth } from '~/composables/useAuth'
 const route = useRoute()
 const router = useRouter()
 const { createTicket, getPeliculaById, createPayment } = usePeliculas()
-const { userId, isAuthenticated } = useAuth()
+const { userId, isAuthenticated, token } = useAuth() 
 
 // Estado de la página
 const loading = ref(true)
@@ -201,9 +178,6 @@ const cardInfo = ref({
   number: '',
   expiry: '',
   cvv: ''
-})
-const paypalInfo = ref({
-  email: ''
 })
 
 // Validación individual de campos
@@ -220,23 +194,13 @@ const cardExpiryError = computed(() => {
 const cardCvvError = computed(() => {
   return paymentMethod.value === 'card' && cardInfo.value.cvv.length !== 3
 })
-const paypalEmailError = computed(() => {
-  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
-  return paymentMethod.value === 'paypal' && !emailRegex.test(paypalInfo.value.email)
-})
 
 // Validación general del formulario
 const isFormValid = computed(() => {
-  if (paymentMethod.value === 'card') {
-    return cardInfo.value.holder.trim() !== '' &&
-      cardInfo.value.number.replace(/\s/g, '').length === 16 &&
-      /^\d{2}\/\d{2}$/.test(cardInfo.value.expiry) &&
-      cardInfo.value.cvv.length === 3
-  } else if (paymentMethod.value === 'paypal') {
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
-    return emailRegex.test(paypalInfo.value.email)
-  }
-  return false
+  return cardInfo.value.holder.trim() !== '' &&
+    cardInfo.value.number.replace(/\s/g, '').length === 16 &&
+    /^\d{2}\/\d{2}$/.test(cardInfo.value.expiry) &&
+    cardInfo.value.cvv.length === 3
 })
 
 // Formatear número de tarjeta con espacios
@@ -288,52 +252,74 @@ const processPayment = async () => {
 
   loading.value = true
   try {
+    // Verificar la autenticación antes de proceder
+    if (!isAuthenticated.value) {
+      router.push('/login?redirect=' + encodeURIComponent(route.fullPath))
+      error.value = 'Necesitas iniciar sesión para completar la compra'
+      return
+    }
+
     const currentUserId = userId.value || 1
-    
-    // Create payment record first
+
+    // Crear registro de pago
     const paymentData = {
       user_id: currentUserId,
       amount: ticketDetails.value.total,
       payment_method: paymentMethod.value,
       status: 'completed'
     }
-    
+
     console.log('Creating payment with data:', paymentData)
-    
-    // Create payment
-    const payment = await createPayment(paymentData)
-    
-    console.log('Payment created:', payment)
-    
-    if (!payment || !payment.id) {
+
+    const paymentResponse = await createPayment(paymentData)
+
+    console.log('Payment response:', paymentResponse)
+
+    // Verificar si hay error en la respuesta
+    if (paymentResponse.error) {
+      // Si es un error de autenticación, redirigir al login
+      if (paymentResponse.error.includes('Unauthenticated')) {
+        router.push('/login?redirect=' + encodeURIComponent(route.fullPath))
+        throw new Error('Sesión expirada. Por favor, inicia sesión nuevamente')
+      } else {
+        throw new Error(paymentResponse.error)
+      }
+    }
+
+    // Verificar que el pago se creó correctamente
+    if (!paymentResponse || !paymentResponse.id) {
       throw new Error('Error al crear el pago: no se recibió ID de pago')
     }
-    
-    // Now create tickets using the payment ID
+
+    // Crear entradas usando el ID de pago
     const ticketPromises = ticketDetails.value.seats.map(async (seat) => {
       const ticketData = {
         user_id: currentUserId,
         movieSession_id: ticketDetails.value.session.id,
         seat_id: seat.id,
-        payment_id: payment.id,
+        payment_id: paymentResponse.id,
         precio: seat.tipo === 'vip' ? ticketDetails.value.prices.vip : ticketDetails.value.prices.normal
       }
-      
+
       console.log('Creating ticket with data:', ticketData)
-      
-      return createTicket(ticketData)
+
+      const ticketResponse = await createTicket(ticketData)
+      if (ticketResponse.error) {
+        throw new Error(ticketResponse.error)
+      }
+      return ticketResponse
     })
-    
+
     const tickets = await Promise.all(ticketPromises)
     console.log('Tickets created:', tickets)
-    
+
     paymentSuccess.value = true
-    
-    // Clear stored ticket details
+
+    // Limpiar detalles de compra almacenados
     localStorage.removeItem('ticketPurchaseDetails')
   } catch (err) {
     console.error('Error al procesar el pago:', err)
-    error.value = 'Ha ocurrido un error al procesar el pago. Por favor, inténtalo de nuevo.'
+    error.value = err.message || 'Ha ocurrido un error al procesar el pago. Por favor, inténtalo de nuevo.'
   } finally {
     loading.value = false
   }
@@ -395,9 +381,12 @@ onMounted(async () => {
 }
 
 @keyframes pulse {
-  0%, 100% {
+
+  0%,
+  100% {
     opacity: 1;
   }
+
   50% {
     opacity: 0.5;
   }

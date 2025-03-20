@@ -11,10 +11,10 @@ class Payment extends Model
 
     protected $fillable = [
         'user_id',
-        'ticket_id',
-        'metodo_pago',
-        'estado',
-        'importe_total',
+        'amount',
+        'payment_method',
+        'status',
+        'transaction_id'
     ];
 
     // Relaciones
