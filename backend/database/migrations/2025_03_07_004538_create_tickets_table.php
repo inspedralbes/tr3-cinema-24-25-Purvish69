@@ -16,8 +16,9 @@ return new class extends Migration
             $table->foreignId('user_id')->constrained()->onDelete('cascade');
             $table->foreignId('movieSession_id')->constrained()->onDelete('cascade');
             $table->foreignId('seat_id')->constrained()->onDelete('cascade');
+            $table->unsignedBigInteger('payment_id')->nullable();
             $table->decimal('precio', 8, 2);
-            $table->string('codigo_entrada')->unique();
+            $table->string('codigo_confirmacion')->unique();
             $table->timestamps();
         });
     }

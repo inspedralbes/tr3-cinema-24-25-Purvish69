@@ -25,6 +25,6 @@ class Payment extends Model
 
     public function ticket()
     {
-        return $this->belongsTo(Ticket::class);
+        return $this->hasMany(Ticket::class);
     }
 }

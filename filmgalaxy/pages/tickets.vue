@@ -11,12 +11,14 @@
         </div>
 
         <!-- Muestra error en caso de fallo -->
-        <div v-else-if="error" class="max-w-md mx-auto glass-effect text-light p-8 rounded-xl">
-          <p class="text-center text-red-500">{{ error }}</p>
-          <div class="mt-4 text-center">
-            <button @click="goBack" class="bg-gold text-dark px-6 py-2 rounded-full">
-              Volver atrás
-            </button>
+        <div v-else-if="error" class="flex justify-center items-center min-h-screen">
+          <div class="max-w-md glass-effect text-light p-8 rounded-xl">
+            <p class="text-center text-red-500">{{ error }}</p>
+            <div class="mt-4 text-center">
+              <button @click="goBack" class="bg-gold text-dark px-6 py-2 rounded-full">
+                Volver atrás
+              </button>
+            </div>
           </div>
         </div>
 
@@ -163,7 +165,7 @@ import { useAuth } from '~/composables/useAuth'
 const route = useRoute()
 const router = useRouter()
 const { createTicket, getPeliculaById, createPayment } = usePeliculas()
-const { userId, isAuthenticated, token } = useAuth() 
+const { userId, isAuthenticated, token } = useAuth()
 
 // Estado de la página
 const loading = ref(true)
@@ -286,18 +288,19 @@ const processPayment = async () => {
       }
     }
 
-    // Verificar que el pago se creó correctamente
-    if (!paymentResponse || !paymentResponse.id) {
+    // Buscar el ID de pago en distintas propiedades, ej. id o insertId
+    const paymentId = paymentResponse.id || paymentResponse.insertId || paymentResponse.data?.id;
+    if (!paymentId) {
       throw new Error('Error al crear el pago: no se recibió ID de pago')
     }
 
-    // Crear entradas usando el ID de pago
+    // Crear entradas usando el ID de pago obtenido
     const ticketPromises = ticketDetails.value.seats.map(async (seat) => {
       const ticketData = {
         user_id: currentUserId,
         movieSession_id: ticketDetails.value.session.id,
         seat_id: seat.id,
-        payment_id: paymentResponse.id,
+        payment_id: paymentId,
         precio: seat.tipo === 'vip' ? ticketDetails.value.prices.vip : ticketDetails.value.prices.normal
       }
 

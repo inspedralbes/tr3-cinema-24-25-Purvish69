@@ -3,31 +3,36 @@
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
-use Doctrine\DBAL\Types\Type;
 
-class UpdatePaymentsTableMakeTicketIdNullable extends Migration
+return new class extends Migration
 {
     /**
      * Run the migrations.
-     *
-     * @return void
      */
-    public function up()
+    public function up(): void
     {
+        // Add foreign key from tickets to payments
+        Schema::table('tickets', function (Blueprint $table) {
+            $table->foreign('payment_id')->references('id')->on('payments')->onDelete('cascade');
+        });
+
+        // Add foreign key from payments to tickets
         Schema::table('payments', function (Blueprint $table) {
-            $table->foreignId('ticket_id')->nullable()->change();
+            $table->foreign('ticket_id')->references('id')->on('tickets')->onDelete('cascade');
         });
     }
 
     /**
      * Reverse the migrations.
-     *
-     * @return void
      */
-    public function down()
+    public function down(): void
     {
+        Schema::table('tickets', function (Blueprint $table) {
+            $table->dropForeign(['payment_id']);
+        });
+
         Schema::table('payments', function (Blueprint $table) {
-            $table->foreignId('ticket_id')->nullable(false)->change();
+            $table->dropForeign(['ticket_id']);
         });
     }
-}
+};

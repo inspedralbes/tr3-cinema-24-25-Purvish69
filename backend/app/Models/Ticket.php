@@ -11,13 +11,14 @@ class Ticket extends Model
 
     protected $fillable = [
         'user_id',
-        'ticket_id',
         'movieSession_id',
         'seat_id',
         'payment_id',
         'precio',
         'codigo_confirmacion'
     ];
+
+    
 
     // Relación con el usuario
     public function user()

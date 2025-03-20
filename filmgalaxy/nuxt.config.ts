@@ -6,6 +6,14 @@ export default defineNuxtConfig({
   compatibilityDate: '2025-03-13',
   devtools: { enabled: true },
 
+  app:{
+    head: {
+      title: 'FilmGalaxy',
+      link:[
+        {rel: 'icon', type: 'image/x-icon', href: '/logo/logofilmgalaxyTransparente.png'}
+      ]
+  }
+  },
   plugins: [
     '~/plugins/vuetify.js'
   ],

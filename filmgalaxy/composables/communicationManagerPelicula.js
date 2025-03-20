@@ -238,6 +238,8 @@ export const usePeliculas = () => {
       } else {
         console.warn('No authentication token available')
       }
+      console.log('pago de user:', headers);
+      
 
       const response = await fetch(`${API_URL}/payments`, {
         method: 'POST',

@@ -9,21 +9,19 @@ return new class extends Migration
     /**
      * Run the migrations.
      */
-    public function up()
+    public function up(): void
     {
         Schema::create('payments', function (Blueprint $table) {
             $table->id();
             $table->foreignId('user_id')->constrained()->onDelete('cascade');
-            $table->foreignId('ticket_id')->constrained()->onDelete('cascade');
+            $table->unsignedBigInteger('ticket_id')->nullable();
             $table->decimal('amount', 10, 2);
-            $table->string('payment_method')->default('card'); // Actualiza el nombre y el valor por defecto
+            $table->string('payment_method')->default('card');
             $table->enum('status', ['completed', 'pending', 'failed'])->default('pending');
-            $table->string('transaction_id'); // Si necesitas este campo
+            $table->string('transaction_id');
             $table->timestamps();
         });
-        ;
     }
-
 
     /**
      * Reverse the migrations.
