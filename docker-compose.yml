@@ -1,0 +1,68 @@
+services:
+  db:
+    image: mysql:8.2.0
+    container_name: tr3-cinema-24-25-purvish69-db-1
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: myrootpassword # Define la contraseña de root aquí
+      MYSQL_DATABASE: filmgalaxy # Nombre de la base de datos
+      MYSQL_USER: user # Usuario normal (diferente de root)
+      MYSQL_PASSWORD: mypassword # Contraseña del usuario normal
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+
+  laravel:
+      build: ./backend
+      ports:
+        - 8000:8000
+      volumes:
+        - ./backend:/var/www/html
+      working_dir: /var/www/html
+      depends_on:
+        - db
+      command: bash -c "composer install && php artisan key:generate && php artisan migrate:fresh --seed && php artisan serve --host=0.0.0.0"
+       
+  # filmgalaxy:
+  #     build: ./filmgalaxy
+  #     ports:
+  #       - 3000:3000
+  #     volumes:
+  #       - ./filmgalaxy:/app 
+  #       - /app/node_modules
+  #     working_dir: /app/
+
+  #     command: sh -c "npm install && npm run dev -- --host 0.0.0.0 --port 5173"
+
+  filmgalaxy:
+    build: 
+      context: ./filmgalaxy
+      dockerfile: Dockerfile
+    container_name: vue
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./filmgalaxy:/app
+    environment:
+      - NODE_ENV=development
+    restart: unless-stopped
+    command: sh -c "npm install && npm run dev -- --host"
+    networks:
+      - app-network
+
+  adminer:
+    image: adminer
+    container_name: tr3-cinema-24-25-purvish69-adminer-1
+    restart: always
+    depends_on:
+      - db
+    ports:
+      - "8080:8080"
+
+volumes:
+  mysql_data:
+
+networks:
+  app-network:
+    driver: bridge
