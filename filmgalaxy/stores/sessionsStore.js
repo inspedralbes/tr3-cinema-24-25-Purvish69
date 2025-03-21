@@ -15,9 +15,13 @@ export const useSessionsStore = defineStore('sessions', () => {
   })
 
   // Actions
-  const fetchSessions = async () => {
+  const fetchSessions = async (retry = true) => {
     try {
       loading.value = true
+      error.value = null
+      
+      console.log('Fetching sessions data...')
+      
       const response = await fetch('http://localhost:8000/api/sessions', {
         method: 'GET',
         headers: {
@@ -28,11 +32,20 @@ export const useSessionsStore = defineStore('sessions', () => {
       })
       
       if (!response.ok) {
-        const data = await response.json()
-        throw new Error(data.message || 'Error fetching sessions')
+        let errorMsg = 'Error fetching sessions'
+        try {
+          const data = await response.json()
+          errorMsg = data.message || errorMsg
+        } catch (e) {
+          console.error('Error parsing error response:', e)
+        }
+        
+        throw new Error(errorMsg)
       }
       
       const data = await response.json()
+      console.log('Sessions fetched successfully:', data)
+      
       // Asegurarse de que cada sesión tenga la información de la película
       const processedSessions = (data.sessions || []).map(session => ({
         ...session,
@@ -41,10 +54,27 @@ export const useSessionsStore = defineStore('sessions', () => {
       }))
       
       sessions.value = processedSessions
+      console.log('Sessions processed and stored in state:', processedSessions.length)
       return { sessions: processedSessions }
     } catch (err) {
       console.error('Error in fetchSessions:', err)
       error.value = err.message
+      
+      // Si hay un error de conexión y retry es true, intentar una vez más después de un tiempo
+      if (retry && (err.message.includes('network') || err.message.includes('fetch'))) {
+        console.log('Retrying fetch in 2 seconds...')
+        return new Promise((resolve) => {
+          setTimeout(async () => {
+            try {
+              const result = await fetchSessions(false) // Segundo intento sin más retries
+              resolve(result)
+            } catch (retryErr) {
+              resolve({ error: retryErr.message })
+            }
+          }, 2000)
+        })
+      }
+      
       return { error: err.message }
     } finally {
       loading.value = false
@@ -88,9 +118,15 @@ export const useSessionsStore = defineStore('sessions', () => {
     }
   }
 
-  const fetchSessionById = async (id) => {
+  const fetchSessionById = async (id, retry = true) => {
     try {
+      if (!id) {
+        throw new Error('Session ID is required');
+      }
+      
       loading.value = true
+      console.log(`Fetching session details for ID: ${id}`)
+      
       const response = await fetch(`http://localhost:8000/api/sessions/${id}`, {
         method: 'GET',
         headers: {
@@ -101,20 +137,57 @@ export const useSessionsStore = defineStore('sessions', () => {
       })
       
       if (!response.ok) {
-        const data = await response.json()
-        throw new Error(data.message || 'Error fetching session details')
+        let errorMsg = 'Error fetching session details'
+        try {
+          const data = await response.json()
+          errorMsg = data.message || errorMsg
+        } catch (e) {
+          console.error('Error parsing error response:', e)
+          errorMsg = `${errorMsg} (Status: ${response.status})`
+        }
+        
+        throw new Error(errorMsg)
       }
       
       const data = await response.json()
+      console.log('Session details fetched successfully:', data)
+      
+      // Ensure we have a valid session object
+      if (!data.session) {
+        throw new Error('Session data not found in response')
+      }
+      
       currentSession.value = {
         ...data.session,
         movie: data.session.movie || null,
         estado: data.session.estado || 'disponible'
       }
+      
+      // Save this session to the sessions array if not already there
+      if (!sessions.value.some(s => s.id === currentSession.value.id)) {
+        sessions.value = [...sessions.value, currentSession.value]
+      }
+      
       return { session: currentSession.value }
     } catch (err) {
       console.error('Error in fetchSessionById:', err)
       error.value = err.message
+      
+      // Si hay un error de conexión y retry es true, intentar una vez más después de un tiempo
+      if (retry && (err.message.includes('network') || err.message.includes('fetch'))) {
+        console.log('Retrying fetch session by ID in 2 seconds...')
+        return new Promise((resolve) => {
+          setTimeout(async () => {
+            try {
+              const result = await fetchSessionById(id, false) // Segundo intento sin más retries
+              resolve(result)
+            } catch (retryErr) {
+              resolve({ error: retryErr.message })
+            }
+          }, 2000)
+        })
+      }
+      
       return { error: err.message }
     } finally {
       loading.value = false

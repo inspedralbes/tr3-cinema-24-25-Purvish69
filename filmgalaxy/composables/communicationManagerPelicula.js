@@ -1,14 +1,34 @@
+import { ref } from 'vue'
+import { useCookie } from '#app'
+
 export const usePeliculas = () => {
   const API_URL = 'http://localhost:8000/api'
   const error = ref('')
   const loading = ref(false)
 
 
-  // Funcion para obtener el token de autenticacion
+  // Función mejorada para obtener el token de autenticación
   const getAuthToken = () => {
     if (typeof window !== 'undefined') {
-      return localStorage.getItem('token')
+      // Intentar obtener desde localStorage primero
+      const localToken = localStorage.getItem('token');
+      if (localToken) {
+        return localToken;
+      }
+      
+      // Intentar obtener desde cookies (para sistemas que usan cookies)
+      const cookies = document.cookie.split(';');
+      for (const cookie of cookies) {
+        const [name, value] = cookie.trim().split('=');
+        if (name === 'token') {
+          return value;
+        }
+      }
     }
+    
+    // Si no se encuentra el token
+    console.warn('No se encontró token de autenticación');
+    return null;
   }
 
   // Get all movies
@@ -131,7 +151,7 @@ export const usePeliculas = () => {
       loading.value = true
 
       // Obtener el token desde las cookies o localStorage
-      const token = useCookie('token').value || localStorage.getItem('token')
+      const token = getAuthToken()
 
       if (!token) {
         throw new Error('No hay token de autenticación disponible')
@@ -267,27 +287,67 @@ export const usePeliculas = () => {
       loading.value = false
     }
   }
+
   // Get user tickets
   const getUserTickets = async (userId) => {
     try {
+      if (!userId) {
+        console.error('getUserTickets: No user ID provided')
+        return { error: 'No se proporcionó ID de usuario' }
+      }
+
+      console.log('getUserTickets: Requesting tickets for user ID:', userId)
       loading.value = true
+      
+      // Obtener el token desde localStorage
+      const token = getAuthToken()
+      const headers = {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json'
+      }
+      
+      // Añadir token de autenticación si está disponible
+      if (token) {
+        headers['Authorization'] = `Bearer ${token}`
+      }
+      
       const response = await fetch(`${API_URL}/users/${userId}/tickets`, {
         method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-          'Accept': 'application/json'
-        },
+        headers,
         credentials: 'include'
       })
 
+      console.log('getUserTickets: Response status:', response.status)
+
       if (!response.ok) {
-        const data = await response.json()
-        throw new Error(data.message || 'Error fetching user tickets')
+        let errorMessage = 'Error fetching user tickets'
+        try {
+          const errorData = await response.json()
+          errorMessage = errorData.message || errorMessage
+          console.error('getUserTickets: Server error:', errorData)
+        } catch (parseError) {
+          console.error('getUserTickets: Error parsing error response:', parseError)
+          errorMessage = `${errorMessage} (Status: ${response.status})`
+        }
+        throw new Error(errorMessage)
       }
 
       const data = await response.json()
-      return data
+      console.log('getUserTickets: Data received:', data)
+      
+      // Manejar diferentes formatos de respuesta
+      if (Array.isArray(data)) {
+        return data
+      } else if (data.tickets && Array.isArray(data.tickets)) {
+        return data.tickets
+      } else if (data.data && Array.isArray(data.data)) {
+        return data.data
+      } else {
+        console.warn('getUserTickets: Unexpected response format:', data)
+        return []
+      }
     } catch (err) {
+      console.error('getUserTickets: Error:', err)
       error.value = err.message
       return { error: err.message }
     } finally {
