@@ -18,7 +18,12 @@ class Ticket extends Model
         'codigo_confirmacion'
     ];
 
-    
+    protected $casts = [
+        'precio' => 'float',
+        'created_at' => 'datetime',
+        'updated_at' => 'datetime',
+    ];
+
 
     // Relación con el usuario
     public function user()
@@ -29,7 +34,7 @@ class Ticket extends Model
     // Relación con la sesión de película
     public function movieSession()
     {
-        return $this->belongsTo(MovieSession::class);
+        return $this->belongsTo(MovieSession::class, 'movieSession_id');
     }
 
     // Relación con la butaca

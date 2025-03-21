@@ -3,9 +3,12 @@
 namespace App\Http\Controllers;
 
 use App\Models\User;
+use App\Mail\SendMail;
 use Illuminate\Http\Request;
+use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\ValidationException;
 
@@ -94,6 +97,8 @@ class UserController extends Controller
             'password' => Hash::make($request->password),
             'rol'      => $rol,
         ]);
+
+        Mail::to($user->email)->send(new SendMail($user));
 
         $token = $user->createToken('auth_token')->plainTextToken;
 

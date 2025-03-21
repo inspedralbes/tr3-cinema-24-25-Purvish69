@@ -125,15 +125,26 @@ class TicketController extends Controller
 
 
     // Muestra un ticket específico
-    public function show(Ticket $ticket)
+    public function show($id)
     {
-        $ticket->load(['user', 'movieSession.movie', 'seat']);
+        // En lugar de usar route model binding, usamos find y cargamos las relaciones explícitamente
+        $ticket = Ticket::with(['user', 'movieSession.movie', 'seat', 'payment'])->find($id);
+        
+        if (!$ticket) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Ticket no encontrado'
+            ], 404);
+        }
+        
         return response()->json($ticket);
     }
 
     // Actualiza un ticket existente
-    public function update(Request $request, Ticket $ticket)
+    public function update(Request $request, $id)
     {
+        $ticket = Ticket::findOrFail($id);
+        
         $validator = Validator::make($request->all(), [
             'user_id' => 'sometimes|required|exists:users,id',
             'movieSession_id' => 'sometimes|required|exists:movieSessions,id',
@@ -176,6 +187,10 @@ class TicketController extends Controller
         }
 
         $ticket->update($data);
+        
+        // Cargar las relaciones después de actualizar
+        $ticket->load(['user', 'movieSession.movie', 'seat', 'payment']);
+        
         return response()->json([
             'status' => 'success',
             'message' => 'Ticket actualizado exitosamente',
@@ -184,8 +199,10 @@ class TicketController extends Controller
     }
 
     // Elimina un ticket y libera la butaca asociada
-    public function destroy(Ticket $ticket)
+    public function destroy($id)
     {
+        $ticket = Ticket::findOrFail($id);
+        
         $seat = Seat::findOrFail($ticket->seat_id);
         $seat->update(['estado' => 'libre']);
 
@@ -220,5 +237,30 @@ class TicketController extends Controller
             'fecha' => $session->fecha,
             'pelicula' => $session->movie ? $session->movie->titulo : null
         ]);
+    }
+    
+    public function getUserTicketsComplete($userId)
+    {
+        // Use the correct relationships that are defined in the Ticket model
+        $tickets = Ticket::where('user_id', $userId)
+            ->with(['movieSession.movie', 'seat', 'payment', 'user'])
+            ->get();
+
+        return response()->json($tickets);
+    }
+
+    // Función para obtener un ticket con el usuario asociado
+    public function showWithUser($id)
+    {
+        $ticket = Ticket::with(['user'])->find($id);
+        
+        if (!$ticket) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Ticket no encontrado'
+            ], 404);
+        }
+        
+        return response()->json($ticket);
     }
 }

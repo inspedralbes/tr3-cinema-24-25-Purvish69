@@ -23,6 +23,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/logout', [UserController::class, 'logout']);
     Route::put('/user/{id}', [UserController::class, 'update']);
     Route::delete('/user/{id}', [UserController::class, 'destroy']);
+    Route::get('/user/tickets', [TicketController::class, 'getUserTickets']);
 });
 
 // Rutas de películas
@@ -46,6 +47,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::delete('/sessions/{id}', [MovieSessionsController::class, 'destroy']);
     Route::get('movie-sessions/check-availability', [MovieSessionsController::class, 'checkAvailability']);
 });
+Route::get('/sessions/{sessionId}/tickets', [TicketController::class, 'getSessionTickets']);
 
 // Rutas de asientos
 Route::get('/seats', [SeatController::class, 'index']);
@@ -57,11 +59,14 @@ Route::delete('/seats/{id}', [SeatController::class, 'destroy']);
 // Rutas de tickets
 Route::get('/tickets', [TicketController::class, 'index']);
 Route::get('/tickets/{id}', [TicketController::class, 'show']);
+Route::get('/tickets/{id}/with-user', [TicketController::class, 'showWithUser']); // Nueva ruta
 Route::get('tickets/precios-sesion/{sessionId}', [TicketController::class, 'getPreciosSesion']);
-Route::get('/sessions/{sessionId}/tickets', [TicketController::class, 'getSessionTickets']); // Añadir esta ruta
 Route::post('/tickets', [TicketController::class, 'store']);
 Route::put('/tickets/{id}', [TicketController::class, 'update']);
 Route::delete('/tickets/{id}', [TicketController::class, 'destroy']);
+Route::get('/tickets/user/{userId}/complete', [TicketController::class, 'getUserTicketsComplete']);
+
+
 
 
 // Rutas de pagos

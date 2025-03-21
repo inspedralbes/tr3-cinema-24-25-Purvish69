@@ -15,7 +15,7 @@ export const usePeliculas = () => {
       if (localToken) {
         return localToken;
       }
-      
+
       // Intentar obtener desde cookies (para sistemas que usan cookies)
       const cookies = document.cookie.split(';');
       for (const cookie of cookies) {
@@ -25,7 +25,7 @@ export const usePeliculas = () => {
         }
       }
     }
-    
+
     // Si no se encuentra el token
     console.warn('No se encontró token de autenticación');
     return null;
@@ -259,7 +259,7 @@ export const usePeliculas = () => {
         console.warn('No authentication token available')
       }
       console.log('pago de user:', headers);
-      
+
 
       const response = await fetch(`${API_URL}/payments`, {
         method: 'POST',
@@ -289,71 +289,63 @@ export const usePeliculas = () => {
   }
 
   // Get user tickets
-  const getUserTickets = async (userId) => {
+  const getTicketWithUser = async (ticketId) => {
     try {
-      if (!userId) {
-        console.error('getUserTickets: No user ID provided')
-        return { error: 'No se proporcionó ID de usuario' }
+      if (!ticketId) {
+        console.error('getTicketWithUser: No ticket ID provided')
+        return { error: 'No se proporcionó ID del ticket' }
       }
 
-      console.log('getUserTickets: Requesting tickets for user ID:', userId)
+      console.log('getTicketWithUser: Requesting ticket ID:', ticketId)
       loading.value = true
-      
+
       // Obtener el token desde localStorage
       const token = getAuthToken()
       const headers = {
         'Content-Type': 'application/json',
         'Accept': 'application/json'
       }
-      
+
       // Añadir token de autenticación si está disponible
       if (token) {
         headers['Authorization'] = `Bearer ${token}`
       }
-      
-      const response = await fetch(`${API_URL}/users/${userId}/tickets`, {
+
+      // Usar la nueva ruta que solo carga la relación del usuario
+      const response = await fetch(`${API_URL}/tickets/${ticketId}/with-user`, {
         method: 'GET',
         headers,
         credentials: 'include'
       })
 
-      console.log('getUserTickets: Response status:', response.status)
+      console.log('getTicketWithUser: Response status:', response.status)
 
       if (!response.ok) {
-        let errorMessage = 'Error fetching user tickets'
+        let errorMessage = 'Error obteniendo información del ticket'
         try {
           const errorData = await response.json()
           errorMessage = errorData.message || errorMessage
-          console.error('getUserTickets: Server error:', errorData)
+          console.error('getTicketWithUser: Server error:', errorData)
         } catch (parseError) {
-          console.error('getUserTickets: Error parsing error response:', parseError)
+          console.error('getTicketWithUser: Error parsing error response:', parseError)
           errorMessage = `${errorMessage} (Status: ${response.status})`
         }
         throw new Error(errorMessage)
       }
 
       const data = await response.json()
-      console.log('getUserTickets: Data received:', data)
-      
-      // Manejar diferentes formatos de respuesta
-      if (Array.isArray(data)) {
-        return data
-      } else if (data.tickets && Array.isArray(data.tickets)) {
-        return data.tickets
-      } else if (data.data && Array.isArray(data.data)) {
-        return data.data
-      } else {
-        console.warn('getUserTickets: Unexpected response format:', data)
-        return []
-      }
+      console.log('getTicketWithUser: Data received:', data)
+
+      return data
     } catch (err) {
-      console.error('getUserTickets: Error:', err)
+      console.error('getTicketWithUser: Error:', err)
       error.value = err.message
       return { error: err.message }
     } finally {
       loading.value = false
     }
   }
+
 
   return {
     error,
@@ -366,6 +358,6 @@ export const usePeliculas = () => {
     getTickets,
     getSessionTickets,
     createPayment,
-    getUserTickets
+    getTicketWithUser,
   }
 }
