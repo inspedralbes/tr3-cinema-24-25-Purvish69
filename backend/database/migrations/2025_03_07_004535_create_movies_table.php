@@ -15,6 +15,7 @@ return new class extends Migration
             $table->id();
             $table->string('titulo');
             $table->text('descripcion');
+            $table->decimal('calificacion', 3, 1); // Cambiado para que coincida con los datos de prueba
             $table->string('director')->nullable();
             $table->json('actores');
             $table->integer('duracion'); // En minutos
@@ -22,6 +23,7 @@ return new class extends Migration
             $table->string('genero');
             $table->string('lenguaje');
             $table->string('imagen')->nullable();
+            $table->string('poster')->nullable();
             $table->string('trailer')->nullable();
             $table->string('omdb_id')->nullable();
             $table->timestamps();

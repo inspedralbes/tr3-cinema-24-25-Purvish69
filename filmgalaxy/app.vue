@@ -1,11 +1,8 @@
 <template>
-  <div>
-    <router-view></router-view>
-  </div>
+  <NuxtPage />
 </template>
 
 <script>
-
 export default {
   name: 'App'
 }

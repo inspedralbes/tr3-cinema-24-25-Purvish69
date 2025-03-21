@@ -7,15 +7,49 @@ use Illuminate\Http\Request;
 use App\Models\MovieSession;
 use Illuminate\Support\Facades\Validator;
 use App\Models\Seat;
+use App\Models\Payment;
 use App\Models\User;
 use Illuminate\Support\Str;
 
 class TicketController extends Controller
 {
+
+    // Función para obtener los tickets de una sesión
+    public function getSessionTickets($sessionId)
+    {
+        try {
+            $tickets = Ticket::where('movieSession_id', $sessionId)->with(['seat', 'user'])->get();
+            return response()->json($tickets);
+        } catch (\Exception $e) {
+            return response()->json(['message' => 'Error fetching session tickets: ' . $e->getMessage()], 500);
+        }
+    }
+
+    // Función para calcular el precio basado en el tipo de butaca y el campo dia_espectador
+    private function calcularPrecio($sessionId, $seatId)
+    {
+        $session = MovieSession::findOrFail($sessionId);
+        $seat = Seat::findOrFail($seatId);
+
+        // Precios según el campo dia_espectador de la sesión
+        if ($session->dia_espectador) {
+            // Precios reducidos para día del espectador
+            $precioNormal = 4; // Precio butaca normal
+            $precioVIP = 6;    // Precio butaca VIP
+        } else {
+            // Precios normales
+            $precioNormal = 6; // Precio butaca normal
+            $precioVIP = 8;    // Precio butaca VIP
+        }
+
+        // Devolvemos el precio según el tipo de butaca
+        return ($seat->tipo === 'vip') ? $precioVIP : $precioNormal;
+    }
+
     // Muestra todos los tickets 
     public function index(Request $request)
     {
-        $query = Ticket::with(['user', 'movieSession.movie', 'seat']);
+        $query = Ticket::with(['user', 'movieSession.movie', 'seat', 'payment']);
 
         if ($request->has('user_id')) {
             $query->where('user_id', $request->user_id);
@@ -23,10 +57,12 @@ class TicketController extends Controller
         if ($request->has('movieSession_id')) {
             $query->where('movieSession_id', $request->movieSession_id);
         }
+        if ($request->has('payment_id')) {
+            $query->where('payment_id', $request->payment_id);
+        }
 
         return response()->json($query->get());
     }
-
     // Crea un nuevo ticket
     public function store(Request $request)
     {
@@ -34,19 +70,21 @@ class TicketController extends Controller
             'user_id' => 'required|exists:users,id',
             'movieSession_id' => 'required|exists:movieSessions,id',
             'seat_id' => 'required|exists:seats,id',
-            'precio' => 'required|numeric',
+            'payment_id' => 'required|exists:payments,id',
+            'precio' => 'sometimes|numeric',
         ]);
 
         if ($validator->fails()) {
             return response()->json([
                 'status' => 'error',
-                'message' => 'Error al crear el ticket'
+                'message' => 'Error al crear el ticket',
+                'errors' => $validator->errors()
             ], 422);
         }
 
         // Verificar que la butaca pertenezca a la sesión y esté libre
         $seat = Seat::findOrFail($request->seat_id);
-        if ($seat->session_id != $request->movieSession_id) {
+        if ($seat->movieSession_id != $request->movieSession_id) {
             return response()->json([
                 'error' => 'La butaca seleccionada no pertenece a la sesión indicada'
             ], 422);
@@ -57,31 +95,21 @@ class TicketController extends Controller
             ], 422);
         }
 
-        // Limitar a 10 tickets por usuario para la misma sesión
-        $countTickets = Ticket::where('user_id', $request->user_id)
-            ->where('movieSession_id', $request->movieSession_id)
-            ->count();
-        if ($countTickets >= 10) {
+        // Verificar que el pago pertenezca al usuario
+        $payment = Payment::findOrFail($request->payment_id);
+        if ($payment->user_id != $request->user_id) {
             return response()->json([
-                'error' => 'El usuario ya ha comprado 10 entradas para esta película'
+                'error' => 'El pago no pertenece al usuario indicado'
             ], 422);
         }
 
-        // Evitar que el usuario tenga tickets para otra sesión futura
-        $futureSessions = MovieSession::where('fecha', '>=', date('Y-m-d'))
-            ->where('id', '!=', $request->movieSession_id)
-            ->pluck('id');
-        $ticketFuturo = Ticket::where('user_id', $request->user_id)
-            ->whereIn('movieSession_id', $futureSessions)
-            ->first();
-        if ($ticketFuturo) {
-            return response()->json([
-                'error' => 'El usuario ya tiene tickets para otra sesión futura'
-            ], 422);
+        // Calcular el precio si no fue proporcionado
+        $data = $request->all();
+        if (!isset($data['precio'])) {
+            $data['precio'] = $this->calcularPrecio($request->movieSession_id, $request->seat_id);
         }
 
         // Crear ticket con un código único de confirmación
-        $data = $request->all();
         $data['codigo_confirmacion'] = Str::uuid();
         $ticket = Ticket::create($data);
 
@@ -95,49 +123,74 @@ class TicketController extends Controller
         ], 201);
     }
 
+
     // Muestra un ticket específico
-    public function show(Ticket $ticket)
+    public function show($id)
     {
-        $ticket->load(['user', 'movieSession.movie', 'seat']);
+        // En lugar de usar route model binding, usamos find y cargamos las relaciones explícitamente
+        $ticket = Ticket::with(['user', 'movieSession.movie', 'seat', 'payment'])->find($id);
+        
+        if (!$ticket) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Ticket no encontrado'
+            ], 404);
+        }
+        
         return response()->json($ticket);
     }
 
     // Actualiza un ticket existente
-    public function update(Request $request, Ticket $ticket)
+    public function update(Request $request, $id)
     {
+        $ticket = Ticket::findOrFail($id);
+        
         $validator = Validator::make($request->all(), [
             'user_id' => 'sometimes|required|exists:users,id',
             'movieSession_id' => 'sometimes|required|exists:movieSessions,id',
             'seat_id' => 'sometimes|required|exists:seats,id',
-            'precio' => 'sometimes|required|numeric|min:0',
         ]);
 
         if ($validator->fails()) {
             return response()->json(['errors' => $validator->errors()], 422);
         }
 
-        // Si se cambia la butaca, se libera la anterior y se valida la nueva
-        if ($request->has('seat_id') && $request->seat_id != $ticket->seat_id) {
-            $oldSeat = Seat::findOrFail($ticket->seat_id);
-            $oldSeat->update(['estado' => 'libre']);
+        $data = $request->all();
 
-            $newSeat = Seat::findOrFail($request->seat_id);
-            // Usamos la sesión nueva si se envía o la ya asignada al ticket
+        // Si se cambia la butaca o la sesión, recalculamos el precio
+        if ($request->has('seat_id') || $request->has('movieSession_id')) {
             $sessionId = $request->movieSession_id ?? $ticket->movieSession_id;
-            if ($newSeat->session_id != $sessionId) {
-                return response()->json([
-                    'error' => 'La butaca seleccionada no corresponde a la sesión'
-                ], 422);
+            $seatId = $request->seat_id ?? $ticket->seat_id;
+
+            // Si se cambia la butaca, se libera la anterior y se valida la nueva
+            if ($request->has('seat_id') && $request->seat_id != $ticket->seat_id) {
+                $oldSeat = Seat::findOrFail($ticket->seat_id);
+                $oldSeat->update(['estado' => 'libre']);
+
+                $newSeat = Seat::findOrFail($request->seat_id);
+                // Usamos la sesión nueva si se envía o la ya asignada al ticket
+                if ($newSeat->movieSession_id != $sessionId) {
+                    return response()->json([
+                        'error' => 'La butaca seleccionada no corresponde a la sesión'
+                    ], 422);
+                }
+                if ($newSeat->estado !== 'libre') {
+                    return response()->json([
+                        'error' => 'La butaca seleccionada ya está ocupada'
+                    ], 422);
+                }
+                $newSeat->update(['estado' => 'ocupada']);
             }
-            if ($newSeat->estado !== 'libre') {
-                return response()->json([
-                    'error' => 'La butaca seleccionada ya está ocupada'
-                ], 422);
-            }
-            $newSeat->update(['estado' => 'ocupada']);
+
+            // Recalcular precio
+            $data['precio'] = $this->calcularPrecio($sessionId, $seatId);
         }
 
-        $ticket->update($request->all());
+        $ticket->update($data);
+        
+        // Cargar las relaciones después de actualizar
+        $ticket->load(['user', 'movieSession.movie', 'seat', 'payment']);
+        
         return response()->json([
             'status' => 'success',
             'message' => 'Ticket actualizado exitosamente',
@@ -146,8 +199,10 @@ class TicketController extends Controller
     }
 
     // Elimina un ticket y libera la butaca asociada
-    public function destroy(Ticket $ticket)
+    public function destroy($id)
     {
+        $ticket = Ticket::findOrFail($id);
+        
         $seat = Seat::findOrFail($ticket->seat_id);
         $seat->update(['estado' => 'libre']);
 
@@ -156,5 +211,56 @@ class TicketController extends Controller
             'status' => 'success',
             'message' => 'Ticket eliminado exitosamente'
         ], 200);
+    }
+
+    // Nueva función para obtener los precios actuales según una sesión
+    public function getPreciosSesion($sessionId)
+    {
+        $session = MovieSession::findOrFail($sessionId);
+
+        // Precios según valor de dia_espectador
+        if ($session->dia_espectador) {
+            $precios = [
+                'normal' => 4,
+                'vip' => 6
+            ];
+        } else {
+            $precios = [
+                'normal' => 6,
+                'vip' => 8
+            ];
+        }
+
+        return response()->json([
+            'precios' => $precios,
+            'dia_espectador' => $session->dia_espectador,
+            'fecha' => $session->fecha,
+            'pelicula' => $session->movie ? $session->movie->titulo : null
+        ]);
+    }
+    
+    public function getUserTicketsComplete($userId)
+    {
+        // Use the correct relationships that are defined in the Ticket model
+        $tickets = Ticket::where('user_id', $userId)
+            ->with(['movieSession.movie', 'seat', 'payment', 'user'])
+            ->get();
+
+        return response()->json($tickets);
+    }
+
+    // Función para obtener un ticket con el usuario asociado
+    public function showWithUser($id)
+    {
+        $ticket = Ticket::with(['user'])->find($id);
+        
+        if (!$ticket) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Ticket no encontrado'
+            ], 404);
+        }
+        
+        return response()->json($ticket);
     }
 }
