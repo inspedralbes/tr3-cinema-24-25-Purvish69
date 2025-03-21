@@ -29,7 +29,7 @@ class SendMail extends Mailable
     public function envelope(): Envelope
     {
         return new Envelope(
-            subject: 'Bienvenido a FilmGalaxy🎬 - Tu portal de cine',
+            subject: 'Bienvenido a FilmGalaxy - Tu portal de cine',
         );
     }
 
@@ -39,7 +39,7 @@ class SendMail extends Mailable
     public function content(): Content
     {
         return new Content(
-            view: 'emails.sendmail',
+            view: 'emails.register',
         );
     }
 
