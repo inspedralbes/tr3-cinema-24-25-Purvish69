@@ -116,22 +116,54 @@
             </div>
 
             <!-- Pantalla de la sala -->
-            <div class="w-full h-8 bg-gray-800 rounded-t-full mb-8 text-center text-sm text-light/50">
+            <div class="w-full h-8 bg-gray-800 rounded-t-full mb-12 text-center text-sm text-light/50">
               PANTALLA
             </div>
 
-            <!-- Cuadrícula de asientos -->
-            <div class="grid grid-cols-10 gap-2 max-w-3xl mx-auto mb-8">
-              <template v-for="seat in seats" :key="seat.id">
-                <button @click="toggleSeat(seat)" :disabled="seat.estado === 'ocupada'"
-                  class="w-8 h-8 rounded transition-all" :class="[
-                    seat.estado === 'ocupada' ? 'bg-red-500' :
-                      selectedSeats.includes(seat) ? 'bg-green-500' :
-                        seat.tipo === 'vip' ? 'bg-gold' : 'bg-gray-500'
-                  ]">
-                  <span class="text-xs text-light">{{ seat.fila }}{{ seat.numero }}</span>
-                </button>
-              </template>
+            <!-- Cuadrícula de asientos con filas verticales y números horizontales -->
+            <div class="flex justify-center mb-12">
+              <!-- Etiquetas de filas (A,B,C...) en el lado izquierdo -->
+              <div class="flex flex-col mr-6">
+                <div class="h-8 flex items-center justify-center"></div> <!-- Espacio vacío para alinear -->
+                <template v-for="rowLetter in uniqueRows" :key="rowLetter">
+                  <div class="h-10 w-8 flex items-center justify-center text-light font-bold mb-5">
+                    {{ rowLetter }}
+                  </div>
+                </template>
+              </div>
+
+              <div>
+                <!-- Números de asiento en la parte superior -->
+                <div class="flex mb-4">
+                  <div v-for="seatNumber in uniqueNumbers" :key="seatNumber" 
+                       class="w-10 h-8 flex items-center justify-center text-light font-bold mx-2">
+                    {{ seatNumber }}
+                  </div>
+                </div>
+
+                <!-- Cuadrícula de asientos organizada por filas -->
+                <div>
+                  <div v-for="rowLetter in uniqueRows" :key="rowLetter" class="flex mb-5">
+                    <template v-for="seatNumber in uniqueNumbers" :key="`${rowLetter}-${seatNumber}`">
+                      <div v-if="getSeat(rowLetter, seatNumber)" class="mx-2">
+                        <button 
+                          @click="toggleSeat(getSeat(rowLetter, seatNumber))" 
+                          :disabled="getSeat(rowLetter, seatNumber).estado === 'ocupada'"
+                          class="w-10 h-10 relative rounded transition-all flex items-center justify-center"
+                          :class="[
+                            getSeat(rowLetter, seatNumber).estado === 'ocupada' ? 'bg-red-500' :
+                              selectedSeats.includes(getSeat(rowLetter, seatNumber)) ? 'bg-green-500' :
+                                getSeat(rowLetter, seatNumber).tipo === 'vip' ? 'bg-gold' : 'bg-gray-500'
+                          ]">
+                          <!-- Ícono de asiento más pequeño -->
+                          <SeatIcon class="absolute inset-0 scale-75" />
+                        </button>
+                      </div>
+                      <div v-else class="w-10 h-10 mx-2"></div> <!-- Espacio vacío si no hay asiento -->
+                    </template>
+                  </div>
+                </div>
+              </div>
             </div>
 
             <!-- Resumen de precios -->
@@ -167,14 +199,13 @@ import { ref, computed, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { usePeliculas } from '~/composables/communicationManagerPelicula'
 import { useSessionsStore } from '~/stores/sessionsStore'
+import SeatIcon from '~/components/SeatIcon.vue'
 
-// Configuración de rutas y navegación
 const route = useRoute()
 const router = useRouter()
 const { getPeliculaById, getSesiones, getAsientos, getSessionTickets, createTicket } = usePeliculas()
 const sessionsStore = useSessionsStore()
 
-// Variables de estado
 const loading = ref(true)
 const error = ref(null)
 const movie = ref(null)
@@ -185,13 +216,28 @@ const seats = ref([])
 const selectedSeats = ref([])
 const occupiedSeats = ref([])
 
-// Precios de los asientos
 const prices = ref({
   normal: 6,
   vip: 8
 })
 
-// Cálculos para los asientos y totales
+// Obtener filas únicas (A, B, C, etc.)
+const uniqueRows = computed(() => {
+  const rows = [...new Set(seats.value.map(seat => seat.fila))].sort()
+  return rows
+})
+
+// Obtener números de asiento únicos (1, 2, 3, etc.)
+const uniqueNumbers = computed(() => {
+  const numbers = [...new Set(seats.value.map(seat => seat.numero))].sort((a, b) => a - b)
+  return numbers
+})
+
+// Función para obtener un asiento específico por fila y número
+const getSeat = (row, number) => {
+  return seats.value.find(seat => seat.fila === row && seat.numero === number)
+}
+
 const normalSeatsCount = computed(() =>
   selectedSeats.value.filter(seat => seat.tipo === 'normal').length
 )
@@ -212,20 +258,17 @@ const total = computed(() =>
   normalSeatsTotal.value + vipSeatsTotal.value
 )
 
-// Función para formatear fechas en español
 const formatDate = (dateString) => {
   if (!dateString) return 'Fecha no disponible'
   const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }
   return new Date(dateString).toLocaleDateString('es-ES', options)
 }
 
-// Alterna la selección de un asiento
 const toggleSeat = (seat) => {
   if (seat.estado === 'ocupada') return
 
   const index = selectedSeats.value.findIndex(s => s.id === seat.id)
   if (index === -1) {
-    // Verifica si ya se ha alcanzado el límite de 10 asientos
     if (selectedSeats.value.length >= 10) {
       alert('No puedes seleccionar más de 10 asientos')
       return
@@ -236,7 +279,6 @@ const toggleSeat = (seat) => {
   }
 }
 
-// Procesa la compra de entradas
 const purchaseTickets = async () => {
   if (!selectedSeats.value.length) return
 
@@ -253,9 +295,7 @@ const purchaseTickets = async () => {
       vipSeatsCount: vipSeatsCount.value
     }
 
-    // Guardar en localStorage para acceder desde la página de tickets
     localStorage.setItem('ticketPurchaseDetails', JSON.stringify(ticketDetails))
-    
     router.push('/tickets')
   } catch (err) {
     error.value = 'Error al procesar la compra'
@@ -265,23 +305,18 @@ const purchaseTickets = async () => {
   }
 }
 
-// Carga inicial de datos al montar el componente
 onMounted(async () => {
   try {
     const sessionId = route.params.id
 
-    // Primero, obtenemos la sesión desde el store
     await sessionsStore.fetchSessionById(sessionId)
 
-    // Si la sesión existe en el store, la usamos
     if (sessionsStore.currentSession) {
       selectedSession.value = sessionsStore.currentSession
 
-      // Obtenemos la película asociada a la sesión
       if (selectedSession.value.movie) {
         currentMovie.value = selectedSession.value.movie
       } else {
-        // Si no viene la película, la solicitamos por su ID
         const movieId = selectedSession.value.movie_id || selectedSession.value.movieId
         if (movieId) {
           const movieData = await getPeliculaById(movieId)
@@ -289,18 +324,14 @@ onMounted(async () => {
         }
       }
     } else {
-      // Si la sesión no está en el store, se obtiene por API
       const sessionsData = await getSesiones()
       sessions.value = sessionsData.sessions || []
-
-      // Buscamos la sesión por su ID
       selectedSession.value = sessions.value.find(s => s.id.toString() === sessionId.toString())
 
       if (!selectedSession.value) {
         throw new Error('No se encontró la sesión solicitada')
       }
 
-      // Obtenemos la película asociada
       const movieId = selectedSession.value.movie_id || selectedSession.value.movieId
       if (movieId) {
         const movieData = await getPeliculaById(movieId)
@@ -310,7 +341,6 @@ onMounted(async () => {
       }
     }
 
-    // Ajusta los precios si es Día del Espectador
     if (selectedSession.value.dia_espectador) {
       prices.value = {
         normal: 4,
@@ -318,10 +348,8 @@ onMounted(async () => {
       }
     }
 
-    // Carga los asientos de la sesión
     const seatsData = await getAsientos(sessionId)
     
-    // Intentamos obtener los tickets de la sesión, si falla asumimos que no hay tickets
     let occupiedSeatIds = []
     try {
       const sessionTickets = await getSessionTickets(sessionId)
@@ -332,7 +360,6 @@ onMounted(async () => {
       console.warn('No se pudieron cargar los tickets de la sesión:', err)
     }
 
-    // Marca los asientos ocupados
     seats.value = (seatsData.seats || []).map(seat => ({
       ...seat,
       estado: occupiedSeatIds.includes(seat.id) ? 'ocupada' : 'disponible'
