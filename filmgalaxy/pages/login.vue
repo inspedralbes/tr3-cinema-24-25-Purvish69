@@ -20,6 +20,27 @@
               density="comfortable" class="mb-6 custom-input" prepend-inner-icon="mdi-lock" bg-color="transparent"
               color="#4A4E69" hide-details="auto"></v-text-field>
 
+            <!-- Alerts for success and error messages -->
+            <div class="mb-4">
+              <v-slide-y-transition>
+                <v-alert v-if="successMessage" type="success" variant="tonal" class="mb-2 alert-success" closable @click:close="successMessage = ''">
+                  <div class="d-flex align-center">
+                    <v-icon class="mr-2 pulse-animation">mdi-check-circle</v-icon>
+                    <span>{{ successMessage }}</span>
+                  </div>
+                </v-alert>
+              </v-slide-y-transition>
+              
+              <v-slide-y-transition>
+                <v-alert v-if="errorMessage" type="error" variant="tonal" class="mb-2 alert-error" closable @click:close="errorMessage = ''">
+                  <div class="d-flex align-center">
+                    <v-icon class="mr-2 shake-animation">mdi-alert-circle</v-icon>
+                    <span>{{ errorMessage }}</span>
+                  </div>
+                </v-alert>
+              </v-slide-y-transition>
+            </div>
+
             <v-btn type="submit" block size="large" :loading="loading" class="mb-4 login-btn" elevation="2"
               v-motion-pop>
               <v-icon start icon="mdi-login"></v-icon>
@@ -58,6 +79,8 @@ const { login } = useAuth()
 const form = ref(null)
 const showPassword = ref(false)
 const loading = ref(false)
+const successMessage = ref('')
+const errorMessage = ref('')
 
 const rules = {
   required: value => !!value || 'Este campo es requerido',
@@ -68,16 +91,27 @@ const rules = {
 }
 
 const handleLogin = async () => {
+  // Reset messages
+  successMessage.value = ''
+  errorMessage.value = ''
+  
   const { valid } = await form.value.validate()
   if (valid) {
     loading.value = true
     try {
       const response = await login(email.value, password.value)
       if (response?.token) {
-        navigateTo('/')
+        successMessage.value = '¡Inicio de sesión exitoso! Redirigiendo...'
+        
+        setTimeout(() => {
+          navigateTo('/')
+        }, 1500)
+      } else {
+        errorMessage.value = 'Credenciales incorrectas. Por favor, inténtalo de nuevo.'
       }
     } catch (error) {
       console.error('Login failed:', error)
+      errorMessage.value = error?.message || 'Error al iniciar sesión. Por favor, inténtalo de nuevo.'
     } finally {
       loading.value = false
     }
@@ -197,80 +231,97 @@ const forgotPassword = () => {
   --v-field-border-opacity: 1;
 }
 
-/* Quitar el background blanco al focus */
-:deep(.custom-input .v-field--focused) {
-  background-color: transparent !important;
+/* Estilos para las alertas */
+.alert-success {
+  border-left: 4px solid #4CAF50;
+  background-color: rgba(76, 175, 80, 0.1) !important;
 }
 
-/* Estilos del botón de login */
+.alert-error {
+  border-left: 4px solid #FF5252;
+  background-color: rgba(255, 82, 82, 0.1) !important;
+}
+
+/* Animaciones para los iconos de alerta */
+.pulse-animation {
+  animation: pulse 1.5s infinite;
+  color: #4CAF50;
+}
+
+.shake-animation {
+  animation: shake 0.5s cubic-bezier(.36,.07,.19,.97) both;
+  color: #FF5252;
+}
+
+@keyframes pulse {
+  0% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1.1);
+    opacity: 0.8;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+@keyframes shake {
+  10%, 90% {
+    transform: translate3d(-1px, 0, 0);
+  }
+  20%, 80% {
+    transform: translate3d(2px, 0, 0);
+  }
+  30%, 50%, 70% {
+    transform: translate3d(-3px, 0, 0);
+  }
+  40%, 60% {
+    transform: translate3d(3px, 0, 0);
+  }
+}
+
+/* Botón de login */
 .login-btn {
-  background-color: #C8A96E !important;
-  color: #1C1C1C !important;
-  transition: all 0.3s ease;
+  background-color: #C8A96E;
+  color: #1C1C1C;
+  transition: transform 0.2s ease, background-color 0.3s ease;
   text-transform: none;
   letter-spacing: 0.5px;
-  height: 48px;
-  font-weight: 600;
-  border-radius: 8px;
-  margin-top: 1rem;
+  font-weight: 500;
 }
 
 .login-btn:hover {
   transform: translateY(-2px);
-  background-color: #d6b77f !important;
-  box-shadow: 0 8px 15px rgba(200, 169, 110, 0.3) !important;
+  background-color: #b89659;
 }
 
 /* Botón de contraseña olvidada */
 .forgot-password-btn {
   color: #4A4E69;
-  opacity: 0.8;
-  transition: opacity 0.2s ease;
-  font-size: 0.9rem;
+  font-size: 0.875rem;
+  transition: color 0.2s ease;
 }
 
 .forgot-password-btn:hover {
-  opacity: 1;
-  background-color: rgba(74, 78, 105, 0.1);
+  color: #C8A96E;
 }
 
 /* Divider */
 .divider {
-  opacity: 0.6;
-  margin: 1.5rem 0;
+  opacity: 0.5;
+  border-color: #9A8C98;
 }
 
 /* Enlace de registro */
 .register-link {
   color: #4A4E69;
-  transition: all 0.2s ease;
-  font-weight: 500;
+  transition: color 0.2s ease;
 }
 
 .register-link:hover {
   color: #C8A96E;
-  text-decoration: underline !important;
-}
-
-/* Estilos generales de botones */
-.v-btn {
-  text-transform: none;
-  letter-spacing: 0.5px;
-}
-
-/* Responsive adjustments */
-@media (max-width: 600px) {
-  .login-card {
-    padding: 1.5rem !important;
-    border-radius: 12px !important;
-  }
-
-  .card-title {
-    font-size: 1.5rem;
-  }
-
-  .v-icon.icon-animation {
-    font-size: 48px !important;
-  }
 }
 </style>

@@ -36,20 +36,35 @@
             <v-text-field v-model="formData.password" label="Contraseña" :type="showPassword ? 'text' : 'password'"
               :append-inner-icon="showPassword ? 'mdi-eye-off' : 'mdi-eye'"
               @click:append-inner="showPassword = !showPassword" :rules="[v => !!v || 'La contraseña es requerida']"
-              variant="outlined" density="comfortable" class="mb-6 input-field"
+              variant="outlined" density="comfortable" class="mb-4 input-field"
               prepend-inner-icon="mdi-lock"></v-text-field>
+
+            <!-- Alerts for success and error messages -->
+            <div class="mb-4">
+              <v-slide-y-transition>
+                <v-alert v-if="successMessage" type="success" variant="tonal" class="mb-2 alert-success" closable @click:close="successMessage = ''">
+                  <div class="d-flex align-center">
+                    <v-icon class="mr-2 pulse-animation">mdi-check-circle</v-icon>
+                    <span>{{ successMessage }}</span>
+                  </div>
+                </v-alert>
+              </v-slide-y-transition>
+              
+              <v-slide-y-transition>
+                <v-alert v-if="error" type="error" variant="tonal" class="mb-2 alert-error" closable @click:close="error = ''">
+                  <div class="d-flex align-center">
+                    <v-icon class="mr-2 shake-animation">mdi-alert-circle</v-icon>
+                    <span>{{ error }}</span>
+                  </div>
+                </v-alert>
+              </v-slide-y-transition>
+            </div>
 
             <v-btn type="submit" block size="large" :loading="loading" :disabled="!isFormValid || loading"
               class="mb-6 register-btn" elevation="2" v-motion-pop>
               <v-icon start icon="mdi-account-plus"></v-icon>
               Registrarse
             </v-btn>
-
-            <v-slide-y-transition>
-              <v-alert v-if="error" type="error" variant="tonal" class="mb-6 alert-error" closable>
-                {{ error }}
-              </v-alert>
-            </v-slide-y-transition>
 
             <div class="text-center">
               <NuxtLink to="/login" class="text-decoration-none d-inline-flex align-center login-link">
@@ -72,6 +87,7 @@ const { register, loading, error } = useAuth()
  
 const showPassword = ref(false)
 const isFormValid = ref(false)
+const successMessage = ref('')
 const formData = ref({
   nombre: '',
   apellido: '',
@@ -81,6 +97,9 @@ const formData = ref({
 })
 
 const handleSubmit = async () => {
+  // Reset success message
+  successMessage.value = ''
+  
   const result = await register(
     formData.value.nombre,
     formData.value.apellido,
@@ -90,7 +109,11 @@ const handleSubmit = async () => {
   )
 
   if (!result.error) {
-    navigateTo('/login')
+    successMessage.value = '¡Cuenta creada exitosamente! Redirigiendo al inicio de sesión...'
+    // Wait a moment to show the success message before redirecting
+    setTimeout(() => {
+      navigateTo('/login')
+    }, 1500)
   }
 }
 </script>
@@ -117,6 +140,8 @@ const handleSubmit = async () => {
   background-color: #F2E9E4;
   max-width: 500px;
   width: 100%;
+  border-radius: 16px !important;
+  box-shadow: 0 15px 25px rgba(0, 0, 0, 0.15) !important;
 }
 
 .card-title {
@@ -154,24 +179,84 @@ const handleSubmit = async () => {
 
 .input-field :deep(.v-field) {
   background-color: #F2E9E4;
+  border-radius: 8px;
+  transition: all 0.3s ease;
+}
+
+.input-field :deep(.v-field--focused) {
+  box-shadow: 0 0 0 2px rgba(74, 78, 105, 0.4) !important;
+}
+
+.input-field :deep(.v-field--focused .v-field__outline) {
+  color: #4A4E69 !important;
+  opacity: 1;
+}
+
+/* Estilos para las alertas */
+.alert-success {
+  border-left: 4px solid #4CAF50;
+  background-color: rgba(76, 175, 80, 0.1) !important;
+}
+
+.alert-error {
+  border-left: 4px solid #FF5252;
+  background-color: rgba(255, 82, 82, 0.1) !important;
+}
+
+/* Animaciones para los iconos de alerta */
+.pulse-animation {
+  animation: pulse 1.5s infinite;
+  color: #4CAF50;
+}
+
+.shake-animation {
+  animation: shake 0.5s cubic-bezier(.36,.07,.19,.97) both;
+  color: #FF5252;
+}
+
+@keyframes pulse {
+  0% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1.1);
+    opacity: 0.8;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+@keyframes shake {
+  10%, 90% {
+    transform: translate3d(-1px, 0, 0);
+  }
+  20%, 80% {
+    transform: translate3d(2px, 0, 0);
+  }
+  30%, 50%, 70% {
+    transform: translate3d(-3px, 0, 0);
+  }
+  40%, 60% {
+    transform: translate3d(3px, 0, 0);
+  }
 }
 
 /* Botón de registro */
 .register-btn {
   background-color: #C8A96E;
   color: #1C1C1C;
-  transition: transform 0.2s ease;
+  transition: transform 0.2s ease, background-color 0.3s ease;
   text-transform: none;
   letter-spacing: 0.5px;
+  font-weight: 500;
 }
 
 .register-btn:hover {
   transform: translateY(-2px);
-}
-
-/* Alerta de error */
-.alert-error {
-  border-left: 4px solid #FF5252;
+  background-color: #b89659;
 }
 
 /* Enlace de inicio de sesión */
