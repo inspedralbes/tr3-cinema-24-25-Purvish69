@@ -39,29 +39,8 @@
               variant="outlined" density="comfortable" class="mb-4 input-field"
               prepend-inner-icon="mdi-lock"></v-text-field>
 
-            <!-- Alerts for success and error messages -->
-            <div class="mb-4">
-              <v-slide-y-transition>
-                <v-alert v-if="successMessage" type="success" variant="tonal" class="mb-2 alert-success" closable @click:close="successMessage = ''">
-                  <div class="d-flex align-center">
-                    <v-icon class="mr-2 pulse-animation">mdi-check-circle</v-icon>
-                    <span>{{ successMessage }}</span>
-                  </div>
-                </v-alert>
-              </v-slide-y-transition>
-              
-              <v-slide-y-transition>
-                <v-alert v-if="error" type="error" variant="tonal" class="mb-2 alert-error" closable @click:close="error = ''">
-                  <div class="d-flex align-center">
-                    <v-icon class="mr-2 shake-animation">mdi-alert-circle</v-icon>
-                    <span>{{ error }}</span>
-                  </div>
-                </v-alert>
-              </v-slide-y-transition>
-            </div>
-
-            <v-btn type="submit" block size="large" :loading="loading" :disabled="!isFormValid || loading"
-              class="mb-6 register-btn" elevation="2" v-motion-pop>
+            <v-btn type="submit" block size="large" :loading="loading" class="mb-6 register-btn" elevation="2"
+              v-motion-pop>
               <v-icon start icon="mdi-account-plus"></v-icon>
               Registrarse
             </v-btn>
@@ -82,12 +61,13 @@
 <script setup>
 import { ref } from 'vue'
 import { useAuth } from '~/composables/useAuth'
+import Swal from 'sweetalert2'
 
-const { register, loading, error } = useAuth()
- 
+const { register } = useAuth()
+
 const showPassword = ref(false)
 const isFormValid = ref(false)
-const successMessage = ref('')
+const loading = ref(false)
 const formData = ref({
   nombre: '',
   apellido: '',
@@ -97,23 +77,54 @@ const formData = ref({
 })
 
 const handleSubmit = async () => {
-  // Reset success message
-  successMessage.value = ''
-  
-  const result = await register(
-    formData.value.nombre,
-    formData.value.apellido,
-    formData.value.email,
-    formData.value.telefono,
-    formData.value.password
-  )
+  loading.value = true
+  try {
+    const result = await register(
+      formData.value.nombre,
+      formData.value.apellido,
+      formData.value.email,
+      formData.value.telefono,
+      formData.value.password
+    )
 
-  if (!result.error) {
-    successMessage.value = '¡Cuenta creada exitosamente! Redirigiendo al inicio de sesión...'
-    // Wait a moment to show the success message before redirecting
-    setTimeout(() => {
+    if (!result.error) {
+      await Swal.fire({
+        icon: 'success',
+        title: '¡Registro Exitoso!',
+        text: 'Tu cuenta ha sido creada correctamente',
+        showConfirmButton: false,
+        timer: 2000,
+        timerProgressBar: true,
+        customClass: {
+          popup: 'swal-custom-popup',
+          title: 'swal-custom-title',
+          htmlContainer: 'swal-custom-content'
+        },
+        didOpen: (toast) => {
+          toast.addEventListener('mouseenter', Swal.stopTimer)
+          toast.addEventListener('mouseleave', Swal.resumeTimer)
+        }
+      })
       navigateTo('/login')
-    }, 1500)
+    } else {
+      throw new Error(result.error)
+    }
+  } catch (error) {
+    console.error('Registration failed:', error)
+    await Swal.fire({
+      icon: 'error',
+      title: 'Error en el registro',
+      text: error?.message || 'Ha ocurrido un error durante el registro. Por favor, inténtalo de nuevo.',
+      confirmButtonText: 'Entendido',
+      customClass: {
+        popup: 'swal-custom-popup',
+        title: 'swal-custom-title',
+        htmlContainer: 'swal-custom-content',
+        confirmButton: 'swal-custom-confirm'
+      }
+    })
+  } finally {
+    loading.value = false
   }
 }
 </script>
@@ -192,58 +203,6 @@ const handleSubmit = async () => {
   opacity: 1;
 }
 
-/* Estilos para las alertas */
-.alert-success {
-  border-left: 4px solid #4CAF50;
-  background-color: rgba(76, 175, 80, 0.1) !important;
-}
-
-.alert-error {
-  border-left: 4px solid #FF5252;
-  background-color: rgba(255, 82, 82, 0.1) !important;
-}
-
-/* Animaciones para los iconos de alerta */
-.pulse-animation {
-  animation: pulse 1.5s infinite;
-  color: #4CAF50;
-}
-
-.shake-animation {
-  animation: shake 0.5s cubic-bezier(.36,.07,.19,.97) both;
-  color: #FF5252;
-}
-
-@keyframes pulse {
-  0% {
-    transform: scale(1);
-    opacity: 1;
-  }
-  50% {
-    transform: scale(1.1);
-    opacity: 0.8;
-  }
-  100% {
-    transform: scale(1);
-    opacity: 1;
-  }
-}
-
-@keyframes shake {
-  10%, 90% {
-    transform: translate3d(-1px, 0, 0);
-  }
-  20%, 80% {
-    transform: translate3d(2px, 0, 0);
-  }
-  30%, 50%, 70% {
-    transform: translate3d(-3px, 0, 0);
-  }
-  40%, 60% {
-    transform: translate3d(3px, 0, 0);
-  }
-}
-
 /* Botón de registro */
 .register-btn {
   background-color: #C8A96E;
@@ -273,5 +232,41 @@ const handleSubmit = async () => {
 .v-btn {
   text-transform: none;
   letter-spacing: 0.5px;
+}
+
+/* Estilos personalizados para SweetAlert2 */
+:global(.swal-custom-popup) {
+  background: #F2E9E4;
+  border-radius: 16px;
+  padding: 2rem;
+}
+
+:global(.swal-custom-title) {
+  color: #22223B;
+  font-size: 1.5rem;
+  font-weight: 600;
+}
+
+:global(.swal-custom-content) {
+  color: #4A4E69;
+  font-size: 1rem;
+}
+
+:global(.swal-custom-confirm) {
+  background-color: #C8A96E !important;
+  color: #1C1C1C !important;
+  border-radius: 8px !important;
+  font-weight: 500 !important;
+  padding: 0.75rem 2rem !important;
+  transition: all 0.3s ease !important;
+}
+
+:global(.swal-custom-confirm:hover) {
+  background-color: #b89659 !important;
+  transform: translateY(-2px);
+}
+
+:global(.swal2-timer-progress-bar) {
+  background: #C8A96E !important;
 }
 </style>

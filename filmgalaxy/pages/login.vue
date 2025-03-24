@@ -20,27 +20,6 @@
               density="comfortable" class="mb-6 custom-input" prepend-inner-icon="mdi-lock" bg-color="transparent"
               color="#4A4E69" hide-details="auto"></v-text-field>
 
-            <!-- Alerts for success and error messages -->
-            <div class="mb-4">
-              <v-slide-y-transition>
-                <v-alert v-if="successMessage" type="success" variant="tonal" class="mb-2 alert-success" closable @click:close="successMessage = ''">
-                  <div class="d-flex align-center">
-                    <v-icon class="mr-2 pulse-animation">mdi-check-circle</v-icon>
-                    <span>{{ successMessage }}</span>
-                  </div>
-                </v-alert>
-              </v-slide-y-transition>
-              
-              <v-slide-y-transition>
-                <v-alert v-if="errorMessage" type="error" variant="tonal" class="mb-2 alert-error" closable @click:close="errorMessage = ''">
-                  <div class="d-flex align-center">
-                    <v-icon class="mr-2 shake-animation">mdi-alert-circle</v-icon>
-                    <span>{{ errorMessage }}</span>
-                  </div>
-                </v-alert>
-              </v-slide-y-transition>
-            </div>
-
             <v-btn type="submit" block size="large" :loading="loading" class="mb-4 login-btn" elevation="2"
               v-motion-pop>
               <v-icon start icon="mdi-login"></v-icon>
@@ -71,6 +50,7 @@
 <script setup>
 import { ref } from 'vue'
 import { useAuth } from '~/composables/useAuth'
+import Swal from 'sweetalert2'
 
 const email = ref('')
 const password = ref('')
@@ -79,8 +59,6 @@ const { login } = useAuth()
 const form = ref(null)
 const showPassword = ref(false)
 const loading = ref(false)
-const successMessage = ref('')
-const errorMessage = ref('')
 
 const rules = {
   required: value => !!value || 'Este campo es requerido',
@@ -91,27 +69,47 @@ const rules = {
 }
 
 const handleLogin = async () => {
-  // Reset messages
-  successMessage.value = ''
-  errorMessage.value = ''
-  
   const { valid } = await form.value.validate()
   if (valid) {
     loading.value = true
     try {
       const response = await login(email.value, password.value)
       if (response?.token) {
-        successMessage.value = '¡Inicio de sesión exitoso! Redirigiendo...'
-        
-        setTimeout(() => {
-          navigateTo('/')
-        }, 1500)
+        await Swal.fire({
+          icon: 'success',
+          title: '¡Bienvenido!',
+          text: 'Inicio de sesión exitoso',
+          showConfirmButton: false,
+          timer: 2000,
+          timerProgressBar: true,
+          customClass: {
+            popup: 'swal-custom-popup',
+            title: 'swal-custom-title',
+            htmlContainer: 'swal-custom-content'
+          },
+          didOpen: (toast) => {
+            toast.addEventListener('mouseenter', Swal.stopTimer)
+            toast.addEventListener('mouseleave', Swal.resumeTimer)
+          }
+        })
+        navigateTo('/')
       } else {
-        errorMessage.value = 'Credenciales incorrectas. Por favor, inténtalo de nuevo.'
+        throw new Error('Credenciales incorrectas')
       }
     } catch (error) {
       console.error('Login failed:', error)
-      errorMessage.value = error?.message || 'Error al iniciar sesión. Por favor, inténtalo de nuevo.'
+      await Swal.fire({
+        icon: 'error',
+        title: 'Error de acceso',
+        text: error?.message || 'Credenciales incorrectas. Por favor, inténtalo de nuevo.',
+        confirmButtonText: 'Entendido',
+        customClass: {
+          popup: 'swal-custom-popup',
+          title: 'swal-custom-title',
+          htmlContainer: 'swal-custom-content',
+          confirmButton: 'swal-custom-confirm'
+        }
+      })
     } finally {
       loading.value = false
     }
@@ -231,58 +229,6 @@ const forgotPassword = () => {
   --v-field-border-opacity: 1;
 }
 
-/* Estilos para las alertas */
-.alert-success {
-  border-left: 4px solid #4CAF50;
-  background-color: rgba(76, 175, 80, 0.1) !important;
-}
-
-.alert-error {
-  border-left: 4px solid #FF5252;
-  background-color: rgba(255, 82, 82, 0.1) !important;
-}
-
-/* Animaciones para los iconos de alerta */
-.pulse-animation {
-  animation: pulse 1.5s infinite;
-  color: #4CAF50;
-}
-
-.shake-animation {
-  animation: shake 0.5s cubic-bezier(.36,.07,.19,.97) both;
-  color: #FF5252;
-}
-
-@keyframes pulse {
-  0% {
-    transform: scale(1);
-    opacity: 1;
-  }
-  50% {
-    transform: scale(1.1);
-    opacity: 0.8;
-  }
-  100% {
-    transform: scale(1);
-    opacity: 1;
-  }
-}
-
-@keyframes shake {
-  10%, 90% {
-    transform: translate3d(-1px, 0, 0);
-  }
-  20%, 80% {
-    transform: translate3d(2px, 0, 0);
-  }
-  30%, 50%, 70% {
-    transform: translate3d(-3px, 0, 0);
-  }
-  40%, 60% {
-    transform: translate3d(3px, 0, 0);
-  }
-}
-
 /* Botón de login */
 .login-btn {
   background-color: #C8A96E;
@@ -323,5 +269,41 @@ const forgotPassword = () => {
 
 .register-link:hover {
   color: #C8A96E;
+}
+
+/* Estilos personalizados para SweetAlert2 */
+:global(.swal-custom-popup) {
+  background: #F2E9E4;
+  border-radius: 16px;
+  padding: 2rem;
+}
+
+:global(.swal-custom-title) {
+  color: #22223B;
+  font-size: 1.5rem;
+  font-weight: 600;
+}
+
+:global(.swal-custom-content) {
+  color: #4A4E69;
+  font-size: 1rem;
+}
+
+:global(.swal-custom-confirm) {
+  background-color: #C8A96E !important;
+  color: #1C1C1C !important;
+  border-radius: 8px !important;
+  font-weight: 500 !important;
+  padding: 0.75rem 2rem !important;
+  transition: all 0.3s ease !important;
+}
+
+:global(.swal-custom-confirm:hover) {
+  background-color: #b89659 !important;
+  transform: translateY(-2px);
+}
+
+:global(.swal2-timer-progress-bar) {
+  background: #C8A96E !important;
 }
 </style>
