@@ -112,11 +112,8 @@ class TicketController extends Controller
             $data['precio'] = $this->calcularPrecio($request->movieSession_id, $request->seat_id);
         }
 
-        // Crear ticket con un código único de confirmación (no se mostrará en el PDF)
         $data['codigo_confirmacion'] = Str::uuid();
         $ticket = Ticket::create($data);
-
-        // Marcar la butaca como ocupada
         $seat->update(['estado' => 'ocupada']);
 
         // Enviar el correo con el PDF adjunto para la sesión actual
@@ -266,25 +263,17 @@ class TicketController extends Controller
         return response()->json($ticket);
     }
     
-    /**
-     * Envía por correo el último ticket comprado por un usuario en una sesión específica
-     * 
-     * @param int $userId ID del usuario
-     * @param int $sessionId ID de la sesión
-     * @return \Illuminate\Http\JsonResponse
-     */
     public function sendTicketsByEmail($userId, $sessionId)
     {
         try {
-            // Obtenemos el usuario
             $user = User::findOrFail($userId);
             
             // Obtenemos solo el ticket más reciente (último comprado) para este usuario y sesión
             $ticket = Ticket::where('user_id', $userId)
                 ->where('movieSession_id', $sessionId)
                 ->with(['movieSession.movie', 'seat'])
-                ->latest('created_at')  // Ordena por fecha de creación descendente
-                ->first();              // Toma solo el más reciente
+                ->latest('created_at') 
+                ->first();             
 
             if (!$ticket) {
                 return response()->json([
@@ -292,7 +281,7 @@ class TicketController extends Controller
                 ], 404);
             }
 
-            // Preparamos la información de la sesión
+           
             $session = $ticket->movieSession;
             $sessionInfo = [
                 'fecha' => $session->fecha,
@@ -301,7 +290,6 @@ class TicketController extends Controller
                 'movie' => $session->movie
             ];
 
-            // Creamos una colección que contiene solo el ticket más reciente
             $ticketsCollection = collect([$ticket]);
 
             // Enviar el correo utilizando el mailable con PDF adjunto

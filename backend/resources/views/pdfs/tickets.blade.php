@@ -100,7 +100,7 @@
         <div class="movie-title">{{ $sessionInfo['movie']->titulo }}</div>
         <div class="session-info">Fecha: {{ \Carbon\Carbon::parse($sessionInfo['fecha'])->format('d/m/Y') }}</div>
         <div class="session-info">Hora: {{ \Carbon\Carbon::parse($sessionInfo['hora'])->format('H:i') }} h</div>
-        <div class="session-info">Sala: {{ $sessionInfo['sala'] }}</div>
+        <div class="session-info">Sala: 1</div>
         <div class="session-info">Espectador: {{ $user->nombre }} {{ $user->apellidos }}</div>
     </div>
 

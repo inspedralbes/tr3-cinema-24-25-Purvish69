@@ -94,7 +94,7 @@
         <p>
             <strong>Fecha:</strong> {{ \Carbon\Carbon::parse($sessionInfo['fecha'])->format('d/m/Y') }}<br>
             <strong>Hora:</strong> {{ \Carbon\Carbon::parse($sessionInfo['hora'])->format('H:i') }} h<br>
-            <strong>Sala:</strong> {{ $sessionInfo['sala'] }}
+            <strong>Sala: 1</strong>
         </p>
         <div class="ticket-count">
             Número de entradas: {{ count($tickets) }}
