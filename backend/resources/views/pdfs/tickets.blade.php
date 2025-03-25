@@ -115,9 +115,9 @@
     <div class="tickets-container">
         @foreach($tickets as $index => $ticket)
         <div class="ticket">
-            <div class="ticket-header">
+            {{-- <div class="ticket-header">
                 <div class="ticket-number">ENTRADA {{ $index + 1 }} / {{ count($tickets) }}</div>
-            </div>
+            </div> --}}
             
             <div class="seat-info">
                 Fila: {{ $ticket->seat->fila }} - Asiento: {{ $ticket->seat->numero }}
