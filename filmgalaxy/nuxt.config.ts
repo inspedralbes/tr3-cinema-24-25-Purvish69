@@ -9,9 +9,6 @@ export default defineNuxtConfig({
   app:{
     head: {
       title: 'FilmGalaxy',
-      link:[
-        {rel: 'icon', type: 'image/x-icon', href: '/logo/logofilmgalaxyTransparente.png'}
-      ]
   }
   },
   plugins: [
