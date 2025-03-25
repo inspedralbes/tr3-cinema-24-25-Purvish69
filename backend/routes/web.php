@@ -3,6 +3,7 @@
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\MovieController;
+use App\Http\Controllers\TicketController;
 
 Route::get('/', function () {
     return redirect()->route('login');
@@ -48,5 +49,5 @@ Route::middleware('auth')->group(function () {
     Route::get('/movieSessions/{id}/delete', [App\Http\Controllers\MovieSessionsController::class, 'delete'])->name('movieSessions.delete');
     Route::delete('/movieSessions/{id}', [App\Http\Controllers\MovieSessionsController::class, 'destroy'])->name('movieSessions.destroy');
 
-    
+    Route::post('/tickets/send-email/{userId}/{sessionId}', [TicketController::class, 'sendTicketsByEmail']);
 });

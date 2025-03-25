@@ -20,9 +20,6 @@ class TicketMail extends Mailable
     public $tickets;
     public $sessionInfo;
 
-    /**
-     * Create a new message instance.
-     */
     public function __construct(User $user, $tickets, $sessionInfo)
     {
         $this->user = $user;
@@ -30,9 +27,6 @@ class TicketMail extends Mailable
         $this->sessionInfo = $sessionInfo;
     }
 
-    /**
-     * Get the message envelope.
-     */
     public function envelope(): Envelope
     {
         return new Envelope(
@@ -40,21 +34,18 @@ class TicketMail extends Mailable
         );
     }
 
-    /**
-     * Get the message content definition.
-     */
     public function content(): Content
     {
         return new Content(
             view: 'emails.tickets',
+            with: [
+                'tickets' => $this->tickets,
+                'sessionInfo' => $this->sessionInfo,
+                'user' => $this->user
+            ]
         );
     }
 
-    /**
-     * Get the attachments for the message.
-     *
-     * @return array<int, \Illuminate\Mail\Mailables\Attachment>
-     */
     public function attachments(): array
     {
         $pdf = PDF::loadView('pdfs.tickets', [

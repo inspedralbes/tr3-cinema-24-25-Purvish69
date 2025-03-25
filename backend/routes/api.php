@@ -65,8 +65,7 @@ Route::post('/tickets', [TicketController::class, 'store']);
 Route::put('/tickets/{id}', [TicketController::class, 'update']);
 Route::delete('/tickets/{id}', [TicketController::class, 'destroy']);
 Route::get('/tickets/user/{userId}/complete', [TicketController::class, 'getUserTicketsComplete']);
-
-
+Route::post('/tickets/send-email/{userId}/{sessionId}', [TicketController::class, 'sendTicketsByEmail']);
 
 
 // Rutas de pagos

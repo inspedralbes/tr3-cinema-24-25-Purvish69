@@ -3,50 +3,52 @@
 namespace App\Http\Controllers;
 
 use App\Models\Ticket;
-use Illuminate\Http\Request;
 use App\Models\MovieSession;
-use Illuminate\Support\Facades\Validator;
 use App\Models\Seat;
 use App\Models\Payment;
 use App\Models\User;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Str;
+use App\Mail\TicketMail;
 
 class TicketController extends Controller
 {
-
     // Función para obtener los tickets de una sesión
     public function getSessionTickets($sessionId)
     {
         try {
-            $tickets = Ticket::where('movieSession_id', $sessionId)->with(['seat', 'user'])->get();
+            $tickets = Ticket::where('movieSession_id', $sessionId)
+                ->with(['seat', 'user'])
+                ->get();
             return response()->json($tickets);
         } catch (\Exception $e) {
-            return response()->json(['message' => 'Error fetching session tickets: ' . $e->getMessage()], 500);
+            return response()->json([
+                'message' => 'Error al obtener los tickets de la sesión: ' . $e->getMessage()
+            ], 500);
         }
     }
 
-    // Función para calcular el precio basado en el tipo de butaca y el campo dia_espectador
+    // Función para calcular el precio según el tipo de butaca y el campo dia_espectador de la sesión
     private function calcularPrecio($sessionId, $seatId)
     {
         $session = MovieSession::findOrFail($sessionId);
         $seat = Seat::findOrFail($seatId);
 
-        // Precios según el campo dia_espectador de la sesión
+        // Precios según si es día espectador o no
         if ($session->dia_espectador) {
-            // Precios reducidos para día del espectador
-            $precioNormal = 4; // Precio butaca normal
-            $precioVIP = 6;    // Precio butaca VIP
+            $precioNormal = 4; // Precio butaca normal en día espectador
+            $precioVIP    = 6; // Precio butaca VIP en día espectador
         } else {
-            // Precios normales
-            $precioNormal = 6; // Precio butaca normal
-            $precioVIP = 8;    // Precio butaca VIP
+            $precioNormal = 6; // Precio normal
+            $precioVIP    = 8; // Precio VIP
         }
 
-        // Devolvemos el precio según el tipo de butaca
         return ($seat->tipo === 'vip') ? $precioVIP : $precioNormal;
     }
 
-    // Muestra todos los tickets 
+    // Muestra todos los tickets (con relaciones)
     public function index(Request $request)
     {
         $query = Ticket::with(['user', 'movieSession.movie', 'seat', 'payment']);
@@ -63,22 +65,23 @@ class TicketController extends Controller
 
         return response()->json($query->get());
     }
-    // Crea un nuevo ticket
+
+    // Crea un nuevo ticket y envía el correo con PDF adjunto
     public function store(Request $request)
     {
         $validator = Validator::make($request->all(), [
-            'user_id' => 'required|exists:users,id',
+            'user_id'         => 'required|exists:users,id',
             'movieSession_id' => 'required|exists:movieSessions,id',
-            'seat_id' => 'required|exists:seats,id',
-            'payment_id' => 'required|exists:payments,id',
-            'precio' => 'sometimes|numeric',
+            'seat_id'         => 'required|exists:seats,id',
+            'payment_id'      => 'required|exists:payments,id',
+            'precio'          => 'sometimes|numeric',
         ]);
 
         if ($validator->fails()) {
             return response()->json([
-                'status' => 'error',
+                'status'  => 'error',
                 'message' => 'Error al crear el ticket',
-                'errors' => $validator->errors()
+                'errors'  => $validator->errors()
             ], 422);
         }
 
@@ -103,36 +106,37 @@ class TicketController extends Controller
             ], 422);
         }
 
-        // Calcular el precio si no fue proporcionado
+        // Calcular el precio si no se envía
         $data = $request->all();
         if (!isset($data['precio'])) {
             $data['precio'] = $this->calcularPrecio($request->movieSession_id, $request->seat_id);
         }
 
-        // Crear ticket con un código único de confirmación
+        // Crear ticket con un código único de confirmación (no se mostrará en el PDF)
         $data['codigo_confirmacion'] = Str::uuid();
         $ticket = Ticket::create($data);
 
         // Marcar la butaca como ocupada
         $seat->update(['estado' => 'ocupada']);
 
+        // Enviar el correo con el PDF adjunto para la sesión actual
+        $this->sendTicketsByEmail($ticket->user_id, $ticket->movieSession_id);
+
         return response()->json([
-            'status' => 'success',
-            'message' => 'Ticket creado exitosamente',
-            'data' => $ticket
+            'status'  => 'success',
+            'message' => 'Ticket creado y correo enviado correctamente',
+            'data'    => $ticket
         ], 201);
     }
-
 
     // Muestra un ticket específico
     public function show($id)
     {
-        // En lugar de usar route model binding, usamos find y cargamos las relaciones explícitamente
         $ticket = Ticket::with(['user', 'movieSession.movie', 'seat', 'payment'])->find($id);
         
         if (!$ticket) {
             return response()->json([
-                'status' => 'error',
+                'status'  => 'error',
                 'message' => 'Ticket no encontrado'
             ], 404);
         }
@@ -146,9 +150,9 @@ class TicketController extends Controller
         $ticket = Ticket::findOrFail($id);
         
         $validator = Validator::make($request->all(), [
-            'user_id' => 'sometimes|required|exists:users,id',
+            'user_id'         => 'sometimes|required|exists:users,id',
             'movieSession_id' => 'sometimes|required|exists:movieSessions,id',
-            'seat_id' => 'sometimes|required|exists:seats,id',
+            'seat_id'         => 'sometimes|required|exists:seats,id',
         ]);
 
         if ($validator->fails()) {
@@ -157,10 +161,10 @@ class TicketController extends Controller
 
         $data = $request->all();
 
-        // Si se cambia la butaca o la sesión, recalculamos el precio
+        // Si se cambia la butaca o la sesión, se recalcula el precio
         if ($request->has('seat_id') || $request->has('movieSession_id')) {
             $sessionId = $request->movieSession_id ?? $ticket->movieSession_id;
-            $seatId = $request->seat_id ?? $ticket->seat_id;
+            $seatId    = $request->seat_id ?? $ticket->seat_id;
 
             // Si se cambia la butaca, se libera la anterior y se valida la nueva
             if ($request->has('seat_id') && $request->seat_id != $ticket->seat_id) {
@@ -168,7 +172,6 @@ class TicketController extends Controller
                 $oldSeat->update(['estado' => 'libre']);
 
                 $newSeat = Seat::findOrFail($request->seat_id);
-                // Usamos la sesión nueva si se envía o la ya asignada al ticket
                 if ($newSeat->movieSession_id != $sessionId) {
                     return response()->json([
                         'error' => 'La butaca seleccionada no corresponde a la sesión'
@@ -188,13 +191,13 @@ class TicketController extends Controller
 
         $ticket->update($data);
         
-        // Cargar las relaciones después de actualizar
+        // Cargar relaciones después de actualizar
         $ticket->load(['user', 'movieSession.movie', 'seat', 'payment']);
         
         return response()->json([
-            'status' => 'success',
+            'status'  => 'success',
             'message' => 'Ticket actualizado exitosamente',
-            'data' => $ticket
+            'data'    => $ticket
         ]);
     }
 
@@ -208,40 +211,39 @@ class TicketController extends Controller
 
         $ticket->delete();
         return response()->json([
-            'status' => 'success',
-            'message' => 'Ticket eliminado exitosamente'
+            'status'  => 'success',
+            'message' => 'Ticket eliminado correctamente'
         ], 200);
     }
 
-    // Nueva función para obtener los precios actuales según una sesión
+    // Función para obtener los precios actuales según la sesión
     public function getPreciosSesion($sessionId)
     {
         $session = MovieSession::findOrFail($sessionId);
 
-        // Precios según valor de dia_espectador
         if ($session->dia_espectador) {
             $precios = [
                 'normal' => 4,
-                'vip' => 6
+                'vip'    => 6
             ];
         } else {
             $precios = [
                 'normal' => 6,
-                'vip' => 8
+                'vip'    => 8
             ];
         }
 
         return response()->json([
-            'precios' => $precios,
+            'precios'        => $precios,
             'dia_espectador' => $session->dia_espectador,
-            'fecha' => $session->fecha,
-            'pelicula' => $session->movie ? $session->movie->titulo : null
+            'fecha'          => $session->fecha,
+            'pelicula'       => $session->movie ? $session->movie->titulo : null
         ]);
     }
     
+    // Obtiene todos los tickets de un usuario con todas las relaciones
     public function getUserTicketsComplete($userId)
     {
-        // Use the correct relationships that are defined in the Ticket model
         $tickets = Ticket::where('user_id', $userId)
             ->with(['movieSession.movie', 'seat', 'payment', 'user'])
             ->get();
@@ -249,18 +251,69 @@ class TicketController extends Controller
         return response()->json($tickets);
     }
 
-    // Función para obtener un ticket con el usuario asociado
+    // Muestra un ticket con el usuario asociado
     public function showWithUser($id)
     {
         $ticket = Ticket::with(['user'])->find($id);
         
         if (!$ticket) {
             return response()->json([
-                'status' => 'error',
+                'status'  => 'error',
                 'message' => 'Ticket no encontrado'
             ], 404);
         }
         
         return response()->json($ticket);
+    }
+    
+    /**
+     * Envía por correo el último ticket comprado por un usuario en una sesión específica
+     * 
+     * @param int $userId ID del usuario
+     * @param int $sessionId ID de la sesión
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function sendTicketsByEmail($userId, $sessionId)
+    {
+        try {
+            // Obtenemos el usuario
+            $user = User::findOrFail($userId);
+            
+            // Obtenemos solo el ticket más reciente (último comprado) para este usuario y sesión
+            $ticket = Ticket::where('user_id', $userId)
+                ->where('movieSession_id', $sessionId)
+                ->with(['movieSession.movie', 'seat'])
+                ->latest('created_at')  // Ordena por fecha de creación descendente
+                ->first();              // Toma solo el más reciente
+
+            if (!$ticket) {
+                return response()->json([
+                    'error' => 'No se encontraron tickets para este usuario en la sesión indicada'
+                ], 404);
+            }
+
+            // Preparamos la información de la sesión
+            $session = $ticket->movieSession;
+            $sessionInfo = [
+                'fecha' => $session->fecha,
+                'hora'  => $session->hora,
+                'sala'  => $session->sala,
+                'movie' => $session->movie
+            ];
+
+            // Creamos una colección que contiene solo el ticket más reciente
+            $ticketsCollection = collect([$ticket]);
+
+            // Enviar el correo utilizando el mailable con PDF adjunto
+            Mail::to($user->email)->send(new TicketMail($user, $ticketsCollection, $sessionInfo));
+
+            return response()->json([
+                'message' => 'Correo enviado correctamente con el último ticket comprado'
+            ], 200);
+        } catch (\Exception $e) {
+            return response()->json([
+                'error' => 'Error al enviar el correo: ' . $e->getMessage()
+            ], 500);
+        }
     }
 }
