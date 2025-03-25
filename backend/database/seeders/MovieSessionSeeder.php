@@ -57,6 +57,39 @@ class MovieSessionSeeder extends Seeder
             ],
         ];
 
+        // Insertar las sesiones
         DB::table('movieSessions')->insert($sessions);
+        
+        // Obtener todas las sesiones para crear asientos
+        $insertedSessions = DB::table('movieSessions')->get();
+        
+        // Crear asientos para cada sesión
+        foreach ($insertedSessions as $session) {
+            $seats = [];
+            $filas = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L'];
+            
+            foreach ($filas as $fila) {
+                for ($numero = 1; $numero <= 10; $numero++) {
+                    // Determinar si el asiento es VIP (fila K y L son VIP si fila_vip_activa es true)
+                    $tipo = 'normal';
+                    if ($session->fila_vip_activa && ($fila == 'F')) {
+                        $tipo = 'vip';
+                    }
+                    
+                    $seats[] = [
+                        'movieSession_id' => $session->id,
+                        'fila' => $fila,
+                        'numero' => $numero,
+                        'tipo' => $tipo,
+                        'estado' => 'libre',
+                        'created_at' => now(),
+                        'updated_at' => now(),
+                    ];
+                }
+            }
+            
+            // Insertar todos los asientos para esta sesión
+            DB::table('seats')->insert($seats);
+        }
     }
 }
