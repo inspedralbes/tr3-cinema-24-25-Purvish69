@@ -73,7 +73,8 @@ class TicketController extends Controller
         $validator = Validator::make($request->all(), [
             'user_id'         => 'required|exists:users,id',
             'movieSession_id' => 'required|exists:movieSessions,id',
-            'seat_id'         => 'required|exists:seats,id',
+            // Permitir que seat_id sea un array o un solo valor
+            'seat_id'         => 'required',
             'payment_id'      => 'required|exists:payments,id',
             'precio'          => 'sometimes|numeric',
         ]);
@@ -86,19 +87,6 @@ class TicketController extends Controller
             ], 422);
         }
 
-        // Verificar que la butaca pertenezca a la sesión y esté libre
-        $seat = Seat::findOrFail($request->seat_id);
-        if ($seat->movieSession_id != $request->movieSession_id) {
-            return response()->json([
-                'error' => 'La butaca seleccionada no pertenece a la sesión indicada'
-            ], 422);
-        }
-        if ($seat->estado !== 'libre') {
-            return response()->json([
-                'error' => 'La butaca seleccionada ya está ocupada'
-            ], 422);
-        }
-
         // Verificar que el pago pertenezca al usuario
         $payment = Payment::findOrFail($request->payment_id);
         if ($payment->user_id != $request->user_id) {
@@ -107,23 +95,48 @@ class TicketController extends Controller
             ], 422);
         }
 
-        // Calcular el precio si no se envía
-        $data = $request->all();
-        if (!isset($data['precio'])) {
-            $data['precio'] = $this->calcularPrecio($request->movieSession_id, $request->seat_id);
+        // Convertir seat_id a array si no lo es
+        $seatIds = is_array($request->seat_id) ? $request->seat_id : [$request->seat_id];
+        $tickets = [];
+
+        foreach ($seatIds as $seatId) {
+            // Verificar que la butaca pertenezca a la sesión y esté libre
+            $seat = Seat::findOrFail($seatId);
+            if ($seat->movieSession_id != $request->movieSession_id) {
+                return response()->json([
+                    'error' => 'La butaca seleccionada no pertenece a la sesión indicada'
+                ], 422);
+            }
+            if ($seat->estado !== 'libre') {
+                return response()->json([
+                    'error' => 'La butaca seleccionada ya está ocupada'
+                ], 422);
+            }
+
+            // Calcular el precio si no se envía
+            $precio = $request->has('precio') ? $request->precio : $this->calcularPrecio($request->movieSession_id, $seatId);
+
+            $data = [
+                'user_id'            => $request->user_id,
+                'movieSession_id'    => $request->movieSession_id,
+                'seat_id'            => $seatId,
+                'payment_id'         => $request->payment_id,
+                'precio'             => $precio,
+                'codigo_confirmacion' => Str::uuid()
+            ];
+
+            $ticket = Ticket::create($data);
+            $seat->update(['estado' => 'ocupada']);
+            $tickets[] = $ticket;
         }
 
-        $data['codigo_confirmacion'] = Str::uuid();
-        $ticket = Ticket::create($data);
-        $seat->update(['estado' => 'ocupada']);
-
-        // Enviar el correo con el PDF adjunto para la sesión actual
-        $this->sendTicketsByEmail($ticket->user_id, $ticket->movieSession_id);
+        // Enviar correo con el PDF adjunto usando el último ticket creado (la función usa la sesión y el usuario para seleccionar el último ticket)
+        $this->sendTicketsByEmail($request->user_id, $request->movieSession_id);
 
         return response()->json([
             'status'  => 'success',
-            'message' => 'Ticket creado y correo enviado correctamente',
-            'data'    => $ticket
+            'message' => 'Tickets creados y correo enviado correctamente',
+            'data'    => $tickets
         ], 201);
     }
 
@@ -131,14 +144,14 @@ class TicketController extends Controller
     public function show($id)
     {
         $ticket = Ticket::with(['user', 'movieSession.movie', 'seat', 'payment'])->find($id);
-        
+
         if (!$ticket) {
             return response()->json([
                 'status'  => 'error',
                 'message' => 'Ticket no encontrado'
             ], 404);
         }
-        
+
         return response()->json($ticket);
     }
 
@@ -146,7 +159,7 @@ class TicketController extends Controller
     public function update(Request $request, $id)
     {
         $ticket = Ticket::findOrFail($id);
-        
+
         $validator = Validator::make($request->all(), [
             'user_id'         => 'sometimes|required|exists:users,id',
             'movieSession_id' => 'sometimes|required|exists:movieSessions,id',
@@ -188,10 +201,10 @@ class TicketController extends Controller
         }
 
         $ticket->update($data);
-        
+
         // Cargar relaciones después de actualizar
         $ticket->load(['user', 'movieSession.movie', 'seat', 'payment']);
-        
+
         return response()->json([
             'status'  => 'success',
             'message' => 'Ticket actualizado exitosamente',
@@ -203,7 +216,7 @@ class TicketController extends Controller
     public function destroy($id)
     {
         $ticket = Ticket::findOrFail($id);
-        
+
         $seat = Seat::findOrFail($ticket->seat_id);
         $seat->update(['estado' => 'libre']);
 
@@ -238,7 +251,7 @@ class TicketController extends Controller
             'pelicula'       => $session->movie ? $session->movie->titulo : null
         ]);
     }
-    
+
     // Obtiene todos los tickets de un usuario con todas las relaciones
     public function getUserTicketsComplete($userId)
     {
@@ -253,28 +266,28 @@ class TicketController extends Controller
     public function showWithUser($id)
     {
         $ticket = Ticket::with(['user'])->find($id);
-        
+
         if (!$ticket) {
             return response()->json([
                 'status'  => 'error',
                 'message' => 'Ticket no encontrado'
             ], 404);
         }
-        
+
         return response()->json($ticket);
     }
-    
+
     public function sendTicketsByEmail($userId, $sessionId)
     {
         try {
             $user = User::findOrFail($userId);
-            
+
             // Obtenemos solo el ticket más reciente (último comprado) para este usuario y sesión
             $ticket = Ticket::where('user_id', $userId)
                 ->where('movieSession_id', $sessionId)
                 ->with(['movieSession.movie', 'seat'])
-                ->latest('created_at') 
-                ->first();             
+                ->latest('created_at')
+                ->first();
 
             if (!$ticket) {
                 return response()->json([
@@ -282,12 +295,12 @@ class TicketController extends Controller
                 ], 404);
             }
 
-             // // Generar el QR code usando  el código de confirmación
+            // // Generar el QR code usando  el código de confirmación
             $qrCodePng = QrCode::size(200)->generate($ticket->codigo_confirmacion);
             $ticket->save();
             $ticket->qr_code = base64_encode($qrCodePng);
 
-           
+
             $session = $ticket->movieSession;
             $sessionInfo = [
                 'fecha' => $session->fecha,
