@@ -19,6 +19,7 @@ return new class extends Migration
             $table->unsignedBigInteger('payment_id')->nullable();
             $table->decimal('precio', 8, 2);
             $table->string('codigo_confirmacion')->unique();
+            $table->string('qr_code')->nullable();
             $table->timestamps();
         });
     }

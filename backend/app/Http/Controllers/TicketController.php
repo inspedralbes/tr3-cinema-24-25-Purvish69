@@ -12,6 +12,7 @@ use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Str;
 use App\Mail\TicketMail;
+use SimpleSoftwareIO\QrCode\Facades\QrCode;
 
 class TicketController extends Controller
 {
@@ -280,6 +281,11 @@ class TicketController extends Controller
                     'error' => 'No se encontraron tickets para este usuario en la sesión indicada'
                 ], 404);
             }
+
+             // // Generar el QR code usando  el código de confirmación
+            $qrCodePng = QrCode::size(200)->generate($ticket->codigo_confirmacion);
+            $ticket->save();
+            $ticket->qr_code = base64_encode($qrCodePng);
 
            
             $session = $ticket->movieSession;

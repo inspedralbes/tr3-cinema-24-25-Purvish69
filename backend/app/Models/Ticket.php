@@ -15,7 +15,8 @@ class Ticket extends Model
         'seat_id',
         'payment_id',
         'precio',
-        'codigo_confirmacion'
+        'codigo_confirmacion',
+        'qr_code'
     ];
 
     protected $casts = [
