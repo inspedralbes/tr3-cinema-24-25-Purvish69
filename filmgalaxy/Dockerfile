@@ -1,11 +1,16 @@
 FROM node:18
-FROM node:18
 
 WORKDIR /app
 
-# Don't run npm install in the Dockerfile
-# We'll handle this in the docker-compose command
+COPY package*.json ./
+
+RUN rm -f package-lock.json && npm install
+
+
+COPY . .
 
 EXPOSE 3000
 
-CMD ["sh", "-c", "npm install && npm run dev -- --host=0.0.0.0"]
+CMD [ "npm", "run", "dev", "--", "--host=0.0.0.0" ]
+
+# CMD [ "npm", "run", "serve" ]

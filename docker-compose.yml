@@ -1,85 +1,58 @@
-version: '3'
-
 services:
+
+  # DATABASE
   db:
     image: mysql:8.2.0
+    container_name: tr3-cinema-24-25-purvish69-db-1
     restart: always
-    container_name: mysql
-    volumes:
-      - mysql_data:/var/lib/mysql
     environment:
       MYSQL_ROOT_PASSWORD: root
-      MYSQL_DATABASE: filmgalaxy 
       MYSQL_USER: user
       MYSQL_PASSWORD: user
+      MYSQL_DATABASE: filmgalaxy
     ports:
       - "3306:3306"
+    volumes:
+      - db_data:/var/lib/mysql
 
+  # ADMINER
   adminer:
     image: adminer
     restart: always
-    container_name: adminer
     depends_on:
       - db
     ports:
-      - "9090:8080"
+      - "8080:8080"
 
-  backend:
-    build:
-      context: ./backend
-      dockerfile: Dockerfile
-    container_name: laravel
+  # LARAVEL
+  laravel:
+    build: ./backend
+    container_name: laravel_app
     ports:
-      - "8000:8000" 
+      - "8000:8000"
     volumes:
-      - ./backend:/var/www/
-    working_dir: /var/www/
+      - ./backend:/var/www
+    working_dir: /var/www
     depends_on:
       - db
-    command: bash -c "chmod +x entrypoint.sh && ./entrypoint.sh"
-    #command: bash -c "composer install && php artisan key:generate && php artisan migrate && php artisan serve --host=0.0.0.0"
+    command: bash -c 'composer install && php artisan migrate:fresh --seed && php artisan serve --host=0.0.0.0'
 
-  front:
-    build: 
+  # FRONTEND
+  filmgalaxy:
+    build:
       context: ./filmgalaxy
-      dockerfile: Dockerfile
-    container_name: vue
+    container_name: filmgalaxy_app
     ports:
-      - "3000:3000"
+      - 3000:3000
     volumes:
       - ./filmgalaxy:/app
+      - /app/node_modules
+    depends_on:
+      - laravel
     environment:
-      - NODE_ENV=development
-      - ROLLUP_SKIP_NODE_RESOLUTION=true
-      - NODE_OPTIONS=--max-old-space-size=4096
-    restart: unless-stopped
-    command: sh -c "npm install --no-optional --legacy-peer-deps && npm run dev -- --host"
-    networks:
-      - app-network
+      NUXT_APP_API_URL: http://laravel:8000
+      CHOKIDAR_USEPOLLING: true
+    command: npm run dev -- --host=0.0.0.0
 
-  # nodejs:
-  #   image: node:18
-  #   container_name: nodejs-service
-  #   working_dir: /usr/src/app
-  #   volumes:
-  #     - ./backend/node-app:/usr/src/app
-  #   ports:
-  #     - "5000:5000"
-  #   command: bash -c "npm install && npm start"
-  #   environment:
-  #     - NODE_ENV=development
-  #   depends_on:
-  #     - db
-  #   expose:
-  #     - "5000"
-  #   networks:
-  #     - app-network
-
-
-# Persistencia
 volumes:
-  mysql_data:
-
-networks:
-  app-network:
-    driver: bridge
+  db_data:
