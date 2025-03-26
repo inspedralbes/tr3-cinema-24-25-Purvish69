@@ -3,44 +3,43 @@ version: '3'
 services:
   db:
     image: mysql:8.2.0
-    container_name: tr3-cinema-24-25-purvish69-db-1
     restart: always
+    container_name: mysql
+    volumes:
+      - mysql_data:/var/lib/mysql
     environment:
       MYSQL_ROOT_PASSWORD: root
-      MYSQL_DATABASE: filmgalaxy
+      MYSQL_DATABASE: filmgalaxy 
       MYSQL_USER: user
       MYSQL_PASSWORD: user
     ports:
       - "3306:3306"
-    volumes:
-      - mysql_data:/var/lib/mysql
-    networks:
-      - app-network
 
-  laravel:
-    build: 
+  adminer:
+    image: adminer
+    restart: always
+    container_name: adminer
+    depends_on:
+      - db
+    ports:
+      - "9090:8080"
+
+  backend:
+    build:
       context: ./backend
       dockerfile: Dockerfile
     container_name: laravel
     ports:
-      - "8000:8000"
+      - "8000:8000" 
     volumes:
-      - ./backend:/var/www/html
-    working_dir: /var/www/html
+      - ./backend:/var/www/
+    working_dir: /var/www/
     depends_on:
       - db
-    environment:
-      - APP_ENV=local
-      - DB_HOST=db
-      - DB_PORT=3306
-      - DB_DATABASE=filmgalaxy
-      - DB_USERNAME=user
-      - DB_PASSWORD=mypassword
-    networks:
-      - app-network
-    command: bash -c "composer install && php artisan key:generate && php artisan migrate:fresh --seed && php artisan serve --host=0.0.0.0 --port=8000"
-       
-  filmgalaxy:
+    command: bash -c "chmod +x entrypoint.sh && ./entrypoint.sh"
+    #command: bash -c "composer install && php artisan key:generate && php artisan migrate && php artisan serve --host=0.0.0.0"
+
+  front:
     build: 
       context: ./filmgalaxy
       dockerfile: Dockerfile
@@ -51,21 +50,33 @@ services:
       - ./filmgalaxy:/app
     environment:
       - NODE_ENV=development
+      - ROLLUP_SKIP_NODE_RESOLUTION=true
+      - NODE_OPTIONS=--max-old-space-size=4096
     restart: unless-stopped
+    command: sh -c "npm install --no-optional --legacy-peer-deps && npm run dev -- --host"
     networks:
       - app-network
 
-  adminer:
-    image: adminer
-    container_name: tr3-cinema-24-25-purvish69-adminer-1
-    restart: always
-    depends_on:
-      - db
-    ports:
-      - "8080:8080"
-    networks:
-      - app-network
+  # nodejs:
+  #   image: node:18
+  #   container_name: nodejs-service
+  #   working_dir: /usr/src/app
+  #   volumes:
+  #     - ./backend/node-app:/usr/src/app
+  #   ports:
+  #     - "5000:5000"
+  #   command: bash -c "npm install && npm start"
+  #   environment:
+  #     - NODE_ENV=development
+  #   depends_on:
+  #     - db
+  #   expose:
+  #     - "5000"
+  #   networks:
+  #     - app-network
 
+
+# Persistencia
 volumes:
   mysql_data:
 
