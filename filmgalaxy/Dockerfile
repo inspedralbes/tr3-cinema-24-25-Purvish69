@@ -1,13 +1,9 @@
-FROM node:18-alpine
+FROM node:18
 
 WORKDIR /app
 
-COPY package*.json ./
-
-# Remueve el package-lock y ejecuta npm install sin dependencias opcionales
-RUN rm -f package-lock.json && npm install --no-optional
-
-COPY . .
+# Don't run npm install in the Dockerfile
+# We'll handle this in the docker-compose command
 
 EXPOSE 3000
 
