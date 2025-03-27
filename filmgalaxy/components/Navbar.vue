@@ -13,36 +13,42 @@
                 {{ item.title }}
             </v-btn>
 
-            <v-btn icon class="ml-2" @click="handleProfileClick">
-                <v-icon :icon="isUserLoggedIn ? 'mdi-account-circle' : 'mdi-account'" color="cream"></v-icon>
-            </v-btn>
+            <client-only>
+                <v-btn icon class="ml-2" @click="handleProfileClick">
+                    <v-icon :icon="isUserLoggedIn ? 'mdi-account-circle' : 'mdi-account'" color="cream"></v-icon>
+                </v-btn>
+            </client-only>
         </div>
     </v-app-bar>
 
     <!-- Mobile Navigation Bar -->
-    <v-app-bar color="primary" elevation="4" height="60" class="hidden-md-and-up mobile-navbar" app fixed>
+    <v-app-bar color="primary" elevation="4" height="60" class="hidden-md-and-up mobile-navbar" fixed>
         <v-app-bar-nav-icon color="cream" @click="drawer = !drawer"></v-app-bar-nav-icon>
         <v-toolbar-title class="text-cream font-weight-bold">
             <img src="../assets/logo/logofilmgalaxyTransparente.png" alt="Logo" class="logo-image mobile-logo" />
         </v-toolbar-title>
         <v-spacer></v-spacer>
-        <v-btn icon class="mr-2" @click="handleProfileClick">
-            <v-icon :icon="isUserLoggedIn ? 'mdi-account-circle' : 'mdi-account'" color="cream"></v-icon>
-        </v-btn>
+        <client-only>
+            <v-btn icon class="mr-2" @click="handleProfileClick">
+                <v-icon :icon="isUserLoggedIn ? 'mdi-account-circle' : 'mdi-account'" color="cream"></v-icon>
+            </v-btn>
+        </client-only>
     </v-app-bar>
 
     <!-- Mobile Navigation Drawer fixed to top -->
-    <v-navigation-drawer v-model="drawer" temporary color="primary" location="start" position="fixed"
-        class="mobile-drawer" :style="{ top: '54px', height: 'calc(100% - 53px)' }">
+    <v-navigation-drawer v-model="drawer" temporary color="primary" location="start" 
+        class="mobile-drawer" :style="{ top: '60px', height: 'calc(100% - 60px)' }">
         <v-list color="cream">
             <v-list-item v-for="(item, i) in mobileMenuItems" :key="i" :to="item.to" :prepend-icon="item.icon"
                 :title="item.title" color="cream"></v-list-item>
             <!-- Mobile-specific drawer items -->
             <v-divider class="my-2" color="cream" opacity="0.5"></v-divider>
-            <v-list-item :title="isUserLoggedIn ? 'Mi Perfil' : 'Login'"
-                :prepend-icon="isUserLoggedIn ? 'mdi-account-circle' : 'mdi-login'" @click="handleProfileClick"
-                color="cream">
-            </v-list-item>
+            <client-only>
+                <v-list-item :title="isUserLoggedIn ? 'Mi Perfil' : 'Login'"
+                    :prepend-icon="isUserLoggedIn ? 'mdi-account-circle' : 'mdi-login'" @click="handleProfileClick"
+                    color="cream">
+                </v-list-item>
+            </client-only>
         </v-list>
     </v-navigation-drawer>
 </template>
@@ -55,7 +61,8 @@ import { useAuth } from '~/composables/useAuth'
 const drawer = ref(false)
 const router = useRouter()
 const { token } = useAuth()
-const isUserLoggedIn = computed(() => !!token.value)
+// Use ref with a default value for SSR compatibility
+const isUserLoggedIn = computed(() => process.client ? !!token.value : false)
 
 // Desktop-specific menu items
 const desktopMenuItems = [
