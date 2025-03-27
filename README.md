@@ -1,18 +1,15 @@
 # 🎬 FilmGalaxy
+## 📝 Sobre el Projecte
+FilmGalaxy és una plataforma integral de reserva d'entrades de cinema que permet als usuaris comprar entrades de pel·lícules estàndard i VIP de manera fàcil a través de múltiples dispositius.
 
-## 📝 About the Project
+## 🚀 Característiques
+- 🎫 Sistema de Reserva d'Entrades
+- 📱 Disseny Responsiu
+- 🎥 Vistes Prèvies de Pel·lícules
+- 💺 Opcions d'Entrades VIP i Estàndard
+- 🎟️ Dia de l'Espectador amb Descomptes (Dia amb preus reduïts per a tots els cinèfils)
 
-FilmGalaxy is a comprehensive cinema ticket booking platform that allows users to purchase standard and VIP movie tickets seamlessly across multiple devices.
-
-## 🚀 Features
-
-- 🎫 Ticket Booking System
-- 📱 Responsive Design
-- 🎥 Movie Previews
-- 💺 VIP and Standard Ticket Options
-
-## 🛠 Tech Stack
-
+## 🛠 Pila Tecnològica
 ### Frontend
 ![Nuxt.js](https://img.shields.io/badge/Nuxt.js-3-green?logo=nuxt.js)
 ![Vue.js](https://img.shields.io/badge/Vue.js-3-brightgreen?logo=vue.js)
@@ -23,27 +20,22 @@ FilmGalaxy is a comprehensive cinema ticket booking platform that allows users t
 ![Laravel](https://img.shields.io/badge/Laravel-12-red?logo=laravel)
 ![PHP](https://img.shields.io/badge/PHP-8.2+-777BB4?logo=php)
 
-## 🔧 Installation
-
-### Prerequisites
+## 🔧 Instal·lació
+### Requisits Previs
 - Node.js
 - PHP 8.2+
 - Composer
 - npm
 
+## 📦 Gestió del Projecte
+- **Tauler del Projecte:** [Taiga](https://tree.taiga.io/project/purvish69-dawtr3cinemapurvish/taskboard/sprint-2-14091)
+- **Prototip de Disseny:** [Penpot](https://design.penpot.app/#/workspace?team-id=f5fe9278-89db-81e9-8004-faf25f3561fd&file-id=456eee66-5663-80cb-8005-d362338816a6&page-id=456eee66-5663-80cb-8005-d362338816a7)
 
-## 📦 Project Management
+## 🌐 Demostració en Viu
+[FilmGalaxy Producció](http://filmgalaxy.daw.inspedralbes.cat/)
 
-- **Project Board:** [Taiga](https://tree.taiga.io/project/purvish69-dawtr3cinemapurvish/taskboard/sprint-2-14091)
-- **Design Prototype:** [Penpot](https://design.penpot.app/#/workspace?team-id=f5fe9278-89db-81e9-8004-faf25f3561fd&file-id=456eee66-5663-80cb-8005-d362338816a6&page-id=456eee66-5663-80cb-8005-d362338816a7)
-
-## 🌐 Live Demo
-[FilmGalaxy Production](http://filmgalaxy.daw.inspedralbes.cat/)
-
-## 👥 Team
-- **Lead Developer:** Purvish Patel
-
+## 👥 Equip
+- **Líder de Desenvolumpament:** Purvish Patel
 
 ---
-
-**🍿 Happy Movie Booking!**
+**🍿 Bon Dia de Cinema!**
