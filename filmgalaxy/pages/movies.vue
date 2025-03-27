@@ -6,64 +6,53 @@
 
       <div class="container mx-auto px-4 py-8">
         <!-- Encabezado principal -->
-        <div class="  container mx-auto px-6" style="padding-top: 60px; padding-bottom: 20px;">
+        <div class="container mx-auto px-6" style="padding-top: 60px; padding-bottom: 10px;">
 
-          <h1 class="text-4x1 md:text-5xl font-bold text-light text-center mb-8 animate-fade-in">
+          <h1 class="text-4x1 md:text-5xl font-bold text-gold text-center mb-6 animate-fade-in">
             Películas en Cartelera
           </h1>
 
-          <!-- Sección para búsqueda y filtros -->
-          <div class="bg-light/10 backdrop-blur-md rounded-xl p-4 max-w-6xl mx-auto transform hover:shadow-2xl transition-all duration-300">
-            <div class="flex flex-col md:flex-row md:items-end gap-4">
-              <!-- Barra de búsqueda -->
-              <div class="flex-grow relative">
-                <label class="block text-light text-sm font-medium mb-2">Búsqueda</label>
-                <div class="relative">
-                  <input type="text" v-model="searchQuery" placeholder="Buscar películas..."
-                    class="w-full pl-10 pr-4 py-3 rounded-lg border-2 border-accent/30 bg-light/5 text-light placeholder-gray-400 focus:outline-none focus:border-accent focus:ring-2 focus:ring-accent/50 transition-all duration-300" />
-                  <span class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+          <!-- Sección para búsqueda y filtros - CON NUEVO DISEÑO DE BUSCADOR -->
+          <div
+            class="bg-light/10 backdrop-blur-md rounded-xl p-3 max-w-4xl mx-auto transform hover:shadow-2xl transition-all duration-300">
+            <div class="flex flex-col md:flex-row items-end gap-3">
+              <!-- Barra de búsqueda con nuevo diseño -->
+              <div class="flex-grow">
+                <div class="relative flex items-center">
+                  <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gold" viewBox="0 0 20 20"
+                      fill="currentColor">
                       <path fill-rule="evenodd"
                         d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z"
                         clip-rule="evenodd" />
                     </svg>
-                  </span>
+                  </div>
+                  <input type="text" v-model="searchQuery" placeholder="¿Qué película buscas?"
+                    class="w-full pl-10 pr-4 py-3 rounded-full border-2 border-gold/40 bg-light/10 text-light placeholder-gray-300 focus:outline-none focus:border-gold focus:ring-2 focus:ring-gold/30 transition-all duration-300 shadow-inner" />
                 </div>
               </div>
 
               <!-- Filtro por idioma -->
-              <div class="md:w-48">
-                <label class="block text-light text-sm font-medium mb-2">Idioma</label>
+              <div class="md:w-40 relative">
                 <select v-model="filterLenguaje"
-                  class="w-full p-3 rounded-lg bg-light/5 border-2 border-accent/30 text-black focus:border-accent focus:ring-2 focus:ring-accent/50 transition-all duration-300">
-                  <option value="">Todos los idiomas</option>
+                  class="w-full p-2.5 rounded-lg bg-light/5 border-2 border-accent/30 text-light focus:border-accent focus:ring-2 focus:ring-accent/50 transition-all duration-300 appearance-none pl-4 pr-8">
+                  <option value="">Todos</option>
                   <option value="Español">Español</option>
                   <option value="Inglés">Inglés</option>
                   <option value="Subtitulada">Subtitulada</option>
                 </select>
+                <div class="absolute inset-y-0 right-0 flex items-center px-2 pointer-events-none">
+                  <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"
+                    xmlns="http://www.w3.org/2000/svg">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                  </svg>
+                </div>
               </div>
-
-              <!-- Filtro por género -->
-              <div class="md:w-48">
-                <label class="block text-light text-sm font-medium mb-2">Género</label>
-                <select v-model="filterGenero"
-                  class="w-full p-3 rounded-lg bg-light/5 border-2 border-accent/30 text-black focus:border-accent focus:ring-2 focus:ring-accent/50 transition-all duration-300">
-                  <option value="">Todos los géneros</option>
-                  <option value="Accion">Acción</option>
-                  <option value="Drama">Drama</option>
-                  <option value="Comedia">Comedia</option>
-                  <option value="Ciencia Ficcion">Ciencia Ficción</option>
-                  <option value="Terror">Terror</option>
-                  <option value="Aventura">Aventura</option>
-                  <option value="Animacion">Animación</option>
-                </select>
-              </div>
-
               <!-- Botón para limpiar los filtros -->
-              <div class="md:ml-2 mb-0.5">
+              <div class="md:ml-1">
                 <button @click="resetFilters"
-                  class="w-full md:w-auto px-6 py-3 bg-gold hover:bg-gold/80 text-primary rounded-lg font-medium transition-colors duration-300 flex items-center justify-center space-x-2">
-                  <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                  class="w-full md:w-auto px-4 py-2.5 bg-gold hover:bg-gold/80 text-primary rounded-full font-medium transition-colors duration-300 flex items-center justify-center space-x-1 shadow-md">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
                     <path fill-rule="evenodd"
                       d="M4 2a1 1 0 011 1v2.101a7.002 7.002 0 0111.601 2.566 1 1 0 11-1.885.666A5.002 5.002 0 005.999 7H9a1 1 0 010 2H4a1 1 0 01-1-1V3a1 1 0 011-1zm.008 9.057a1 1 0 011.276.61A5.002 5.002 0 0014.001 13H11a1 1 0 110-2h5a1 1 0 011 1v4a1 1 0 11-2 0v-2.101a7.002 7.002 0 01-11.601-2.566 1 1 0 01.61-1.276z"
                       clip-rule="evenodd" />
@@ -126,14 +115,14 @@
               <p class="text-xs text-gray-300">{{ movie.lenguaje || 'Idioma no especificado' }}</p>
               <p v-if="movie.genero" class="text-xs text-gray-400">{{ movie.genero }}</p>
 
-              <!-- Botones para ver detalles o comprar entradas -->
+              <!-- Botones para ver detalles o comprar entradas - AUMENTADOS DE TAMAÑO -->
               <div class="flex gap-1 pt-1">
                 <button @click="goToDetails(movie.id)"
-                  class="flex-1 bg-gold hover:bg-gold/80 text-primary font-medium py-1 px-2 rounded text-xs transition-colors duration-300">
+                  class="flex-1 bg-gold hover:bg-gold/80 text-primary font-medium py-2 px-2 rounded text-sm transition-colors duration-300">
                   Detalls
                 </button>
                 <button @click="goToBuy(movie.id)"
-                  class="flex-1 bg-accent hover:bg-accent/80 text-light font-medium py-1 px-2 rounded text-xs transition-colors duration-300">
+                  class="flex-1 bg-accent hover:bg-accent/80 text-light font-medium py-2 px-2 rounded text-sm transition-colors duration-300">
                   Comprar
                 </button>
               </div>
@@ -158,7 +147,7 @@ const router = useRouter();
 
 // Referencias reactivas para gestionar los filtros de búsqueda
 const searchQuery = ref('');
-const filterGenero = ref('');
+// Eliminado filterGenero ya que se eliminó ese filtro
 const filterLenguaje = ref('');
 
 // Al montar el componente, obtenemos las películas si aún no se han cargado
@@ -182,18 +171,16 @@ const filteredMovies = computed(() => {
       (movie.genero?.toLowerCase().includes(searchQuery.value.toLowerCase())) ||
       (movie.sinopsis?.toLowerCase().includes(searchQuery.value.toLowerCase()));
 
-    // Filtros por género e idioma
-    const matchGenero = !filterGenero.value || (movie.genero === filterGenero.value);
+    // Filtro solo por idioma, ya que se eliminó el filtro de género
     const matchLenguaje = !filterLenguaje.value || (movie.lenguaje === filterLenguaje.value);
 
-    return searchMatch && matchGenero && matchLenguaje;
+    return searchMatch && matchLenguaje;
   });
 });
 
 // Función para restablecer todos los filtros
 const resetFilters = () => {
   searchQuery.value = '';
-  filterGenero.value = '';
   filterLenguaje.value = '';
 };
 
@@ -218,7 +205,6 @@ const goToBuy = (id) => {
 </script>
 
 <style>
-/* Clase para el gradiente de fondo */
 .custom-bg {
   background: linear-gradient(135deg, #22223B 10%, #EAE0D5 100%);
 }
@@ -255,6 +241,15 @@ const goToBuy = (id) => {
   overflow: hidden;
 }
 
+/* Asegurarse de ocultar completamente el desplegable nativo */
+select {
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+  background-image: none !important;
+}
+
+
 /* Estilos específicos para dispositivos móviles */
 @media (max-width: 640px) {
   .grid-cols-2>* {
@@ -265,5 +260,24 @@ const goToBuy = (id) => {
     -webkit-line-clamp: 1;
     line-clamp: 1;
   }
+
+  /* Hacer que los botones sean más fáciles de tocar en dispositivos móviles */
+  button {
+    min-height: 40px;
+  }
+
+  /* Asegurar que los textos de los botones sean legibles */
+  .text-sm {
+    font-size: 0.8rem;
+  }
+}
+
+
+/* Estilos específicos para el nuevo buscador */
+select {
+  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e");
+  background-position: right 0.5rem center;
+  background-repeat: no-repeat;
+  background-size: 1.5em 1.5em;
 }
 </style>

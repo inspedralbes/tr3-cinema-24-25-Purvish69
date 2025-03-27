@@ -11,8 +11,7 @@
         <!-- Error State -->
         <div v-else-if="error" class="max-w-md mx-auto bg-carbon/80 text-ivory p-6 rounded-xl backdrop-blur-sm">
           <p class="text-center">{{ error }}</p>
-          <button @click="router.push('/movies')"
-            class="action-button mt-4 w-full">
+          <button @click="router.push('/movies')" class="action-button mt-4 w-full">
             Ver películas
           </button>
         </div>
@@ -21,18 +20,16 @@
         <div v-else-if="!tickets.length" class="max-w-md mx-auto ticket-card p-8 rounded-xl text-center">
           <h2 class="text-2xl font-bold text-gold mb-3">No tienes entradas</h2>
           <p class="mb-6 text-ivory">¡Compra tus entradas ahora y disfruta del mejor cine!</p>
-          <button @click="router.push('/movies')" 
-            class="action-button">
+          <button @click="router.push('/movies')" class="action-button">
             Ver películas
           </button>
         </div>
 
         <!-- Tickets List -->
-        <div v-else class="max-w-4xl mx-auto">
-          <h1 class="text-4xl font-bold text-gold mb-8 text-center">Mis Entradas</h1>
+        <div v-else class="max-w-4xl mx-auto mt-16">
+          <h1 class="text-5xl font-bold text-gold mb-8 text-center">Mis Entradas</h1>
           <div class="space-y-4">
-            <div v-for="ticket in tickets" :key="ticket.id" 
-              class="ticket-card rounded-xl overflow-hidden">
+            <div v-for="ticket in tickets" :key="ticket.id" class="ticket-card rounded-xl overflow-hidden">
               <div class="p-6">
                 <div class="flex justify-between items-start mb-4">
                   <h2 class="text-2xl font-bold text-ivory">
@@ -174,12 +171,12 @@ const formatDayAndDate = (dateString) => {
 
 const getCurrentUserId = computed(() => {
   if (userId.value) return userId.value;
-  
+
   if (typeof window !== 'undefined') {
     const storedUser = JSON.parse(localStorage.getItem('user') || '{}');
     return storedUser.id;
   }
-  
+
   return null;
 });
 
@@ -192,7 +189,7 @@ onMounted(async () => {
 
   try {
     const userIdValue = getCurrentUserId.value;
-    
+
     if (!userIdValue) {
       error.value = 'No se pudo identificar al usuario';
       loading.value = false;
@@ -200,24 +197,24 @@ onMounted(async () => {
     }
 
     const allTickets = await getTickets();
-    
+
     if (!allTickets || allTickets.error) {
       console.error('Error al obtener tickets:', allTickets?.error);
       error.value = 'Error al cargar tus entradas. Por favor, inténtalo de nuevo más tarde.';
       loading.value = false;
       return;
     }
-    
+
     let userTickets = allTickets.filter(ticket => ticket.user_id === userIdValue);
-    
+
     if (!userTickets.length) {
       loading.value = false;
       return;
     }
-    
+
     userTickets = userTickets.map(ticket => {
       const enhancedTicket = { ...ticket };
-      
+
       if (!enhancedTicket.movie_session && enhancedTicket.movieSession_id) {
         enhancedTicket.movie_session = {
           id: enhancedTicket.movieSession_id,
@@ -226,14 +223,14 @@ onMounted(async () => {
           sala: enhancedTicket.session?.sala || '1'
         };
       }
-      
+
       if (enhancedTicket.movie_session && !enhancedTicket.movie_session.movie) {
         enhancedTicket.movie_session.movie = {};
       }
-      
+
       return enhancedTicket;
     });
-    
+
     tickets.value = userTickets;
   } catch (err) {
     console.error('Error al cargar tickets:', err);
@@ -272,7 +269,7 @@ onMounted(async () => {
 
 /* Main Background */
 .main-background {
-  background: linear-gradient(135deg, #22223B    10%, #9A8C98   100%);
+  background: linear-gradient(135deg, #22223B 10%, #9A8C98 100%);
 }
 
 /* Loading Spinner */
@@ -297,7 +294,7 @@ onMounted(async () => {
   backdrop-filter: blur(8px);
   border: 1px solid rgba(200, 169, 110, 0.1);
   box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1),
-              0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    0 2px 4px -1px rgba(0, 0, 0, 0.06);
 }
 
 /* Status Badge */
