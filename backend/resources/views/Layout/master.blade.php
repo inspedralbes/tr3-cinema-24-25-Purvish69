@@ -145,6 +145,9 @@
           <li class="nav-item">
             <a class="nav-link" href="{{ route('tickets.index') }}">Entrades</a>
           </li>
+          <li class="nav-item">
+            <a class="nav-link" href="{{ route('stats.index') }}">Estadístiques</a>
+          </li>
         </ul>
         <ul class="navbar-nav">
           @if(Auth::check())
