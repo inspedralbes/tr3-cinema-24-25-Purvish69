@@ -50,4 +50,23 @@ Route::middleware('auth')->group(function () {
     Route::delete('/movieSessions/{id}', [App\Http\Controllers\MovieSessionsController::class, 'destroy'])->name('movieSessions.destroy');
 
     Route::post('/tickets/send-email/{userId}/{sessionId}', [TicketController::class, 'sendTicketsByEmail']);
+
+
+Route::middleware(['auth'])->group(function() {
+    // Listado y filtro de tickets
+    Route::get('/tickets', [TicketController::class, 'indexView'])->name('tickets.index');
+    Route::get('/tickets/filter', [TicketController::class, 'filterByMovie'])->name('tickets.filter');
+
+    // Crear ticket
+    Route::get('/tickets/create', [TicketController::class, 'createView'])->name('tickets.create');
+    Route::post('/tickets', [TicketController::class, 'store'])->name('tickets.store');
+
+    // Editar ticket
+    Route::get('/tickets/{id}/edit', [TicketController::class, 'editView'])->name('tickets.edit');
+    Route::put('/tickets/{id}', [TicketController::class, 'update'])->name('tickets.update');
+
+    // Eliminar ticket
+    Route::delete('/tickets/{id}', [TicketController::class, 'destroy'])->name('tickets.destroy');
+});
+
 });

@@ -103,6 +103,9 @@
           <li class="nav-item">
             <a class="nav-link" href="{{ route('movieSessions.index') }}">Crear Session</a>
           </li>
+          <li class="nav-item">
+            <a class="nav-link" href="{{ route('tickets.index') }}">Tickets</a>
+          </li>
         </ul>
         <ul class="navbar-nav">
           @if(Auth::check())
