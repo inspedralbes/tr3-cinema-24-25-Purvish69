@@ -51,7 +51,7 @@
 
                     <div class="flex space-x-4 animate-fade-up" style="animation-delay: 400ms">
                       <button class="btn-primary">
-                        Comprar Entradas
+                        Comprar entrades
                       </button>
                       <button class="btn-secondary"
                         @click="movieStore.navigateToMovieDetails(movieStore.featuredMovies[currentSlide], router)">
@@ -76,27 +76,26 @@
         <section class="container mx-auto px-4 py-12">
           <div class="flex flex-col md:flex-row justify-between items-center mb-8">
             <h2 class="text-2xl md:text-4xl font-bold text-light mb-4 md:mb-0">
-              Películas de Session
+              Sessions de pel·lícula
             </h2>
             <button class="btn-primary" @click="$router.push('/')">
-              Ver Más Sessiones
+              Veure més sessions
             </button>
           </div>
 
           <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6">
             <div v-for="session in combinedSessions" :key="session.id"
-              class="group relative bg-light/10 rounded-xl overflow-hidden backdrop-blur-sm transition-transform duration-300 hover:scale-105"
-              :class="{ 'animate-pulse-subtle': isSessionStartingSoon(session) }">
+              class="group relative bg-light/10 rounded-xl overflow-hidden backdrop-blur-sm transition-transform duration-300 hover:scale-105">
               <!-- Movie Poster -->
               <div class="relative aspect-[2/3]">
                 <img :src="session.movie.imagen" :alt="session.movie.titulo" class="w-full h-full object-cover" />
                 <div class="absolute top-4 right-4 bg-gold text-primary px-3 py-1 rounded-full text-sm font-medium">
                   {{ session.hora }}
                 </div>
-                <!-- Indicador de estado (próximo a terminar) -->
+                <!-- Indicador d'estat (a punt d'acabar) -->
                 <div v-if="isSessionEndingSoon(session)"
                   class="absolute top-4 left-4 bg-red-500 text-white px-3 py-1 rounded-full text-sm font-medium animate-pulse">
-                  Terminando Pronto
+                  Acaba aviat
                 </div>
                 <div
                   class="absolute inset-0 bg-gradient-to-t from-primary/90 via-primary/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300">
@@ -116,7 +115,7 @@
                 <h3 class="text-lg font-bold text-light line-clamp-2">
                   {{ session.movie.titulo }}
                 </h3>
-                <!-- Nueva línea para mostrar día, fecha y hora -->
+                <!-- Nova línia per mostrar dia, data i hora -->
                 <p class="text-sm text-light">
                   {{ formatDateHeader(session.fecha) }} - {{ session.hora }}
                 </p>
@@ -136,14 +135,14 @@
           </div>
         </section>
 
-        <!-- Próximamente Info de Películas -->
+        <!-- Pròximament Info de Pel·lícules -->
         <section class="container mx-auto px-4 py-12">
           <div class="flex flex-col md:flex-row justify-between items-center mb-8">
             <h2 class="text-2xl md:text-4xl font-bold text-light mb-4 md:mb-0">
-              Próximamente
+              Pròximament
             </h2>
             <button class="btn-primary" @click="$router.push('/movies')">
-              Ver Más Películas
+              Veure més pel·lícules
             </button>
           </div>
 
@@ -213,18 +212,18 @@ function startCarousel() {
   }, 5000);
 }
 
-// Upcoming sessions for the next 4 days
+// Sessions imminents per als propers 4 dies
 const combinedSessions = computed(() => {
   const now = new Date();
   const today = new Date(now);
   today.setHours(0, 0, 0, 0);
 
-  // Inicialmente buscar en los próximos 4 días
+  // Inicialment buscar en els propers 4 dies
   let maxDate = new Date(today);
   maxDate.setDate(maxDate.getDate() + 4);
 
   let sessions = sessionsStore.availableSessions.filter(session => {
-    // Convertir la fecha y hora de la sesión a un objeto Date
+    // Convertir la data i hora de la sessió a un objecte Date
     const sessionDate = new Date(session.fecha);
     const sessionTime = session.hora.split(':');
     const sessionDateTime = new Date(sessionDate);
@@ -234,19 +233,19 @@ const combinedSessions = computed(() => {
       0, 0
     );
 
-    // Verificar si la sesión ya ha terminado
+    // Verificar si la sessió ja ha acabat
     const movieDurationMinutes = session.movie?.duracion ? parseInt(session.movie.duracion) : 120;
     const sessionEndTime = new Date(sessionDateTime);
     sessionEndTime.setMinutes(sessionEndTime.getMinutes() + movieDurationMinutes);
 
-    // Solo mostrar sesiones que no han terminado
+    // Només mostrar sessions que encara no han acabat
     return sessionEndTime > now && sessionDate <= maxDate;
   });
 
-  // Si hay menos de 4 sesiones, aumentar el rango de días hasta encontrar al menos 4
+  // Si hi ha menys de 4 sessions, augmentar el rang de dies fins a trobar almenys 4
   if (sessions.length < 4) {
-    let extendedDays = 5; // Empezar con un día adicional
-    while (sessions.length < 4 && extendedDays <= 30) { // Limitar a 30 días
+    let extendedDays = 5; // Començar amb un dia addicional
+    while (sessions.length < 4 && extendedDays <= 30) { // Limitar a 30 dies
       maxDate = new Date(today);
       maxDate.setDate(maxDate.getDate() + extendedDays);
 
@@ -271,29 +270,29 @@ const combinedSessions = computed(() => {
     }
   }
 
-  // Ordenar sesiones primero por fecha y luego por hora
+  // Ordenar sessions primer per data i després per hora
   sessions.sort((a, b) => {
     const dateA = new Date(a.fecha);
     const dateB = new Date(b.fecha);
 
-    // Si las fechas son diferentes, ordenar por fecha
+    // Si les dates són diferents, ordenar per data
     if (dateA.getTime() !== dateB.getTime()) {
       return dateA - dateB;
     }
 
-    // Si las fechas son iguales, ordenar por hora
+    // Si les dates són iguals, ordenar per hora
     return a.hora.localeCompare(b.hora);
   });
 
-  // Devolver máximo 8 sesiones para mostrar
+  // Devolver màxim 8 sessions per mostrar
   return sessions.slice(0, 8);
 });
 
-// Chequear periódicamente si hay sesiones que han terminado y actualizar la lista
+// Comprovar periòdicament si hi ha sessions que han acabat i actualitzar la llista
 const checkExpiredSessions = () => {
   const now = new Date();
 
-  // Verificar cuántas sesiones han terminado
+  // Comptar quantes sessions han acabat
   const expiredSessionsCount = sessionsStore.sessions.filter(session => {
     const sessionDate = new Date(session.fecha);
     const sessionTime = session.hora.split(':');
@@ -311,46 +310,46 @@ const checkExpiredSessions = () => {
     return sessionEndTime <= now;
   }).length;
 
-  // Si más del 50% de las sesiones han terminado o no hay sesiones visibles, recargar
+  // Si més del 50% de les sessions han acabat o no hi ha sessions visibles, recarregar
   if (expiredSessionsCount > sessionsStore.sessions.length / 2 || combinedSessions.value.length === 0) {
     sessionsStore.fetchSessions();
   }
 };
 
-// Configurar un intervalo para verificar sesiones expiradas cada 5 minutos
+// Configurar un interval per comprovar sessions acabades cada 5 minuts
 let checkSessionsInterval;
 onMounted(() => {
   movieStore.fetchMovies();
   sessionsStore.fetchSessions();
   startCarousel();
 
-  // Verificar periódicamente si hay sesiones expiradas (cada 5 minutos)
+  // Comprovar periòdicament si hi ha sessions acabades (cada 5 minuts)
   checkSessionsInterval = setInterval(checkExpiredSessions, 300000);
 
-  // También verificar al cargar la página
+  // També comprovar en carregar la pàgina
   checkExpiredSessions();
 });
 
-// Limpiar intervalos al desmontar
+// Netejar intervals al desmuntar
 onUnmounted(() => {
   if (carouselInterval) clearInterval(carouselInterval);
   if (checkSessionsInterval) clearInterval(checkSessionsInterval);
 });
 
-// Helpers para formatear fechas y duración
+// Helpers per formatejar dates i durada
 const formatReleaseDate = (dateString) => {
   if (!dateString) return '';
   const date = new Date(dateString);
-  return date.toLocaleDateString('es-ES', {
+  return date.toLocaleDateString('ca-ES', {
     day: 'numeric', month: 'short'
   });
 };
 
 const formatDateHeader = (dateString) => {
-  // La fecha ya viene en formato "yyyy-mmm-dd" (ej: "2025-mar.-18")
+  // La data ve en format "yyyy-mmm-dd" (ex: "2025-mar.-18")
   const date = new Date(dateString);
 
-  // Verificar si es hoy, mañana o pasado mañana
+  // Verificar si és avui, demà o passat demà
   const today = new Date();
   today.setHours(0, 0, 0, 0);
 
@@ -360,24 +359,24 @@ const formatDateHeader = (dateString) => {
   const dayAfterTomorrow = new Date(today);
   dayAfterTomorrow.setDate(dayAfterTomorrow.getDate() + 2);
 
-  // Convertir a fechas sin hora para comparación
+  // Convertir a dates sense hora per comparar
   const dateOnly = new Date(date);
   dateOnly.setHours(0, 0, 0, 0);
 
   if (dateOnly.getTime() === today.getTime()) {
-    return 'Hoy - ' + date.toLocaleDateString('es-ES', {
+    return 'Avui - ' + date.toLocaleDateString('ca-ES', {
       weekday: 'long', day: 'numeric', month: 'long'
     });
   } else if (dateOnly.getTime() === tomorrow.getTime()) {
-    return 'Mañana - ' + date.toLocaleDateString('es-ES', {
+    return 'Demà - ' + date.toLocaleDateString('ca-ES', {
       weekday: 'long', day: 'numeric', month: 'long'
     });
   } else if (dateOnly.getTime() === dayAfterTomorrow.getTime()) {
-    return 'Pasado mañana - ' + date.toLocaleDateString('es-ES', {
+    return 'Passat demà - ' + date.toLocaleDateString('ca-ES', {
       weekday: 'long', day: 'numeric', month: 'long'
     });
   } else {
-    return date.toLocaleDateString('es-ES', {
+    return date.toLocaleDateString('ca-ES', {
       weekday: 'long', day: 'numeric', month: 'long', year: 'numeric'
     });
   }
@@ -392,7 +391,7 @@ const formatDuration = (minutes) => {
   return `${hours}h ${remainingMins.toString().padStart(2, '0')}min`;
 };
 
-// Indicar si una sesión está a punto de terminar
+// Indicar si una sessió està a punt d'acabar
 const isSessionEndingSoon = (session) => {
   const now = new Date();
   const sessionDate = new Date(session.fecha);
@@ -408,12 +407,12 @@ const isSessionEndingSoon = (session) => {
   const sessionEndTime = new Date(sessionDateTime);
   sessionEndTime.setMinutes(sessionEndTime.getMinutes() + movieDurationMinutes);
 
-  const timeDiff = (sessionEndTime - now) / 1000 / 60; // minutos
+  const timeDiff = (sessionEndTime - now) / 1000 / 60; // minuts
 
-  return timeDiff < 30; // menos de 30 minutos para terminar
+  return timeDiff < 30; // menys de 30 minuts per acabar
 };
 
-// Indicar si una sesión está a punto de comenzar
+// Indicar si una sessió està a punt de començar
 const isSessionStartingSoon = (session) => {
   const now = new Date();
   const sessionDate = new Date(session.fecha);
@@ -425,12 +424,12 @@ const isSessionStartingSoon = (session) => {
     0, 0
   );
 
-  const timeDiff = (sessionDateTime - now) / 1000 / 60; // minutos
+  const timeDiff = (sessionDateTime - now) / 1000 / 60; // minuts
 
-  return timeDiff < 30; // menos de 30 minutos para comenzar
+  return timeDiff < 30; // menys de 30 minuts per començar
 };
 
-// Obtener información del tiempo restante para una sesión
+// Obtenir informació del temps restant per a una sessió
 const getSessionTimeInfo = (session) => {
   const now = new Date();
   const sessionDate = new Date(session.fecha);
@@ -446,25 +445,25 @@ const getSessionTimeInfo = (session) => {
   const sessionEndTime = new Date(sessionDateTime);
   sessionEndTime.setMinutes(sessionEndTime.getMinutes() + movieDurationMinutes);
 
-  // Si la sesión ya ha comenzado
+  // Si la sessió ja ha començat
   if (now > sessionDateTime) {
-    const timeDiff = (sessionEndTime - now) / 1000 / 60; // minutos hasta el final
+    const timeDiff = (sessionEndTime - now) / 1000 / 60; // minuts fins al final
     if (timeDiff <= 0) {
-      return `Sesión finalizada`;
+      return `Sessió finalitzada`;
     } else if (timeDiff < 30) {
-      return `Termina en ${Math.floor(timeDiff)} min`;
+      return `Acaba en ${Math.floor(timeDiff)} min`;
     } else {
-      return `En progreso (${Math.floor(timeDiff)} min restantes)`;
+      return `En curs (${Math.floor(timeDiff)} min restants)`;
     }
   } else {
-    // Si la sesión no ha comenzado
-    const timeDiff = (sessionDateTime - now) / 1000 / 60; // minutos hasta el inicio
+    // Si la sessió no ha començat
+    const timeDiff = (sessionDateTime - now) / 1000 / 60; // minuts fins a l'inici
     if (timeDiff < 60) {
-      return `Comienza en ${Math.floor(timeDiff)} min`;
-    } else if (timeDiff < 1440) { // menos de 24 horas
-      return `Comienza a las ${session.hora}`;
+      return `Comença en ${Math.floor(timeDiff)} min`;
+    } else if (timeDiff < 1440) { // menys de 24 hores
+      return `Comença a les ${session.hora}`;
     } else {
-      return `${formatReleaseDate(session.fecha)} a las ${session.hora}`;
+      return `${formatReleaseDate(session.fecha)} a les ${session.hora}`;
     }
   }
 };
@@ -475,7 +474,7 @@ const getSessionTimeInfo = (session) => {
   background: linear-gradient(135deg, #22223B 10%, #EAE0D5 100%);
 }
 
-/* Animación para fade-up */
+/* Animació per fade-up */
 @keyframes fade-up {
   from {
     opacity: 0;
@@ -492,7 +491,7 @@ const getSessionTimeInfo = (session) => {
   animation: fade-up 0.6s ease-out forwards;
 }
 
-/* Animación para fade-in */
+/* Animació per fade-in */
 @keyframes fade-in {
   from {
     opacity: 0;
@@ -507,7 +506,7 @@ const getSessionTimeInfo = (session) => {
   animation: fade-in 0.3s ease-out forwards;
 }
 
-/* Animación para pulse-subtle */
+/* Animació per pulse-subtle */
 @keyframes pulse-subtle {
   from {
     transform: scale(1);
@@ -522,7 +521,7 @@ const getSessionTimeInfo = (session) => {
   animation: pulse-subtle 1s ease-out infinite;
 }
 
-/* Barra de desplazamiento personalizada */
+/* Barra de desplaçament personalitzada */
 ::-webkit-scrollbar {
   width: 10px;
 }
@@ -545,7 +544,7 @@ const getSessionTimeInfo = (session) => {
   scrollbar-color: #d4af37 #1a202c;
 }
 
-/* Truncado de texto en 2 líneas */
+/* Truncament de text en 2 línies */
 .line-clamp-2 {
   display: -webkit-box;
   -webkit-line-clamp: 2;

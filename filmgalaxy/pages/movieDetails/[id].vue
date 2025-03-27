@@ -177,7 +177,7 @@
                 <p>Asientos normales: {{ normalSeatsCount }} x €{{ prices.normal }} = €{{ normalSeatsTotal }}</p>
                 <p>Asientos VIP: {{ vipSeatsCount }} x €{{ prices.vip }} = €{{ vipSeatsTotal }}</p>
                 <div class="border-t border-gray-700 pt-2 mt-4">
-                  <p class="text-xl font-bold">Total: €{{ total }}</p>
+                  <p class="text-xl font-bold">Total: €{{ totalPrice }}</p>
                 </div>
               </div>
             </div>
@@ -199,7 +199,171 @@
 </template>
 
 <script setup>
-// Aquí va tu lógica de script existente
+import { ref, onMounted, computed } from 'vue';
+import { useRoute, useRouter } from 'vue-router';
+import { useMovieStore } from '~/stores/movieStore';
+
+const route = useRoute();
+const router = useRouter();
+const movieStore = useMovieStore();
+
+const loading = ref(true);
+const error = ref(null);
+const currentMovie = ref(null);
+const selectedSession = ref(null);
+const selectedSeats = ref([]);
+const uniqueRows = ref([]);
+const uniqueNumbers = ref([]);
+const seats = ref([]);
+
+// Precios de las entradas
+const prices = {
+  normal: 8.5,
+  vip: 12.0
+};
+
+// Contadores para el resumen
+const normalSeatsCount = computed(() => 
+  selectedSeats.value.filter(seat => seat.tipo !== 'vip').length
+);
+
+const vipSeatsCount = computed(() => 
+  selectedSeats.value.filter(seat => seat.tipo === 'vip').length
+);
+
+const normalSeatsTotal = computed(() => 
+  normalSeatsCount.value * prices.normal
+);
+
+const vipSeatsTotal = computed(() => 
+  vipSeatsCount.value * prices.vip
+);
+
+const totalPrice = computed(() => 
+  normalSeatsTotal.value + vipSeatsTotal.value
+);
+
+// Formatear fecha para mostrar
+const formatDate = (dateString) => {
+  if (!dateString) return 'Fecha no disponible';
+  
+  const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+  try {
+    const date = new Date(dateString);
+    return date.toLocaleDateString('es-ES', options);
+  } catch (e) {
+    console.error('Error al formatear fecha:', e);
+    return 'Fecha no disponible';
+  }
+};
+
+// Buscar un asiento por fila y número
+const getSeat = (row, number) => {
+  return seats.value.find(seat => 
+    seat.fila === row && seat.numero === parseInt(number)
+  );
+};
+
+// Seleccionar/deseleccionar asiento
+const toggleSeat = (seat) => {
+  if (seat.estado === 'ocupada') return;
+  
+  const index = selectedSeats.value.findIndex(s => 
+    s.fila === seat.fila && s.numero === seat.numero
+  );
+  
+  if (index >= 0) {
+    selectedSeats.value.splice(index, 1);
+  } else {
+    selectedSeats.value.push(seat);
+  }
+};
+
+// Comprar entradas
+const purchaseTickets = () => {
+  if (selectedSeats.value.length === 0) return;
+  
+  // Aquí irá la lógica para confirmar la compra de entradas
+  // En un caso real, redirigirías a una página de pago
+  router.push('/billetesDeUsuario');
+};
+
+// Cargar película y sesiones
+onMounted(async () => {
+  const movieId = parseInt(route.params.id);
+  
+  if (!movieId) {
+    error.value = 'ID de película no válido';
+    loading.value = false;
+    return;
+  }
+  
+  try {
+    // Si tenemos la película en el store, la usamos
+    const movie = movieStore.getMovieById(movieId);
+    
+    if (movie) {
+      currentMovie.value = movie;
+      movieStore.setCurrentMovie(movie);
+    } else {
+      // Si no está en el store, intentamos cargarla
+      await movieStore.fetchMovies();
+      currentMovie.value = movieStore.getMovieById(movieId);
+      
+      if (!currentMovie.value) {
+        error.value = 'No se encontró la película';
+        loading.value = false;
+        return;
+      }
+    }
+    
+    // Configuración de ejemplo de asientos (en un caso real, esto vendría de la API)
+    // Generar filas A-F
+    const rows = ['A', 'B', 'C', 'D', 'E', 'F'];
+    uniqueRows.value = rows;
+    
+    // Generar números 1-12
+    const numbers = Array.from({ length: 12 }, (_, i) => i + 1);
+    uniqueNumbers.value = numbers;
+    
+    // Generar asientos
+    const seatList = [];
+    rows.forEach(row => {
+      numbers.forEach(num => {
+        // Asientos al azar ocupados (20% de probabilidad)
+        const estado = Math.random() < 0.2 ? 'ocupada' : 'disponible';
+        
+        // Asientos VIP en las filas E y F
+        const tipo = row === 'E' || row === 'F' ? 'vip' : 'normal';
+        
+        seatList.push({
+          fila: row,
+          numero: num,
+          estado,
+          tipo
+        });
+      });
+    });
+    
+    seats.value = seatList;
+    
+    // Ejemplo de sesión seleccionada
+    selectedSession.value = {
+      id: 1,
+      movie_id: movieId,
+      fecha: new Date().toISOString().split('T')[0],
+      hora: '19:30',
+      sala: 2,
+      dia_espectador: Math.random() < 0.5 // 50% de probabilidad de ser día del espectador
+    };
+    
+  } catch (err) {
+    console.error('Error al cargar datos:', err);
+    error.value = 'Error al cargar los datos de la película';
+  } finally {
+    loading.value = false;
+  }
+});
 </script>
 
 <style scoped>
