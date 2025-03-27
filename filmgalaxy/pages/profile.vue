@@ -7,66 +7,66 @@
           <v-row justify="center">
             <v-col cols="12" sm="10" md="8" lg="6">
               <v-card class="profile-card" elevation="22">
-                <!-- Profile Header -->
+                <!-- Capçalera del perfil -->
                 <div class="profile-header">
                   <v-avatar size="120" class="user-avatar elevation-5">
                     <v-icon size="72" icon="mdi-account" color="#F2E9E4"></v-icon>
                   </v-avatar>
                 </div>
 
-                <!-- Loading State -->
+                <!-- Estat de càrrega -->
                 <div v-if="loading" class="text-center py-8">
                   <div class="loading-animation">
                     <div class="dot dot1"></div>
                     <div class="dot dot2"></div>
                     <div class="dot dot3"></div>
                   </div>
-                  <p class="text-body-1 loading-text">Cargando información de usuario...</p>
+                  <p class="text-body-1 loading-text">Carregant informació d'usuari...</p>
                 </div>
 
-                <!-- User Data -->
+                <!-- Dades de l'usuari -->
                 <v-card-text v-else-if="userData" class="user-details pa-6">
                   <div class="user-info-container">
                     <div class="info-row">
                       <div class="info-item">
                         <v-icon icon="mdi-account" color="#4A4E69" class="info-icon"></v-icon>
-                        <span class="info-label">Nombre:</span>
+                        <span class="info-label">Nom:</span>
                         <span class="info-value">{{ userData.nombre }}</span>
                       </div>
                       <div class="info-item">
                         <v-icon icon="mdi-account-multiple" color="#4A4E69" class="info-icon"></v-icon>
-                        <span class="info-label">Apellido:</span>
+                        <span class="info-label">Cognom:</span>
                         <span class="info-value">{{ userData.apellido }}</span>
                       </div>
                     </div>
                     <div class="info-row">
                       <div class="info-item">
                         <v-icon icon="mdi-email" color="#4A4E69" class="info-icon"></v-icon>
-                        <span class="info-label">Email:</span>
+                        <span class="info-label">Correu electrònic:</span>
                         <span class="info-value">{{ userData.email }}</span>
                       </div>
                       <div class="info-item">
                         <v-icon icon="mdi-phone" color="#4A4E69" class="info-icon"></v-icon>
-                        <span class="info-label">Teléfono:</span>
+                        <span class="info-label">Telèfon:</span>
                         <span class="info-value">{{ userData.telefono }}</span>
                       </div>
                     </div>
                   </div>
                 </v-card-text>
 
-                <!-- Error State -->
+                <!-- Estat d'error -->
                 <v-card-text v-else class="text-center py-6">
                   <v-icon size="48" icon="mdi-alert-circle" color="#9A8C98" class="mb-4"></v-icon>
-                  <p class="text-body-1">No se pudo cargar la información del usuario.</p>
+                  <p class="text-body-1">No s'ha pogut carregar la informació de l'usuari.</p>
                   <v-btn color="#4A4E69" class="mt-4" @click="loadUserData">
-                    Intentar nuevamente
+                    Tornar a provar
                   </v-btn>
                 </v-card-text>
 
-                <!-- Action Button: Logout -->
+                <!-- Botó d'acció: Tancar sessió -->
                 <v-card-actions v-if="userData" class="actions-container">
                   <v-btn color="#9A8C98" size="large" @click="handleLogout" variant="elevated" prepend-icon="mdi-logout" class="logout-btn">
-                    Cerrar Sesión
+                    Tancar Sessió
                   </v-btn>
                 </v-card-actions>
               </v-card>
@@ -83,14 +83,14 @@ import { ref, onMounted } from 'vue'
 import Navbar from '@/components/Navbar.vue'
 import useAuth from '~/composables/useAuth'
 
-// Usamos el objeto completo del composable
+// Usuem el objecte complet del composable
 const auth = useAuth()
 const { getUserData, logout } = auth
 
 const userData = ref(null)
 const loading = ref(true)
 
-// Función para leer cookies
+// Funció per llegir galetes
 const getCookie = (name) => {
   const cookies = document.cookie.split('; ').reduce((prev, current) => {
     const [cookieName, value] = current.split('=')
@@ -104,13 +104,13 @@ const loadUserData = async () => {
   try {
     loading.value = true
 
-    // Obtener el userId de las cookies directamente
+    // Obtenir el userId de les galetes directament
     const cookieUserId = getCookie('userId')
     if (!cookieUserId) {
-      console.error("No se encontró la cookie userId o es inválida")
+      console.error("No s'ha trobat la galeta userId o és invàlida")
       const response = await getUserData()
       if (response ) {
-        console.warn('Usando el primer usuario por defecto (solo para desarrollo)')
+        console.warn('Usant el primer usuari per defecte (només per desenvolupament)')
         userData.value = response
       }
       return
@@ -119,15 +119,15 @@ const loadUserData = async () => {
     const response = await getUserData()
     if (response ) {
       userData.value = response
-      console.log('Usuario logueado encontrado:', response)
+      console.log('Usuari trobat:', response)
     }else{
-      console.error('Usuario no encontrado')
+      console.error('Usuari no trobat')
     }
   } catch (error) {
-    console.error('Error al cargar los datos del usuario:', error)
+    console.error('Error al carregar les dades de l\'usuari:', error)
   } finally {
     loading.value = false
-    console.log('Carga de datos completada. Estado de loading:', loading.value)
+    console.log('Càrrega de dades completada. Estat de loading:', loading.value)
   }
 }
 
@@ -138,7 +138,7 @@ const handleLogout = async () => {
     userData.value = null
     navigateTo('/login')
   } catch (error) {
-    console.error('Error al cerrar sesión:', error)
+    console.error('Error al tancar sessió:', error)
   }
 }
 
@@ -148,7 +148,7 @@ onMounted(() => {
 </script>
 
 <style scoped>
-/* Contenedor principal */
+/* Contenidor principal */
 .profile-container {
   min-height: 100vh;
   display: flex;
@@ -158,7 +158,7 @@ onMounted(() => {
   background-image: linear-gradient(140deg,  #EAE0D5 5%,  #22223B 100%);
 }
 
-/* Tarjeta de perfil */
+/* Targeta de perfil */
 .profile-card {
   border-radius: 10px;
   overflow: hidden;
@@ -171,7 +171,7 @@ onMounted(() => {
   transform: translateY(-4px);
 }
 
-/* Encabezado con degradado */
+/* Encapçalament amb degradat */
 .profile-header {
   padding: 2rem 1.5rem;
   background-color: #EAE0D5;
@@ -179,7 +179,7 @@ onMounted(() => {
   justify-content: center;
 }
 
-/* Avatar del usuario */
+/* Avatar de l'usuari */
 .user-avatar {
   border: 4px solid #22223B;
   background-color: #4A4E69;
@@ -189,21 +189,21 @@ onMounted(() => {
   padding: 1.5rem;
 }
 
-/* Contenedor de información del usuario */
+/* Contenidor de informació de l'usuari */
 .user-info-container {
   display: flex;
   flex-direction: column;
   gap: 1rem;
 }
 
-/* Filas de información (dos columnas en desktop) */
+/* Files d'informació (dues columnes en ordinador de sobretaula) */
 .info-row {
   display: flex;
   justify-content: space-between;
   gap: 1rem;
 }
 
-/* Elemento de información */
+/* Element d'informació */
 .info-item {
   flex: 1;
   display: flex;
@@ -230,9 +230,8 @@ onMounted(() => {
   color: #22223B;
 }
 
-
 .actions-container {
-    background-color: #EAE0D5;
+  background-color: #EAE0D5;
   padding: 1rem;
   display: flex;
   justify-content: center;
@@ -250,7 +249,7 @@ onMounted(() => {
   box-shadow: 0 6px 12px rgba(34, 34, 59, 0.2);
 }
 
-/* Animación de carga */
+/* Animació de càrrega */
 .loading-animation {
   display: flex;
   justify-content: center;
@@ -280,7 +279,7 @@ onMounted(() => {
   font-weight: 500;
 }
 
-/* Responsive: en móviles las filas se apilan */
+/* Responsiu: en mòbils les files es pileen */
 @media (max-width: 600px) {
   .info-row {
     flex-direction: column;

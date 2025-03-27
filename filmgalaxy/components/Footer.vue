@@ -1,29 +1,37 @@
 <template>
   <v-footer class="bg-primary" elevation="4">
     <v-container>
-      <v-row class="py-8">
-        <v-col cols="12" md="4">
+      <v-row class="py-8" align="center" justify="space-between">
+        <!-- Columna Esquerra: FilmGalaxy -->
+        <v-col cols="12" md="4" class="text-left">
           <h3 class="text-h5 text-light mb-4">FilmGalaxy</h3>
-          <p class="text-accent mb-4">Compra tus entradas en FilmGalaxy, y <br> disfruta de la mejor experiencia de
-            cine.</p>
+          <p class="text-accent mb-4">
+            Compra les teves entrades a FilmGalaxy, i <br> gaudeix de la millor experiència de cinema.
+          </p>
           <div class="d-flex gap-4">
             <v-btn icon="mdi-facebook" variant="text" color="gold"
               href="https://github.com/inspedralbes/tr3-cinema-24-25-Purvish69/tree/dev"></v-btn>
-            <v-btn icon="mdi-twitter" variant="text" color="gold" href="https://www.imdb.com/?ref_=nv_home" ></v-btn>
+            <v-btn icon="mdi-twitter" variant="text" color="gold" href="https://www.imdb.com/?ref_=nv_home"></v-btn>
             <v-btn icon="mdi-instagram" variant="text" color="gold"></v-btn>
           </div>
         </v-col>
 
-        <v-col cols="12" md="4">
-          <h4 class="text-h6 text-light mb-4">Enlaces Rápidos</h4>
+        <!-- Columna Central: Preus -->
+        <v-col cols="12" md="4" class="text-center">
+          <h4 class="text-h6 text-light mb-4">Preus</h4>
           <v-list bg-color="transparent" class="pa-0">
-            <v-list-item v-for="(link, i) in quickLinks" :key="i" :title="link" class="px-0"
-              color="accent"></v-list-item>
+            <v-list-item class="px-0" color="accent">
+              <span class="text-light">Dia d'espectador: Normal 4€, VIP 6€</span>
+            </v-list-item>
+            <v-list-item class="px-0" color="accent">
+              <span class="text-light">Dia normal: Normal 6€, VIP 8€</span>
+            </v-list-item>
           </v-list>
         </v-col>
 
-        <v-col cols="12" md="4">
-          <h4 class="text-h6 text-light mb-4">Contacto</h4>
+        <!-- Columna Dreta: Contacte -->
+        <v-col cols="12" md="4" class="text-right">
+          <h4 class="text-h6 text-light mb-4">Contacte</h4>
           <v-list bg-color="transparent" class="pa-0">
             <v-list-item v-for="(contact, i) in contactInfo" :key="i" :title="contact" class="px-0"
               color="accent"></v-list-item>
@@ -32,30 +40,16 @@
       </v-row>
 
       <v-divider class="border-opacity-25"></v-divider>
-
-      <!-- <v-row class="py-4">
-          <v-col cols="12" class="text-center text-accent">
-            © {{ new Date().getFullYear() }} FilmGalaxy, Todos los pe.
-          </v-col>
-        </v-row> -->
     </v-container>
   </v-footer>
 </template>
 
 <script setup>
-const quickLinks = [
-  'Cartelera',
-  'Próximos Estrenos',
-  'Promociones',
-  'Sobre Nosotros',
-  'Términos y Condiciones'
-];
-
 const contactInfo = [
   '📞 +34 900 123 456',
   '📧 info@cinemax.com',
-  '📍 Calle Avenida Siempreviva, 69, Barcelona',
-  '🕒 Lun - Sab: 16:00- 18:00 - 20:00'
+  '📍 Carrer Avenida Sempreviva, 69, Barcelona',
+  '🕒 Dl - Ds: 16:00 - 18:00 - 20:00'
 ];
 </script>
 

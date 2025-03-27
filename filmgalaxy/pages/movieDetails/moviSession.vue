@@ -3,7 +3,7 @@
     <Navbar />
     <div class="min-h-screen bg-gradient-to-br from-primary via-secondary to-cream bg-custom">
       <div class="container mx-auto px-6" style="padding-top: 120px; padding-bottom: 60px;">
-        <h1 class="text-3xl md:text-4xl font-bold text-light text-center mb-8 animate-fade-in">
+        <h1 class="text-3xl md:text-5xl font-bold text-gold text-center mb-8 animate-fade-in">
           Sesiones de Películas
         </h1>
 
