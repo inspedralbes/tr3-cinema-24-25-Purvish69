@@ -44,7 +44,7 @@
             <!-- Mobile-specific drawer items -->
             <v-divider class="my-2" color="cream" opacity="0.5"></v-divider>
             <client-only>
-                <v-list-item :title="isUserLoggedIn ? 'Mi Perfil' : 'Login'"
+                <v-list-item :title="isUserLoggedIn ? 'El Meu Perfil' : 'Iniciar Sessió'"
                     :prepend-icon="isUserLoggedIn ? 'mdi-account-circle' : 'mdi-login'" @click="handleProfileClick"
                     color="cream">
                 </v-list-item>
@@ -69,7 +69,7 @@ const desktopMenuItems = [
     { title: 'Inici', icon: 'mdi-home', to: '/' },
     { title: 'Pel·lícules', icon: 'mdi-movie', to: '/movies' },
     { title: 'Sessions', icon: 'mdi-ticket', to: '/movieDetails/moviSession' }, 
-    { title: 'Billetes Comprados', icon: 'mdi-ticket-confirmation', to: '/billetesDeUsuario' },
+    { title: 'Entrades Comprades', icon: 'mdi-ticket-confirmation', to: '/billetesDeUsuario' },
     // { title: 'informacion', icon: 'mdi-phone', to: '/informacion' }
 ]
 
@@ -78,7 +78,7 @@ const mobileMenuItems = [
     { title: 'Inici', icon: 'mdi-home', to: '/' },
     { title: 'Pel·lícules', icon: 'mdi-movie', to: '/movies' },
     { title: 'Sessions', icon: 'mdi-ticket', to: '/movieDetails/moviSession' }, 
-    { title: 'Billetes Comprados', icon: 'mdi-ticket-confirmation', to: '/billetesDeUsuario' },
+    { title: 'Entrades Comprades', icon: 'mdi-ticket-confirmation', to: '/billetesDeUsuario' },
     // { title: 'informacion', icon: 'mdi-phone', to: '/informacion' }
 ]
 

@@ -10,11 +10,11 @@
           </div>
 
           <v-form @submit.prevent="handleLogin" ref="form" class="login-form">
-            <v-text-field v-model="email" label="Email" type="email" :rules="[rules.required, rules.email]"
+            <v-text-field v-model="email" label="Correu electrònic" type="email" :rules="[rules.required, rules.email]"
               variant="outlined" density="comfortable" class="mb-4 custom-input" prepend-inner-icon="mdi-email"
               bg-color="transparent" color="#4A4E69" hide-details="auto"></v-text-field>
 
-            <v-text-field v-model="password" label="Contraseña" :type="showPassword ? 'text' : 'password'"
+            <v-text-field v-model="password" label="Contrasenya" :type="showPassword ? 'text' : 'password'"
               :append-inner-icon="showPassword ? 'mdi-eye-off' : 'mdi-eye'"
               @click:append-inner="showPassword = !showPassword" :rules="[rules.required]" variant="outlined"
               density="comfortable" class="mb-6 custom-input" prepend-inner-icon="mdi-lock" bg-color="transparent"
@@ -23,12 +23,12 @@
             <v-btn type="submit" block size="large" :loading="loading" class="mb-4 login-btn" elevation="2"
               v-motion-pop>
               <v-icon start icon="mdi-login"></v-icon>
-              Iniciar Sesión
+              Iniciar Sessió
             </v-btn>
 
             <div class="text-center mb-4">
               <v-btn variant="text" class="forgot-password-btn" @click="forgotPassword">
-                ¿Olvidaste tu contraseña?
+                Has oblidat la contrasenya?
               </v-btn>
             </div>
 
@@ -37,7 +37,7 @@
             <div class="text-center">
               <NuxtLink to="/register" class="text-decoration-none d-inline-flex align-center register-link">
                 <v-icon size="small" class="mr-1">mdi-account-plus</v-icon>
-                ¿No tienes una cuenta? Regístrate
+                No tens un compte? Registra't
               </NuxtLink>
             </div>
           </v-form>
@@ -61,10 +61,10 @@ const showPassword = ref(false)
 const loading = ref(false)
 
 const rules = {
-  required: value => !!value || 'Este campo es requerido',
+  required: value => !!value || 'Aquest camp és obligatori',
   email: value => {
     const pattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
-    return pattern.test(value) || 'Formato de email inválido'
+    return pattern.test(value) || 'Format d\'email invàlid'
   }
 }
 
@@ -77,8 +77,8 @@ const handleLogin = async () => {
       if (response?.token) {
         await Swal.fire({
           icon: 'success',
-          title: '¡Bienvenido!',
-          text: 'Inicio de sesión exitoso',
+          title: 'Benvingut!',
+          text: 'Inici de sessió correcte',
           showConfirmButton: false,
           timer: 2000,
           timerProgressBar: true,
@@ -94,15 +94,15 @@ const handleLogin = async () => {
         })
         navigateTo('/')
       } else {
-        throw new Error('Credenciales incorrectas')
+        throw new Error('Credencials incorrectes')
       }
     } catch (error) {
       console.error('Login failed:', error)
       await Swal.fire({
         icon: 'error',
-        title: 'Error de acceso',
-        text: error?.message || 'Credenciales incorrectas. Por favor, inténtalo de nuevo.',
-        confirmButtonText: 'Entendido',
+        title: 'Error d\'accés',
+        text: error?.message || 'Credencials incorrectes. Si us plau, torna-ho a provar.',
+        confirmButtonText: 'Entès',
         customClass: {
           popup: 'swal-custom-popup',
           title: 'swal-custom-title',
@@ -122,7 +122,7 @@ const forgotPassword = () => {
 </script>
 
 <style scoped>
-/* Colores principales */
+/* Colores principals */
 :root {
   --dark-blue: #22223B;
   --medium-blue: #4A4E69;
@@ -132,13 +132,13 @@ const forgotPassword = () => {
   --dark-gray: #1C1C1C;
 }
 
-/* Estilos del contenedor principal */
+/* Estils del contenedor principal */
 .login-container {
   background: linear-gradient(135deg, #22223B 0%, #EAE0D5 100%);
   min-height: 100vh;
 }
 
-/* Estilos de la tarjeta de login */
+/* Estils de la tarjeta de login */
 .login-card {
   position: relative;
   overflow: hidden;
@@ -155,13 +155,13 @@ const forgotPassword = () => {
   letter-spacing: 0.5px;
 }
 
-/* Animación del icono */
+/* Animació del icono */
 .icon-animation {
   color: #C8A96E;
   animation: float 3s ease-in-out infinite;
 }
 
-/* Animación de flotamiento del icono */
+/* Animació de flotació del icono */
 @keyframes float {
   0% {
     transform: translateY(0);
@@ -176,7 +176,7 @@ const forgotPassword = () => {
   }
 }
 
-/* Estilos de los campos de entrada */
+/* Estils dels camps de entrada */
 :deep(.custom-input) {
   margin-bottom: 1rem;
 }
@@ -229,7 +229,7 @@ const forgotPassword = () => {
   --v-field-border-opacity: 1;
 }
 
-/* Botón de login */
+/* Botó de login */
 .login-btn {
   background-color: #C8A96E;
   color: #1C1C1C;
@@ -244,7 +244,7 @@ const forgotPassword = () => {
   background-color: #b89659;
 }
 
-/* Botón de contraseña olvidada */
+/* Botó de contrasenya oblidada */
 .forgot-password-btn {
   color: #4A4E69;
   font-size: 0.875rem;
@@ -261,7 +261,7 @@ const forgotPassword = () => {
   border-color: #9A8C98;
 }
 
-/* Enlace de registro */
+/* Enllaç de registre */
 .register-link {
   color: #4A4E69;
   transition: color 0.2s ease;
@@ -271,7 +271,7 @@ const forgotPassword = () => {
   color: #C8A96E;
 }
 
-/* Estilos personalizados para SweetAlert2 */
+/* Estils personalitzats per SweetAlert2 */
 :global(.swal-custom-popup) {
   background: #F2E9E4;
   border-radius: 16px;

@@ -5,50 +5,50 @@
       <v-col cols="12" md="6" class="d-flex align-center justify-center pa-6">
         <v-card v-motion-slide-right class="pa-8 rounded-xl mx-auto register-card" elevation="12">
           <v-card-title class="text-h4 font-weight-bold text-center mb-8 card-title">
-            Crear Cuenta
+            Crear Compte
           </v-card-title>
 
           <v-form @submit.prevent="handleSubmit" v-model="isFormValid">
             <v-row>
               <v-col cols="12" sm="6">
-                <v-text-field v-model="formData.nombre" label="Nombre" :rules="[v => !!v || 'El nombre es requerido']"
+                <v-text-field v-model="formData.nombre" label="Nom" :rules="[v => !!v || 'El nom és obligatori']"
                   variant="outlined" density="comfortable" class="input-field"
                   prepend-inner-icon="mdi-account"></v-text-field>
               </v-col>
 
               <v-col cols="12" sm="6">
-                <v-text-field v-model="formData.apellido" label="Apellido"
-                  :rules="[v => !!v || 'El apellido es requerido']" variant="outlined" density="comfortable"
+                <v-text-field v-model="formData.apellido" label="Cognom"
+                  :rules="[v => !!v || 'El cognom és obligatori']" variant="outlined" density="comfortable"
                   class="input-field" prepend-inner-icon="mdi-account"></v-text-field>
               </v-col>
             </v-row>
 
             <v-text-field v-model="formData.email" label="Email" type="email" :rules="[
-              v => !!v || 'El email es requerido',
-              v => /.+@.+\..+/.test(v) || 'Email debe ser válido'
+              v => !!v || 'L\'email és obligatori',
+              v => /.+@.+\..+/.test(v) || 'L\'email ha de ser vàlid'
             ]" variant="outlined" density="comfortable" class="mb-2 input-field"
               prepend-inner-icon="mdi-email"></v-text-field>
 
-            <v-text-field v-model="formData.telefono" label="Teléfono" type="tel"
-              :rules="[v => !!v || 'El teléfono es requerido']" variant="outlined" density="comfortable"
+            <v-text-field v-model="formData.telefono" label="Telèfon" type="tel"
+              :rules="[v => !!v || 'El telèfon és obligatori']" variant="outlined" density="comfortable"
               class="mb-2 input-field" prepend-inner-icon="mdi-phone"></v-text-field>
 
-            <v-text-field v-model="formData.password" label="Contraseña" :type="showPassword ? 'text' : 'password'"
+            <v-text-field v-model="formData.password" label="Contrasenya" :type="showPassword ? 'text' : 'password'"
               :append-inner-icon="showPassword ? 'mdi-eye-off' : 'mdi-eye'"
-              @click:append-inner="showPassword = !showPassword" :rules="[v => !!v || 'La contraseña es requerida']"
+              @click:append-inner="showPassword = !showPassword" :rules="[v => !!v || 'La contrasenya és obligatòria']"
               variant="outlined" density="comfortable" class="mb-4 input-field"
               prepend-inner-icon="mdi-lock"></v-text-field>
 
             <v-btn type="submit" block size="large" :loading="loading" class="mb-6 register-btn" elevation="2"
               v-motion-pop>
               <v-icon start icon="mdi-account-plus"></v-icon>
-              Registrarse
+              Registrar-se
             </v-btn>
 
             <div class="text-center">
               <NuxtLink to="/login" class="text-decoration-none d-inline-flex align-center login-link">
                 <v-icon size="small" class="mr-1">mdi-login</v-icon>
-                ¿Ya tienes una cuenta? Inicia sesión
+                Ja tens un compte? Inicia sessió
               </NuxtLink>
             </div>
           </v-form>
@@ -90,8 +90,8 @@ const handleSubmit = async () => {
     if (!result.error) {
       await Swal.fire({
         icon: 'success',
-        title: '¡Registro Exitoso!',
-        text: 'Tu cuenta ha sido creada correctamente',
+        title: 'Registre Completat!',
+        text: 'El teu compte ha estat creat correctament',
         showConfirmButton: false,
         timer: 2000,
         timerProgressBar: true,
@@ -113,9 +113,9 @@ const handleSubmit = async () => {
     console.error('Registration failed:', error)
     await Swal.fire({
       icon: 'error',
-      title: 'Error en el registro',
-      text: error?.message || 'Ha ocurrido un error durante el registro. Por favor, inténtalo de nuevo.',
-      confirmButtonText: 'Entendido',
+      title: 'Error en el registre',
+      text: error?.message || 'Hi ha hagut un error durant el registre. Si us plau, torna-ho a provar.',
+      confirmButtonText: 'Entès',
       customClass: {
         popup: 'swal-custom-popup',
         title: 'swal-custom-title',
@@ -130,7 +130,7 @@ const handleSubmit = async () => {
 </script>
 
 <style scoped>
-/* Colores principales */
+/* Colores principals */
 :root {
   --dark-blue: #22223B;
   --medium-blue: #4A4E69;
@@ -140,13 +140,13 @@ const handleSubmit = async () => {
   --dark-gray: #1C1C1C;
 }
 
-/* Estilos del contenedor principal */
+/* Estils del contenidor principal */
 .register-container {
   background: linear-gradient(135deg, #22223B 0%, #EAE0D5 100%);
   min-height: 100vh;
 }
 
-/* Estilos de la tarjeta de registro */
+/* Estils de la targeta de registre */
 .register-card {
   background-color: #F2E9E4;
   max-width: 500px;
@@ -159,7 +159,7 @@ const handleSubmit = async () => {
   color: #22223B;
 }
 
-/* Estilos de los campos de entrada */
+/* Estils de els camps de entrada */
 .input-field :deep(.v-field__outline__start) {
   border-color: #9A8C98;
 }
@@ -203,7 +203,7 @@ const handleSubmit = async () => {
   opacity: 1;
 }
 
-/* Botón de registro */
+/* Botó de registre */
 .register-btn {
   background-color: #C8A96E;
   color: #1C1C1C;
@@ -218,7 +218,7 @@ const handleSubmit = async () => {
   background-color: #b89659;
 }
 
-/* Enlace de inicio de sesión */
+/* Enllaç d'inici de sessió */
 .login-link {
   color: #4A4E69;
   transition: color 0.2s ease;
@@ -228,13 +228,13 @@ const handleSubmit = async () => {
   color: #C8A96E;
 }
 
-/* Estilos generales de botones */
+/* Estils generals de botons */
 .v-btn {
   text-transform: none;
   letter-spacing: 0.5px;
 }
 
-/* Estilos personalizados para SweetAlert2 */
+/* Estils personalitzats per SweetAlert2 */
 :global(.swal-custom-popup) {
   background: #F2E9E4;
   border-radius: 16px;
