@@ -45,8 +45,8 @@
         </div>
 
         <!-- Formulario de pago -->
-        <div v-else class="max-w-4xl mx-auto">
-          <h1 class="text-3xl font-bold text-gold mb-8 text-center">Finalizar Compra</h1>
+        <div v-else class="max-w-4xl mx-auto mt-16">
+          <h1 class="text-6xl font-bold text-gold mb-8 text-center">Finalizar Compra</h1>
 
           <div class="flex flex-col md:flex-row gap-8">
             <!-- Resumen de la compra -->
