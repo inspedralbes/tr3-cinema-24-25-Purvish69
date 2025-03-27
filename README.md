@@ -31,28 +31,6 @@ FilmGalaxy is a comprehensive cinema ticket booking platform that allows users t
 - Composer
 - npm
 
-### Clone the Repository
-```bash
-git clone https://github.com/yourusername/FilmGalaxy.git
-cd FilmGalaxy
-```
-
-### Frontend Setup
-```bash
-cd frontend
-npm install
-npm run dev
-```
-
-### Backend Setup
-```bash
-cd backend
-composer install
-cp .env.example .env
-php artisan key:generate
-php artisan migrate
-php artisan serve
-```
 
 ## 📦 Project Management
 
@@ -65,17 +43,6 @@ php artisan serve
 ## 👥 Team
 - **Lead Developer:** Purvish Patel
 
-## 🤝 Contributing
-
-1. Fork the repository
-2. Create your feature branch (`git checkout -b feature/AmazingFeature`)
-3. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
-4. Push to the branch (`git push origin feature/AmazingFeature`)
-5. Open a Pull Request
-
-## 📄 License
-
-Distributed under the MIT License.
 
 ---
 
