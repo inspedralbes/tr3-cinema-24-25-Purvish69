@@ -11,6 +11,7 @@ export default defineNuxtConfig({
       title: 'FilmGalaxy',
   }
   },
+  ssr: false,
   plugins: [
     '~/plugins/vuetify.js'
   ],
