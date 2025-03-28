@@ -1,102 +1,64 @@
 <template>
   <v-app>
     <Navbar />
-    <br><br>
-    <div class="min-h-screen bg-gradient-to-br from-primary to-secondary">
-      <div class="container mx-auto px-3 py-8 animate-fade-in">
+    <div class="min-h-screen bg-gradient-to-br from-primary to-secondary py-12">
+      <div class="container mx-auto px-4">
         <!-- Loading State -->
         <div v-if="loading" class="flex justify-center items-center h-[70vh]">
-          <div class="animate-pulse-slow">
+          <div class="animate-pulse">
             <div class="w-16 h-16 border-4 border-gold border-t-transparent rounded-full animate-spin"></div>
           </div>
         </div>
-
         <!-- Error State -->
-        <div v-else-if="error" class="max-w-md mx-auto glass-effect text-light p-8 rounded-xl animate-slide-up">
+        <div v-else-if="error" class="max-w-md mx-auto glass-effect text-light p-8 rounded-xl">
           <p class="text-center">{{ error }}</p>
         </div>
-
         <!-- Movie Details -->
-        <div v-else class="space-y-8 animate-slide-up">
-          <!-- Movie Info Section -->
-          <div class="relative mt-10">
-            <!-- Fondo con Imagen de la Película -->
-            <div class="absolute inset-0 h-full bg-cover bg-center opacity-20 rounded-xl overflow-hidden"
-              :style="{ backgroundImage: `url(${movie.imagen || 'https://via.placeholder.com/400x600?text=No+Poster'})` }">
+        <div v-else class="space-y-12">
+          <!-- Movie Info Card -->
+          <div class="relative bg-secondary/80 backdrop-blur-sm rounded-xl overflow-hidden shadow-lg mt-24">
+            <!-- Imagen de Fondo -->
+            <div class="absolute inset-0 bg-cover bg-center opacity-10"
+                 :style="{ backgroundImage: `url(${movie.imagen || 'https://via.placeholder.com/800x600?text=No+Poster'})` }">
             </div>
-            <div class="relative flex flex-col lg:flex-row gap-8">
+            <div class="relative flex flex-col md:flex-row">
               <!-- Poster de la Película -->
-              <div class="lg:w-1/3">
-                <div class="movie-card overflow-hidden rounded-xl">
-                  <img :src="movie.imagen || 'https://via.placeholder.com/400x600?text=No+Poster'" :alt="movie.titulo"
-                    class="w-full h-auto object-cover transition-transform duration-300 hover:brightness-110" />
-                </div>
+              <div class="md:w-1/3 p-4 flex justify-center items-center">
+                <img :src="movie.imagen || 'https://via.placeholder.com/400x600?text=No+Poster'" :alt="movie.titulo"
+                     class="w-full h-auto rounded-lg shadow-md transition-transform duration-300 hover:scale-105" />
               </div>
-
               <!-- Información de la Película -->
-              <div class="lg:w-2/3 flex flex-col justify-center">
-                <div class="movie-card p-8 backdrop-blur-sm bg-secondary/70 rounded-xl">
-                  <h1 class="text-4xl md:text-5xl font-bold mb-9 text-gold">{{ movie.titulo }}</h1>
-
-                  <!-- Calificación -->
-                  <div class="mb-6 flex items-center space-x-4">
-                    <span class="text-2xl font-bold text-gold">{{ movie.calificacion }}/10</span>
-                  </div>
-
-                  <!-- Detalles -->
-                  <div class="space-y-4 text-light">
-                    <p class="flex items-center">
-                      <span class="font-semibold w-32">Actores:</span>
-                      <span>{{ movie.actores || 'N/A' }}</span>
-                    </p>
-                    <p class="flex items-center">
-                      <span class="font-semibold w-32">Director:</span>
-                      <span>{{ movie.director || 'N/A' }}</span>
-                    </p>
-                    <p class="flex items-center">
-                      <span class="font-semibold w-32">Género:</span>
-                      <span>{{ movie.genero || 'N/A' }}</span>
-                    </p>
-                    <p class="flex items-center">
-                      <span class="font-semibold w-32">Idioma:</span>
-                      <span>{{ movie.lenguaje || 'N/A' }}</span>
-                    </p>
-                    <p class="flex items-center">
-                      <span class="font-semibold w-32">Duración:</span>
-                      <span>{{ movie.duracion || 'N/A' }} min</span>
-                    </p>
-                    <p class="flex items-center">
-                      <span class="font-semibold w-32">Clasificación:</span>
-                      <span>{{ movie.clasificacion || 'N/A' }}</span>
-                    </p>
-                  </div>
-
-                  <!-- Sinopsis -->
-                  <div class="mt-8">
-                    <h3 class="text-xl font-semibold mb-3 text-gold">Sinopsis:</h3>
-                    <p class="text-light leading-relaxed">
-                      {{ movie.descripcion || 'Sin descripción disponible' }}
-                    </p>
-                  </div>
-
-                  <!-- Botón para Comprar Entradas -->
-                  <div class="flex justify-center pt-8">
-                    <button @click="goToBuy(movie.id)" class="btn-primary">
-                      Comprar Entradas
-                    </button>
-                  </div>
+              <div class="md:w-2/3 p-6 flex flex-col justify-center">
+                <h1 class="text-3xl md:text-4xl font-bold text-gold mb-4">{{ movie.titulo }}</h1>
+                <div class="flex items-center mb-4">
+                  <span class="text-2xl font-bold text-gold mr-2">{{ movie.calificacion }}/10</span>
+                </div>
+                <div class="grid grid-cols-2 gap-y-2 text-light mb-4">
+                  <p><span class="font-semibold">Actores:</span> {{ movie.actores || 'N/A' }}</p>
+                  <p><span class="font-semibold">Director:</span> {{ movie.director || 'N/A' }}</p>
+                  <p><span class="font-semibold">Género:</span> {{ movie.genero || 'N/A' }}</p>
+                  <p><span class="font-semibold">Idioma:</span> {{ movie.lenguaje || 'N/A' }}</p>
+                  <p><span class="font-semibold">Duración:</span> {{ movie.duracion || 'N/A' }} min</p>
+                  <p><span class="font-semibold">Clasificación:</span> {{ movie.clasificacion || 'N/A' }}</p>
+                </div>
+                <div class="mb-4">
+                  <h3 class="text-xl font-semibold text-gold mb-2">Sinopsis:</h3>
+                  <p class="text-light">{{ movie.descripcion || 'Sin descripción disponible' }}</p>
+                </div>
+                <div class="flex justify-end">
+                  <button @click="goToBuy(movie.id)" class="btn-primary">
+                    Comprar Entradas
+                  </button>
                 </div>
               </div>
             </div>
           </div>
-
           <!-- Trailer -->
-          <div v-if="trailerEmbedUrl" class="movie-card p-6 max-w-3xl mx-auto rounded-xl">
-            <h2 class="text-xl font-semibold mb-4 text-gold">Trailer</h2>
-            <div class="relative pt-[45%]">
+          <div v-if="trailerEmbedUrl" class="bg-secondary/80 p-6 max-w-4xl mx-auto rounded-xl shadow-lg">
+            <h2 class="text-2xl font-semibold mb-4 text-gold">Trailer</h2>
+            <div class="relative pb-[56.25%]">
               <iframe :src="trailerEmbedUrl" class="absolute top-0 left-0 w-full h-full rounded-lg" frameborder="0"
-                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                allowfullscreen>
+                      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen>
               </iframe>
             </div>
           </div>
@@ -119,16 +81,6 @@ const movieStore = useMovieStore();
 const movie = ref({});
 const loading = ref(true);
 const error = ref(null);
-
-const actorsList = computed(() => {
-  if (!movie.value.actores) return [];
-  try {
-    return JSON.parse(movie.value.actores);
-  } catch (e) {
-    console.error('Error parsing actors list:', e);
-    return [];
-  }
-});
 
 const trailerEmbedUrl = computed(() => {
   if (!movie.value.trailer) return null;
