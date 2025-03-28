@@ -22,7 +22,7 @@ export const useSessionsStore = defineStore('sessions', () => {
       
       console.log('Fetching sessions data...')
       
-      const response = await fetch('http://localhost:8000/api/sessions', {
+      const response = await fetch('http://filmgalaxyback.daw.inspedralbes.cat/api/sessions', {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
@@ -84,7 +84,7 @@ export const useSessionsStore = defineStore('sessions', () => {
   const fetchSessionsByMovieId = async (movieId) => {
     try {
       loading.value = true
-      const response = await fetch(`http://localhost:8000/api/sessions?movie_id=${movieId}`, {
+      const response = await fetch(`http://filmgalaxyback.daw.inspedralbes.cat/api/sessions?movie_id=${movieId}`, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
@@ -127,7 +127,7 @@ export const useSessionsStore = defineStore('sessions', () => {
       loading.value = true
       console.log(`Fetching session details for ID: ${id}`)
       
-      const response = await fetch(`http://localhost:8000/api/sessions/${id}`, {
+      const response = await fetch(`http://filmgalaxyback.daw.inspedralbes.cat/api/sessions/${id}`, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',

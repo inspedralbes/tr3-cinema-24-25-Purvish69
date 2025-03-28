@@ -2,7 +2,7 @@ import { ref } from 'vue'
 import { useCookie } from '#app'
 
 export const usePeliculas = () => {
-  const API_URL = 'http://localhost:8000/api'
+  const API_URL = 'http://filmgalaxyback.daw.inspedralbes.cat/api'
   const error = ref('')
   const loading = ref(false)
 
