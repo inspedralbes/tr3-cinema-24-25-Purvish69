@@ -4,6 +4,8 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\MovieController;
 use App\Http\Controllers\TicketController;
+use App\Http\Controllers\StatsController;
+use App\Http\Controllers\MovieSessionsController;
 
 Route::get('/', function () {
     return redirect()->route('login');
@@ -16,6 +18,9 @@ Route::post('/logout', [UserController::class, 'logout'])->name('logout');
 
 // Rutas protegidas por autenticación
 Route::middleware('auth')->group(function () {
+    // Ruta para estadísticas
+    Route::get('/stats', [StatsController::class, 'index'])->name('stats.index');
+
     // Ruta raíz redirige al listado de usuarios (index.blade.php)
     Route::get('/users', [UserController::class, 'index'])->name('users.index');
 
@@ -52,21 +57,13 @@ Route::middleware('auth')->group(function () {
     Route::post('/tickets/send-email/{userId}/{sessionId}', [TicketController::class, 'sendTicketsByEmail']);
 
 
-Route::middleware(['auth'])->group(function() {
-    // Listado y filtro de tickets
-    Route::get('/tickets', [TicketController::class, 'indexView'])->name('tickets.index');
-    Route::get('/tickets/filter', [TicketController::class, 'filterByMovie'])->name('tickets.filter');
-
-    // Crear ticket
-    Route::get('/tickets/create', [TicketController::class, 'createView'])->name('tickets.create');
-    Route::post('/tickets', [TicketController::class, 'store'])->name('tickets.store');
-
-    // Editar ticket
-    Route::get('/tickets/{id}/edit', [TicketController::class, 'editView'])->name('tickets.edit');
-    Route::put('/tickets/{id}', [TicketController::class, 'update'])->name('tickets.update');
-
-    // Eliminar ticket
-    Route::delete('/tickets/{id}', [TicketController::class, 'destroy'])->name('tickets.destroy');
-});
-
+    Route::middleware(['auth'])->group(function () {
+        Route::get('/tickets', [TicketController::class, 'indexView'])->name('tickets.index');
+        Route::get('/tickets/filter', [TicketController::class, 'filterByMovie'])->name('tickets.filter');
+        Route::get('/tickets/create', [TicketController::class, 'createView'])->name('tickets.create');
+        Route::post('/tickets', [TicketController::class, 'store'])->name('tickets.store');
+        Route::get('/tickets/{id}/edit', [TicketController::class, 'editView'])->name('tickets.edit');
+        Route::put('/tickets/{id}', [TicketController::class, 'update'])->name('tickets.update');
+        Route::delete('/tickets/{id}', [TicketController::class, 'destroy'])->name('tickets.destroy');
+    });
 });

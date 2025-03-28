@@ -2,7 +2,9 @@
     <!-- Desktop Navigation Bar -->
     <v-app-bar color="primary" elevation="4" height="80" class="hidden-sm-and-down">
         <v-toolbar-title class="text-cream font-weight-bold">
-            <img src="../assets/logo/logofilmgalaxyTransparente.png" alt="Logo" class="logo-image desktop-logo" />
+            <router-link to="/">
+                <img src="../assets/logo/logofilmgalaxyTransparente.png" alt="Logo" class="logo-image desktop-logo" />
+            </router-link>
         </v-toolbar-title>
         <v-spacer></v-spacer>
         <!-- Desktop-specific menu items -->
@@ -25,7 +27,9 @@
     <v-app-bar color="primary" elevation="4" height="60" class="hidden-md-and-up mobile-navbar" fixed>
         <v-app-bar-nav-icon color="cream" @click="drawer = !drawer"></v-app-bar-nav-icon>
         <v-toolbar-title class="text-cream font-weight-bold">
-            <img src="../assets/logo/logofilmgalaxyTransparente.png" alt="Logo" class="logo-image mobile-logo" />
+            <router-link to="/">
+                <img src="../assets/logo/logofilmgalaxyTransparente.png" alt="Logo" class="logo-image mobile-logo" />
+            </router-link>
         </v-toolbar-title>
         <v-spacer></v-spacer>
         <client-only>
@@ -36,8 +40,8 @@
     </v-app-bar>
 
     <!-- Mobile Navigation Drawer fixed to top -->
-    <v-navigation-drawer v-model="drawer" temporary color="primary" location="start" 
-        class="mobile-drawer" :style="{ top: '60px', height: 'calc(100% - 60px)' }">
+    <v-navigation-drawer v-model="drawer" temporary color="primary" location="start" class="mobile-drawer"
+        :style="{ top: '60px', height: 'calc(100% - 60px)' }">
         <v-list color="cream">
             <v-list-item v-for="(item, i) in mobileMenuItems" :key="i" :to="item.to" :prepend-icon="item.icon"
                 :title="item.title" color="cream"></v-list-item>
@@ -68,7 +72,7 @@ const isUserLoggedIn = computed(() => process.client ? !!token.value : false)
 const desktopMenuItems = [
     { title: 'Inici', icon: 'mdi-home', to: '/' },
     { title: 'Pel·lícules', icon: 'mdi-movie', to: '/movies' },
-    { title: 'Sessions', icon: 'mdi-ticket', to: '/movieDetails/moviSession' }, 
+    { title: 'Sessions', icon: 'mdi-ticket', to: '/movieDetails/moviSession' },
     { title: 'Entrades Comprades', icon: 'mdi-ticket-confirmation', to: '/billetesDeUsuario' },
     // { title: 'informacion', icon: 'mdi-phone', to: '/informacion' }
 ]
@@ -77,7 +81,7 @@ const desktopMenuItems = [
 const mobileMenuItems = [
     { title: 'Inici', icon: 'mdi-home', to: '/' },
     { title: 'Pel·lícules', icon: 'mdi-movie', to: '/movies' },
-    { title: 'Sessions', icon: 'mdi-ticket', to: '/movieDetails/moviSession' }, 
+    { title: 'Sessions', icon: 'mdi-ticket', to: '/movieDetails/moviSession' },
     { title: 'Entrades Comprades', icon: 'mdi-ticket-confirmation', to: '/billetesDeUsuario' },
     // { title: 'informacion', icon: 'mdi-phone', to: '/informacion' }
 ]
@@ -123,7 +127,7 @@ const handleProfileClick = () => {
 .mobile-drawer {
     z-index: 1999 !important;
     overflow-y: auto;
-    
+
 }
 
 /* Asegurar que el diseño general sea correcto para el drawer */

@@ -16,13 +16,20 @@
           </button>
         </div>
 
-        <!-- No Tickets State -->
-        <div v-else-if="!tickets.length" class="max-w-md mx-auto ticket-card p-8 rounded-xl text-center">
-          <h2 class="text-2xl font-bold text-gold mb-3">No tens entrades</h2>
-          <p class="mb-6 text-ivory">Compra les teves entrades ara i gaudeix del millor cinema!</p>
-          <button @click="router.push('/movies')" class="action-button">
-            Veure pel·lícules
-          </button>
+       <!-- No Tickets State -->
+       <div v-else-if="!tickets.length" class="min-h-[80vh] flex items-center justify-center">
+          <div class="max-w-md w-full ticket-card p-8 rounded-xl text-center">
+            <div class="py-4">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-16 w-16 mx-auto text-gold mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 5v2m0 4v2m0 4v2M5 5a2 2 0 00-2 2v3a2 2 0 110 4v3a2 2 0 002 2h14a2 2 0 002-2v-3a2 2 0 110-4V7a2 2 0 00-2-2H5z" />
+              </svg>
+              <h2 class="text-2xl font-bold text-gold mb-3">No tens entrades</h2>
+              <p class="mb-6 text-ivory">Compra les teves entrades ara i gaudeix del millor cinema!</p>
+              <button @click="router.push('/moviSession')" class="action-button">
+                Veure pel·lícules
+              </button>
+            </div>
+          </div>
         </div>
 
         <!-- Tickets List -->

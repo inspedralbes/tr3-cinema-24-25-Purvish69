@@ -24,9 +24,9 @@ class UserSeeder extends Seeder
                 'rol' => 'user',
             ],
             [
-                'nombre' => 'María',
-                'apellido' => 'González',
-                'email' => 'maria@gmail.com',
+                'nombre' => 'purvishh',
+                'apellido' => 'patel',
+                'email' => 'a23purpatmah@inspedralbes.cat',
                 'telefono' => '623456789',
                 'password' => Hash::make('12345678'),
                 'rol' => 'user',
