@@ -20,7 +20,7 @@ class AdminSeeder extends Seeder
                 'apellido' => 'patel',
                 'email' => 'purvish@filmgalaxy.com',
                 'telefono' => '600000001',
-                'password' => Hash::make('1234'),
+                'password' => Hash::make('12345678'),
                 'rol' => 'admin',
             ],
             [
@@ -28,7 +28,7 @@ class AdminSeeder extends Seeder
                 'apellido' => 'bbb',
                 'email' => 'bbb@filmgalaxy.com',
                 'telefono' => '600000002',
-                'password' => Hash::make('1234'),
+                'password' => Hash::make('12345678'),
                 'rol' => 'admin',
             ],
         ];

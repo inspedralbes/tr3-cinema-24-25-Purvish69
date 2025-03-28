@@ -23,10 +23,9 @@
               </v-col>
             </v-row>
 
-            <v-text-field v-model="formData.email" label="Email" type="email" :rules="[
-              v => !!v || 'L\'email és obligatori',
-              v => /.+@.+\..+/.test(v) || 'L\'email ha de ser vàlid'
-            ]" variant="outlined" density="comfortable" class="mb-2 input-field"
+            <v-text-field v-model="formData.email" label="Email" type="email" 
+              :rules="emailRules"
+              variant="outlined" density="comfortable" class="mb-2 input-field"
               prepend-inner-icon="mdi-email"></v-text-field>
 
             <v-text-field v-model="formData.telefono" label="Telèfon" type="tel"
@@ -35,7 +34,8 @@
 
             <v-text-field v-model="formData.password" label="Contrasenya" :type="showPassword ? 'text' : 'password'"
               :append-inner-icon="showPassword ? 'mdi-eye-off' : 'mdi-eye'"
-              @click:append-inner="showPassword = !showPassword" :rules="[v => !!v || 'La contrasenya és obligatòria']"
+              @click:append-inner="showPassword = !showPassword" 
+              :rules="passwordRules"
               variant="outlined" density="comfortable" class="mb-4 input-field"
               prepend-inner-icon="mdi-lock"></v-text-field>
 
@@ -59,7 +59,7 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
 import { useAuth } from '~/composables/useAuth'
 import Swal from 'sweetalert2'
 
@@ -75,6 +75,18 @@ const formData = ref({
   telefono: '',
   password: ''
 })
+
+// Improved validation rules
+const emailRules = computed(() => [
+  v => !!v || 'L\'email és obligatori',
+  v => !v || v.length < 2 || /.+@.+\..+/.test(v) || 'L\'email ha de ser vàlid'
+])
+
+const passwordRules = computed(() => [
+  v => !!v || 'La contrasenya és obligatòria',
+  v => !v || v.length >= 8 || 'La contrasenya ha de tenir almenys 8 caràcters',
+  v => !v || /^[a-zA-Z0-9]+$/.test(v) || 'Només s\'accepten lletres o números'
+])
 
 const handleSubmit = async () => {
   loading.value = true

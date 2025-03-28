@@ -9,16 +9,21 @@
             <h2 class="text-h4 font-weight-bold card-title">Film Galaxy</h2>
           </div>
 
-          <v-form @submit.prevent="handleLogin" ref="form" class="login-form">
+          <v-form @submit.prevent="handleLogin" ref="form" class="login-form" validate-on="submit">
             <v-text-field v-model="email" label="Correu electrònic" type="email" :rules="[rules.required, rules.email]"
               variant="outlined" density="comfortable" class="mb-4 custom-input" prepend-inner-icon="mdi-email"
-              bg-color="transparent" color="#4A4E69" hide-details="auto"></v-text-field>
+              bg-color="transparent" color="#4A4E69" validate-on="blur"></v-text-field>
 
             <v-text-field v-model="password" label="Contrasenya" :type="showPassword ? 'text' : 'password'"
               :append-inner-icon="showPassword ? 'mdi-eye-off' : 'mdi-eye'"
-              @click:append-inner="showPassword = !showPassword" :rules="[rules.required]" variant="outlined"
+              @click:append-inner="showPassword = !showPassword" 
+              :rules="[
+                rules.required,
+                rules.password
+              ]" 
+              variant="outlined"
               density="comfortable" class="mb-6 custom-input" prepend-inner-icon="mdi-lock" bg-color="transparent"
-              color="#4A4E69" hide-details="auto"></v-text-field>
+              color="#4A4E69" validate-on="blur"></v-text-field>
 
             <v-btn type="submit" block size="large" :loading="loading" class="mb-4 login-btn" elevation="2"
               v-motion-pop>
@@ -65,7 +70,9 @@ const rules = {
   email: value => {
     const pattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
     return pattern.test(value) || 'Format d\'email invàlid'
-  }
+  },
+  password: value => (value && value.length >= 8 && /^[a-zA-Z0-9]+$/.test(value)) || 
+    'La contrasenya ha de tenir almenys 8 caràcters amb lletres o números'
 }
 
 const handleLogin = async () => {
