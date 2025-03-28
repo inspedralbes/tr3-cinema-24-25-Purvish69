@@ -78,6 +78,11 @@
         height: 3px;
         background-color: #C8A96E;
     }
+
+    .badge-status {
+        font-size: 0.8rem;
+        padding: 0.3rem 0.6rem;
+    }
 </style>
 @endsection
 
@@ -104,12 +109,12 @@
             </div>
         </div>
         
-        <!-- Tarjeta de Películas Activas -->
+        <!-- Tarjeta del Total de Sesiones -->
         <div class="col-md-4">
             <div class="stat-card text-center">
                 <i class="bi bi-film stat-icon"></i>
-                <h2 class="stat-number">{{ $activeSessions }}</h2>
-                <p class="stat-label">Sessions Actives</p>
+                <h2 class="stat-number">{{ count($sessionStats) }}</h2>
+                <p class="stat-label">Total de Sessions</p>
             </div>
         </div>
     </div>
@@ -118,7 +123,7 @@
         <div class="col-12">
             <div class="card">
                 <div class="card-header bg-dark text-white">
-                    <h5 class="mb-0">Detall de Sessions Actives</h5>
+                    <h5 class="mb-0">Detall de Totes les Sessions</h5>
                 </div>
                 <div class="card-body">
                     <div class="table-responsive">
@@ -128,6 +133,7 @@
                                     <th>Pel·lícula</th>
                                     <th>Sessió</th>
                                     <th>Data i Hora</th>
+                                    <th>Estat</th>
                                     <th>Total d'Entrades</th>
                                     <th>Recaptació</th>
                                 </tr>
@@ -146,15 +152,27 @@
                                     </td>
                                     <td>{{ $session->id }}</td>
                                     <td>{{ $session->fecha->format('d/m/Y') }} {{ $session->hora }}</td>
-                                    <td>{{ $session->tickets_count }}</td>
+                                    <td>
+                                        <span class="badge {{ $session->estado === 'disponible' ? 'bg-success' : ($session->estado === 'cancelada' ? 'bg-danger' : 'bg-secondary') }} badge-status">
+                                            {{ ucfirst($session->estado) }}
+                                        </span>
+                                    </td>
+                                    <td>{{ $session->tickets_count ?? 0 }}</td>
                                     <td>{{ number_format($session->tickets_sum_precio ?? 0, 2) }}€</td>
                                 </tr>
                                 @empty
                                 <tr>
-                                    <td colspan="5" class="text-center">No hi ha sessions actives en aquest moment</td>
+                                    <td colspan="6" class="text-center">No hi ha sessions disponibles</td>
                                 </tr>
                                 @endforelse
                             </tbody>
+                            <tfoot>
+                                <tr class="bg-light">
+                                    <td colspan="4" class="text-end fw-bold">Totals:</td>
+                                    <td class="fw-bold">{{ $sessionStats->sum('tickets_count') ?? 0 }}</td>
+                                    <td class="fw-bold">{{ number_format($sessionStats->sum('tickets_sum_precio') ?? 0, 2) }}€</td>
+                                </tr>
+                            </tfoot>
                         </table>
                     </div>
                 </div>

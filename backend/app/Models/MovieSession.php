@@ -21,7 +21,7 @@ class MovieSession extends Model
     ];
 
     protected $casts = [
-        'fecha' => 'date',
+        'fecha' => 'datetime',
         'dia_espectador' => 'boolean',
         'fila_vip_activa' => 'boolean',
     ];
@@ -35,12 +35,12 @@ class MovieSession extends Model
     
     public function tickets()
     {
-        return $this->hasMany(Ticket::class , 'movieSession_id');
+        return $this->hasMany(Ticket::class, 'movieSession_id');
     }
 
     public function seats()
     {
-        return $this->hasMany(Seat::class , 'movieSession_id');
+        return $this->hasMany(Seat::class, 'movieSession_id');
     }
 
 }
