@@ -1,0 +1,62 @@
+services:
+
+  # DATABASE
+  db:
+    image: mysql:8.2.0
+    restart: always
+    container_name: mysql
+    volumes:
+      - mysql_data:/var/lib/mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: filmgalaxy
+      MYSQL_USER: user
+      MYSQL_PASSWORD: user
+    ports:
+      - "3306:3306"
+
+  # ADMINER
+  adminer:
+    image: adminer
+    restart: always
+    depends_on:
+      - db
+    ports:
+      - "8080:8080"
+
+  # LARAVEL
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: laravel
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./backend:/var/www/
+    working_dir: /var/www/
+    depends_on:
+      - db
+    #command: bash -c "chmod +x entrypoint.sh && ./entrypoint.sh"
+    command: bash -c "composer install && php artisan key:generate && php artisan migrate && php artisan db:seed && php artisan serve --host=0.0.0.0"
+
+
+    # FRONTEND
+  filmgalaxy:
+    build:
+      context: ./filmgalaxy
+    container_name: filmgalaxy_app
+    ports:
+      - 3000:3000
+    volumes:
+      - ./filmgalaxy:/app
+      - /app/node_modules
+    depends_on:
+      - backend
+    environment:
+      NUXT_APP_API_URL: http://backend:8000
+      CHOKIDAR_USEPOLLING: true
+    command: npm run dev -- --host=0.0.0.0
+
+volumes:
+  mysql_data:
