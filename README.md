@@ -34,6 +34,8 @@ FilmGalaxy és una plataforma integral de reserva d'entrades de cinema que perme
 ## 🌐 Demostració en Viu
 [FilmGalaxy Producció](http://filmgalaxy.daw.inspedralbes.cat/)
 
+[FilmGalaxy Producció Administrador](http://filmgalaxyback.daw.inspedralbes.cat/)
+
 ## 👥 Equip
 - **Líder de Desenvolumpament:** Purvish Patel
 
