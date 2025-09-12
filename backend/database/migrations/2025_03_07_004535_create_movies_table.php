@@ -15,7 +15,7 @@ return new class extends Migration
             $table->id();
             $table->string('titulo');
             $table->text('descripcion');
-            $table->decimal('calificacion', 3, 1); // Cambiado para que coincida con los datos de prueba
+            $table->decimal('calificacion', 3, 1);
             $table->string('director')->nullable();
             $table->json('actores');
             $table->integer('duracion'); // En minutos

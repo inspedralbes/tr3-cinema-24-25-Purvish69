@@ -20,8 +20,6 @@ return new class extends Migration
             $table->boolean('dia_espectador')->default(false);
             $table->boolean('fila_vip_activa')->default(false);
             $table->timestamps();
-            
-            // Restricción única para evitar duplicados
             $table->unique(['fecha', 'hora']);
         });
     }

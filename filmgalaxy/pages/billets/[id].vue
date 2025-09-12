@@ -115,7 +115,7 @@
               </div>
             </div>
 
-            <!-- Pantalla de la sala -->
+            <!--   de la sala -->
             <div class="w-full h-8 bg-gray-800 rounded-t-full mb-12 text-center text-sm text-light/50">
               PANTALLA
             </div>
@@ -132,11 +132,13 @@
                 </template>
               </div>
 
+              
+
               <div>
                 <!-- Números de asiento en la parte superior -->
                 <div class="flex mb-4">
-                  <div v-for="seatNumber in uniqueNumbers" :key="seatNumber" 
-                       class="w-10 h-8 flex items-center justify-center text-light font-bold mx-2">
+                  <div v-for="seatNumber in uniqueNumbers" :key="seatNumber"
+                    class="w-10 h-8 flex items-center justify-center text-light font-bold mx-2">
                     {{ seatNumber }}
                   </div>
                 </div>
@@ -145,17 +147,21 @@
                 <div>
                   <div v-for="rowLetter in uniqueRows" :key="rowLetter" class="flex mb-5">
                     <template v-for="seatNumber in uniqueNumbers" :key="`${rowLetter}-${seatNumber}`">
+                      <!-- Botón de asiento con Ícono que pinta de acuerdo al estado -->
                       <div v-if="getSeat(rowLetter, seatNumber)" class="mx-2">
-                        <button 
-                          @click="toggleSeat(getSeat(rowLetter, seatNumber))" 
+                        <button @click="toggleSeat(getSeat(rowLetter, seatNumber))"
                           :disabled="getSeat(rowLetter, seatNumber).estado === 'ocupada'"
-                          class="w-10 h-10 relative rounded transition-all flex items-center justify-center"
-                          :class="[
+                          class="w-10 h-10 relative rounded transition-all flex items-center justify-center" :class="[
+                            // el color rojo para los asientos ocupados
                             getSeat(rowLetter, seatNumber).estado === 'ocupada' ? 'bg-red-500' :
+                              // el color verde para los asientos seleccionados por el usuario para comprar entradas 
                               selectedSeats.includes(getSeat(rowLetter, seatNumber)) ? 'bg-green-500' :
+                                // el color gris para los asientos no seleccionados, que son disponibles  
+                                // y que los usuarios puedes comprar
+                                // color gold para los asientos VIP que esto depende de las session si esa session es VIP o no 
                                 getSeat(rowLetter, seatNumber).tipo === 'vip' ? 'bg-gold' : 'bg-gray-500'
                           ]">
-                          <!-- Ícono de asiento más pequeño -->
+                          <!-- Ícono de asiento  -->
                           <SeatIcon class="absolute inset-0 scale-75" />
                         </button>
                       </div>
@@ -212,16 +218,16 @@ const movie = ref(null)
 const currentMovie = ref(null)
 const sessions = ref([])
 const selectedSession = ref(null)
-const seats = ref([])
-const selectedSeats = ref([])
-const occupiedSeats = ref([])
+const seats = ref([]) // guarda todos los asientos
+const selectedSeats = ref([]) // guarda los asientos seleccionados por el usuario
+const occupiedSeats = ref([]) // guarda los asientos ocupados
 
 const prices = ref({
   normal: 6,
   vip: 8
 })
 
-// Obtener filas únicas (A, B, C, etc.)
+// Obtener filas únicas (A, B, C, D,...)
 const uniqueRows = computed(() => {
   const rows = [...new Set(seats.value.map(seat => seat.fila))].sort()
   return rows
@@ -264,17 +270,24 @@ const formatDate = (dateString) => {
   return new Date(dateString).toLocaleDateString('es-ES', options)
 }
 
+// Función para manejar la selección de asientos del usuario
 const toggleSeat = (seat) => {
+  // Si el asiento ya está ocupado pues sale de la función
   if (seat.estado === 'ocupada') return
 
+  // Buscar si el asiento ya está en la lista de asientos seleccionados
   const index = selectedSeats.value.findIndex(s => s.id === seat.id)
+  
+  // Si el asiento no está en la lista (index = -1), intentar agregarlo
   if (index === -1) {
     if (selectedSeats.value.length >= 10) {
       alert('No puedes seleccionar más de 10 asientos')
       return
     }
+    // Añadir el asiento a la lista de seleccionados
     selectedSeats.value.push(seat)
   } else {
+    // Si el asiento ya estaba seleccionado, quitarlo de la lista
     selectedSeats.value.splice(index, 1)
   }
 }
@@ -349,7 +362,7 @@ onMounted(async () => {
     }
 
     const seatsData = await getAsientos(sessionId)
-    
+
     let occupiedSeatIds = []
     try {
       const sessionTickets = await getSessionTickets(sessionId)
@@ -391,9 +404,12 @@ onMounted(async () => {
 }
 
 @keyframes pulse {
-  0%, 100% {
+
+  0%,
+  100% {
     opacity: 1;
   }
+
   50% {
     opacity: 0.5;
   }

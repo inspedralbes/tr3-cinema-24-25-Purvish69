@@ -161,7 +161,7 @@ class TicketController extends Controller
     {
         // Find the ticket
         $ticket = Ticket::findOrFail($id);
-        
+
         // Update ticket with request data
         $ticket->update([
             'user_id' => $request->user_id,
@@ -170,7 +170,7 @@ class TicketController extends Controller
             'payment_id' => $request->payment_id,
             'precio' => $request->precio,
         ]);
-        
+
         // Instead of returning JSON, redirect to index with a success message
         return redirect()->route('tickets.index')
             ->with('success', 'Ticket actualizado exitosamente');
@@ -243,9 +243,7 @@ class TicketController extends Controller
 
     public function sendTicketsByEmail($userId, $sessionId)
     {
-
         $user = User::findOrFail($userId);
-
         // Obtenemos solo el ticket más reciente (último comprado) para este usuario y sesión
         $ticket = Ticket::where('user_id', $userId)
             ->where('movieSession_id', $sessionId)
@@ -253,18 +251,22 @@ class TicketController extends Controller
             ->latest('created_at')
             ->first();
 
+        // verificar si se encontraron tickets o no 
         if (!$ticket) {
             return response()->json([
                 'error' => 'No se encontraron tickets para este usuario en la sesión indicada'
             ], 404);
         }
 
-        // // Generar el QR code usando  el código de confirmación
+        // Generar el QR code usando  el código de confirmación del ticket 
+        // el QR code enviamos con el PDF adjunto en via correo 
         $qrCodePng = QrCode::size(200)->generate($ticket->codigo_confirmacion);
+        // Guardar el QR code en la base de datos
         $ticket->save();
+        // Convertir el QR code a base64
         $ticket->qr_code = base64_encode($qrCodePng);
 
-
+        // Información de la sesión del ticket
         $session = $ticket->movieSession;
         $sessionInfo = [
             'fecha' => $session->fecha,
@@ -272,12 +274,11 @@ class TicketController extends Controller
             'sala'  => $session->sala,
             'movie' => $session->movie
         ];
-
         $ticketsCollection = collect([$ticket]);
-
-        // Enviar el correo utilizando el mailable con PDF adjunto
+        // Enviar el correo utilizando el mailable con PDF adjunto de los tickets
         Mail::to($user->email)->send(new TicketMail($user, $ticketsCollection, $sessionInfo));
 
+        // Retornar una respuesta de éxito
         return response()->json([
             'message' => 'Correo enviado correctamente con el último ticket comprado'
         ], 200);
