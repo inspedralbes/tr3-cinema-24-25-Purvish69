@@ -2,7 +2,8 @@ import { ref } from 'vue'
 import { useCookie } from '#app'
 
 export const usePeliculas = () => {
-  const API_URL = 'http://filmgalaxyback.daw.inspedralbes.cat/api'
+  const config = useRuntimeConfig()
+  const API_URL = config.public.apiBaseUrl
   const error = ref('')
   const loading = ref(false)
 
@@ -88,10 +89,14 @@ export const usePeliculas = () => {
   }
 
   // Get sessions for a movie
-  const getSesiones = async (movieId) => {
+  const getSesiones = async (movieId = null) => {
     try {
       loading.value = true
-      const response = await fetch(`${API_URL}/sessions?movie_id=${movieId}`, {
+      const sessionsUrl = movieId
+        ? `${API_URL}/sessions?movie_id=${movieId}`
+        : `${API_URL}/sessions`
+
+      const response = await fetch(sessionsUrl, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',

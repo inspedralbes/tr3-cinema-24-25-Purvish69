@@ -2,6 +2,9 @@ import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 
 export const useSessionsStore = defineStore('sessions', () => {
+  const config = useRuntimeConfig()
+  const API_URL = config.public.apiBaseUrl
+
   // State
   const sessions = ref([])
   const currentSession = ref(null)
@@ -22,7 +25,7 @@ export const useSessionsStore = defineStore('sessions', () => {
       
       console.log('Fetching sessions data...')
       
-      const response = await fetch('http://filmgalaxyback.daw.inspedralbes.cat/api/sessions', {
+      const response = await fetch(`${API_URL}/sessions`, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
@@ -84,7 +87,7 @@ export const useSessionsStore = defineStore('sessions', () => {
   const fetchSessionsByMovieId = async (movieId) => {
     try {
       loading.value = true
-      const response = await fetch(`http://filmgalaxyback.daw.inspedralbes.cat/api/sessions?movie_id=${movieId}`, {
+      const response = await fetch(`${API_URL}/sessions?movie_id=${movieId}`, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
@@ -127,7 +130,7 @@ export const useSessionsStore = defineStore('sessions', () => {
       loading.value = true
       console.log(`Fetching session details for ID: ${id}`)
       
-      const response = await fetch(`http://filmgalaxyback.daw.inspedralbes.cat/api/sessions/${id}`, {
+      const response = await fetch(`${API_URL}/sessions/${id}`, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',

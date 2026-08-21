@@ -1,7 +1,8 @@
 export const useAuth = () => {
   const token = useCookie('token')
   const userId = useCookie('userId')
-  const API_URL = 'http://filmgalaxyback.daw.inspedralbes.cat/api'
+  const config = useRuntimeConfig()
+  const API_URL = config.public.apiBaseUrl
 
 
   const register = async (nombre, apellido, email, telefono, password) => {

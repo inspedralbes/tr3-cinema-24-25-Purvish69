@@ -320,11 +320,11 @@ const purchaseTickets = async () => {
 
 onMounted(async () => {
   try {
-    const sessionId = route.params.id
+    const sessionId = route.params.id?.toString()
 
-    await sessionsStore.fetchSessionById(sessionId)
+    const sessionResponse = await sessionsStore.fetchSessionById(sessionId)
 
-    if (sessionsStore.currentSession) {
+    if (sessionResponse?.session || sessionsStore.currentSession) {
       selectedSession.value = sessionsStore.currentSession
 
       if (selectedSession.value.movie) {
@@ -333,22 +333,24 @@ onMounted(async () => {
         const movieId = selectedSession.value.movie_id || selectedSession.value.movieId
         if (movieId) {
           const movieData = await getPeliculaById(movieId)
-          currentMovie.value = movieData
+          currentMovie.value = movieData.movie || movieData
         }
       }
     } else {
       const sessionsData = await getSesiones()
       sessions.value = sessionsData.sessions || []
-      selectedSession.value = sessions.value.find(s => s.id.toString() === sessionId.toString())
+      selectedSession.value = sessions.value.find(s => s.id?.toString() === sessionId)
 
       if (!selectedSession.value) {
-        throw new Error('No se encontró la sesión solicitada')
+        error.value = 'La sesión ya no existe o ha cambiado. Selecciona una sesión disponible.'
+        await router.replace('/moviSession')
+        return
       }
 
       const movieId = selectedSession.value.movie_id || selectedSession.value.movieId
       if (movieId) {
         const movieData = await getPeliculaById(movieId)
-        currentMovie.value = movieData
+        currentMovie.value = movieData.movie || movieData
       } else if (selectedSession.value.movie) {
         currentMovie.value = selectedSession.value.movie
       }

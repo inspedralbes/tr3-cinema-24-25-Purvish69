@@ -6,6 +6,12 @@ export default defineNuxtConfig({
   compatibilityDate: '2025-03-13',
   devtools: { enabled: true },
 
+  runtimeConfig: {
+    public: {
+      apiBaseUrl: process.env.NUXT_PUBLIC_API_BASE_URL || process.env.NUXT_APP_API_URL || 'http://localhost:8000/api'
+    }
+  },
+
   app:{
     head: {
       title: 'FilmGalaxy',

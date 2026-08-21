@@ -12,9 +12,15 @@ use Illuminate\Support\Facades\Validator;
 class MovieSessionsController extends Controller
 {
     // Lista todas las sesiones de películas con la información de la película asociada
-    public function index()
+    public function index(Request $request)
     {
-        $sessions = MovieSession::with('movie')->get();
+        $sessionsQuery = MovieSession::with('movie');
+
+        if ($request->filled('movie_id')) {
+            $sessionsQuery->where('movie_id', $request->movie_id);
+        }
+
+        $sessions = $sessionsQuery->orderBy('fecha')->orderBy('hora')->get();
         
         // Si la petición espera JSON se retorna en ese formato, de lo contrario se muestra la vista
         if (request()->wantsJson()) {

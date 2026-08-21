@@ -54,6 +54,7 @@ services:
     depends_on:
       - backend
     environment:
+      NUXT_PUBLIC_API_BASE_URL: http://localhost:8000/api
       NUXT_APP_API_URL: http://backend:8000
       CHOKIDAR_USEPOLLING: true
     command: npm run dev -- --host=0.0.0.0

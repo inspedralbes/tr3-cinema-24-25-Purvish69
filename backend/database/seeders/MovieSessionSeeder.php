@@ -2,6 +2,7 @@
 
 namespace Database\Seeders;
 
+use App\Models\Movie;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
@@ -13,49 +14,41 @@ class MovieSessionSeeder extends Seeder
      */
     public function run(): void
     {
-        // Crear 4 sesiones diferentes con diferentes días, horas y películas
-        $sessions = [
-            [
-                'movie_id' => 1, // Avengers: Endgame
-                'fecha' => Carbon::now()->addDays(1)->format('Y-m-d'), // Mañana
-                'hora' => '16:00',
-                'estado' => 'disponible',
-                'dia_espectador' => true,
-                'fila_vip_activa' => false,
-                'created_at' => now(),
-                'updated_at' => now(),
-            ],
-            [
-                'movie_id' => 2, // The Dark Knight
-                'fecha' => Carbon::now()->addDays(2)->format('Y-m-d'), // Pasado mañana
-                'hora' => '18:00',
-                'estado' => 'disponible',
-                'dia_espectador' => false,
-                'fila_vip_activa' => true,
-                'created_at' => now(),
-                'updated_at' => now(),
-            ],
-            [
-                'movie_id' => 3, // Interstellar
-                'fecha' => Carbon::now()->addDays(3)->format('Y-m-d'), // En 3 días
-                'hora' => '20:00',
-                'estado' => 'disponible',
-                'dia_espectador' => false,
-                'fila_vip_activa' => true,
-                'created_at' => now(),
-                'updated_at' => now(),
-            ],
-            [
-                'movie_id' => 4, // Spider-Man: No Way Home
-                'fecha' => Carbon::now()->addDays(4)->format('Y-m-d'), // En 4 días
-                'hora' => '16:00',
-                'estado' => 'disponible',
-                'dia_espectador' => true,
-                'fila_vip_activa' => false,
-                'created_at' => now(),
-                'updated_at' => now(),
-            ],
-        ];
+        DB::table('payments')->delete();
+        DB::table('tickets')->delete();
+        DB::table('seats')->delete();
+        DB::table('movieSessions')->delete();
+
+        $movieIds = Movie::query()->pluck('id')->values()->all();
+
+        if (empty($movieIds)) {
+            return;
+        }
+
+        $hours = ['16:00', '18:00', '20:00'];
+        $sessions = [];
+
+        // Genera sesiones para los próximos 7 días con datos siempre actuales.
+        for ($dayOffset = 1; $dayOffset <= 7; $dayOffset++) {
+            $sessionDate = Carbon::now()->addDays($dayOffset);
+            $dayMovieIds = $movieIds;
+            shuffle($dayMovieIds);
+
+            foreach ($hours as $index => $hour) {
+                $movieId = $dayMovieIds[$index % count($dayMovieIds)];
+
+                $sessions[] = [
+                    'movie_id' => $movieId,
+                    'fecha' => $sessionDate->format('Y-m-d'),
+                    'hora' => $hour,
+                    'estado' => 'disponible',
+                    'dia_espectador' => $sessionDate->isWednesday(),
+                    'fila_vip_activa' => $hour !== '16:00',
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ];
+            }
+        }
 
         // Insertar las sesiones
         DB::table('movieSessions')->insert($sessions);
