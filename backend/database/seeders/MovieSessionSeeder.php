@@ -28,9 +28,12 @@ class MovieSessionSeeder extends Seeder
         $hours = ['16:00', '18:00', '20:00'];
         $sessions = [];
 
-        // Genera sesiones para los próximos 7 días con datos siempre actuales.
-        for ($dayOffset = 1; $dayOffset <= 7; $dayOffset++) {
-            $sessionDate = Carbon::now()->addDays($dayOffset);
+        // Genera sesiones desde hoy hasta el final de la semana siguiente.
+        $today = Carbon::today();
+        $daysUntilNextSunday = (Carbon::SUNDAY - $today->dayOfWeek + 7) % 7;
+        $lastSessionDate = $today->copy()->addDays($daysUntilNextSunday + 7);
+
+        for ($sessionDate = $today->copy(); $sessionDate->lte($lastSessionDate); $sessionDate->addDay()) {
             $dayMovieIds = $movieIds;
             shuffle($dayMovieIds);
 
