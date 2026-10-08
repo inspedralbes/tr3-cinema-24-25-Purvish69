@@ -109,11 +109,41 @@
       </div>
     </div>
     <Footer />
+
+    <!-- Login required modal -->
+    <div v-if="showLoginModal" class="fixed inset-0 z-[100] flex items-center justify-center bg-black/70 px-4"
+      role="dialog" aria-modal="true" aria-labelledby="login-modal-title" @click.self="closeLoginModal">
+      <div class="w-full max-w-md rounded-2xl bg-primary p-6 text-center shadow-2xl ring-1 ring-gold/30">
+        <div class="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-gold/20">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-gold" fill="none" viewBox="0 0 24 24"
+            stroke="currentColor" aria-hidden="true">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8"
+              d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM5 21a7 7 0 0114 0M19 8v6m3-3h-6" />
+          </svg>
+        </div>
+        <h2 id="login-modal-title" class="text-2xl font-bold text-light">Inicia sesión para continuar</h2>
+        <p class="mt-3 text-light/75">
+          Necesitas iniciar sesión para comprar entradas para esta sesión.
+        </p>
+        <div class="mt-6 flex flex-col gap-3 sm:flex-row-reverse">
+          <button type="button"
+            class="rounded-lg bg-gold px-5 py-3 font-semibold text-primary transition-colors hover:bg-gold/80"
+            @click="goToLogin">
+            Iniciar sesión
+          </button>
+          <button type="button"
+            class="rounded-lg border border-light/30 px-5 py-3 font-medium text-light transition-colors hover:bg-light/10"
+            @click="closeLoginModal">
+            Ahora no
+          </button>
+        </div>
+      </div>
+    </div>
   </v-app>
 </template>
 
 <script setup>
-import { onMounted } from 'vue'
+import { onMounted, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useSessionsStore } from '@/stores/sessionsStore'
 import { useAuth } from '@/composables/useAuth'
@@ -122,6 +152,8 @@ const route = useRoute()
 const router = useRouter()
 const sessionsStore = useSessionsStore()
 const { isAuthenticated } = useAuth()
+const showLoginModal = ref(false)
+const pendingSessionId = ref(null)
 
 // Format date to a more readable format
 const formatDate = (dateString) => {
@@ -139,14 +171,8 @@ const formatDate = (dateString) => {
 const comprarEntradas = (session) => {
   // Verificar si el usuario está autenticado
   if (!isAuthenticated.value) {
-    // Si no está autenticado, redirigir a la página de login
-    router.push({
-      path: '/login',
-      query: { redirect: `/billets/${session.id}` }
-    });
-
-    // Mostrar mensaje de alerta
-    alert('Debes iniciar sesión para comprar entradas');
+    pendingSessionId.value = session?.id || null
+    showLoginModal.value = true
     return;
   }
 
@@ -154,6 +180,19 @@ const comprarEntradas = (session) => {
   if (session && session.id) {
     router.push(`/billets/${session.id}`);
   }
+}
+
+const closeLoginModal = () => {
+  showLoginModal.value = false
+  pendingSessionId.value = null
+}
+
+const goToLogin = () => {
+  const redirect = pendingSessionId.value ? `/billets/${pendingSessionId.value}` : '/movieDetails/moviSession'
+  router.push({
+    path: '/login',
+    query: { redirect }
+  })
 }
 
 // Refresh sessions
