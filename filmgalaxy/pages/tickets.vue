@@ -1,7 +1,8 @@
 <template>
-  <v-app>
-    <Navbar />
-    <div class="min-h-screen bg-gradient-to-br custom-bg py-8">
+  <v-app class="cinema-app-root">
+    <div class="cinema-page-wrapper">
+      <Navbar />
+      <div class="min-h-screen py-8">
       <div class="container mx-auto px-4">
         <!-- Estado de carga -->
         <div v-if="loading" class="flex justify-center items-center h-[70vh]">
@@ -145,13 +146,12 @@
                     </button>
                   </div>
                 </form>
-              </div>
             </div>
           </div>
         </div>
       </div>
+      <Footer />
     </div>
-    <Footer />
   </v-app>
 </template>
 
@@ -370,13 +370,28 @@ onMounted(async () => {
 </script>
 
 <style scoped>
-.custom-bg {
-  background: linear-gradient(135deg, #22223B 10%, #EAE0D5 110%);
+/* Page Root */
+.cinema-app-root {
+  background: #080a14 !important;
+}
+
+:deep(.v-application__wrap) {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background: transparent !important;
+}
+
+.cinema-page-wrapper {
+  min-height: 100vh;
+  background: radial-gradient(circle at 50% 0%, #1a203a 0%, #0c0f1c 45%, #06070e 100%);
+  color: #F2E9E4;
 }
 
 .glass-effect {
-  background: #4A4E69;
-  backdrop-filter: blur(10px);
+  background: rgba(22, 26, 46, 0.75);
+  border: 1px solid rgba(200, 169, 110, 0.25);
+  backdrop-filter: blur(12px);
 }
 
 .animate-pulse-slow {

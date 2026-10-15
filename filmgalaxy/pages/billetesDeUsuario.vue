@@ -1,8 +1,9 @@
 <template>
-  <v-app class="bg-midnight min-h-screen">
-    <Navbar />
-    <div class="main-background min-h-[calc(100vh-64px)] pt-8">
-      <div class="container mx-auto px-4">
+  <v-app class="cinema-app-root">
+    <div class="cinema-page-wrapper">
+      <Navbar />
+      <div class="min-h-[calc(100vh-76px)] pt-6 pb-16">
+        <div class="container mx-auto px-4">
         <!-- Loading State -->
         <div v-if="loading" class="flex justify-center items-center min-h-[60vh]">
           <div class="loading-spinner"></div>
@@ -25,7 +26,7 @@
               </svg>
               <h2 class="text-2xl font-bold text-gold mb-3">No tens entrades</h2>
               <p class="mb-6 text-ivory">Compra les teves entrades ara i gaudeix del millor cinema!</p>
-              <button @click="router.push('/moviSession')" class="action-button">
+              <button @click="router.push('/movieDetails/moviSession')" class="action-button">
                 Veure pel·lícules
               </button>
             </div>
@@ -114,9 +115,10 @@
             </div>
           </div>
         </div>
+        </div>
       </div>
+      <Footer />
     </div>
-    <Footer />
   </v-app>
 </template>
 
@@ -274,9 +276,22 @@ onMounted(async () => {
   color: var(--color-ivory);
 }
 
-/* Main Background */
-.main-background {
-  background: linear-gradient(135deg, #22223B 10%, #9A8C98 100%);
+/* Page Root */
+.cinema-app-root {
+  background: #080a14 !important;
+}
+
+:deep(.v-application__wrap) {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background: transparent !important;
+}
+
+.cinema-page-wrapper {
+  min-height: 100vh;
+  background: radial-gradient(circle at 50% 0%, #1a203a 0%, #0c0f1c 45%, #06070e 100%);
+  color: #F2E9E4;
 }
 
 /* Loading Spinner */

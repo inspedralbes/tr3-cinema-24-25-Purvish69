@@ -1,12 +1,12 @@
 <template>
-  <v-app>
-    <div class="min-h-screen custom-bg">
+  <v-app class="cinema-app-root">
+    <div class="cinema-page-wrapper">
       <!-- Barra de navegación -->
       <Navbar />
 
       <div class="container mx-auto px-4 py-8">
         <!-- Encabezado principal -->
-        <div class="container mx-auto px-6" style="padding-top: 60px; padding-bottom: 10px;">
+        <div class="container mx-auto px-6 pt-4 pb-4">
 
           <h1 class="text-4x1 md:text-5xl font-bold text-gold text-center mb-6 animate-fade-in">
             Pel·lícules en Cartellera
@@ -204,9 +204,23 @@ const goToBuy = (id) => {
 };
 </script>
 
-<style>
-.custom-bg {
-  background: linear-gradient(135deg, #22223B 10%, #EAE0D5 100%);
+<style scoped>
+/* Page Root */
+.cinema-app-root {
+  background: #080a14 !important;
+}
+
+:deep(.v-application__wrap) {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background: transparent !important;
+}
+
+.cinema-page-wrapper {
+  min-height: 100vh;
+  background: radial-gradient(circle at 50% 0%, #1a203a 0%, #0c0f1c 45%, #06070e 100%);
+  color: #F2E9E4;
 }
 
 /* Estils d'animació i transicions */

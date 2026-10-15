@@ -1,5 +1,5 @@
 <template>
-  <v-app>
+  <v-app class="cinema-app-root bg-[#0c0e1a]">
     <Navbar />
     <div class="min-h-screen bg-gradient-to-br custom-bg py-8">
       <div class="container mx-auto px-4">

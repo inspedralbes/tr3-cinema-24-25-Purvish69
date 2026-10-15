@@ -1,8 +1,8 @@
 <template>
-  <v-app>
-    <Navbar />
-    <div class="min-h-screen bg-gradient-to-br from-primary via-secondary to-cream bg-custom">
-      <div class="container mx-auto px-6" style="padding-top: 120px; padding-bottom: 60px;">
+  <v-app class="cinema-app-root">
+    <div class="cinema-page-wrapper">
+      <Navbar />
+      <div class="container mx-auto px-6 pt-6 pb-16">
         <h1 class="text-3xl md:text-5xl font-bold text-gold text-center mb-8 animate-fade-in">
           Sesiones de Películas
         </h1>
@@ -216,11 +216,23 @@ onMounted(async () => {
 })
 </script>
 
-<style>
-/* CSS puro para el gradiente de fondo y animaciones */
-.bg-custom {
-  background: linear-gradient(135deg, #22223B 10%, #EAE0D5 100%);
+<style scoped>
+/* Page Root */
+.cinema-app-root {
+  background: #080a14 !important;
+}
+
+:deep(.v-application__wrap) {
   min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background: transparent !important;
+}
+
+.cinema-page-wrapper {
+  min-height: 100vh;
+  background: radial-gradient(circle at 50% 0%, #1a203a 0%, #0c0f1c 45%, #06070e 100%);
+  color: #F2E9E4;
 }
 
 .animate-fade-in {

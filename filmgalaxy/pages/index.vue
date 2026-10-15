@@ -1,184 +1,334 @@
 <template>
-  <v-app>
-    <div class="min-h-screen bg-gradient-to-br from-primary via-secondary to-cream custom-bg">
-      <!-- Navbar -->
+  <v-app class="cinema-app-root">
+    <div class="cinema-page-wrapper">
+      <!-- Navbar (Floats transparently over the hero) -->
       <Navbar />
 
-      <main class="relative pt-16">
+      <main class="relative hero-main">
         <!-- Error Alert -->
         <div v-if="movieStore.error"
-          class="fixed top-4 right-4 z-50 max-w-md bg-red-500/90 text-light py-36 rounded-lg backdrop-blur-sm animate-fade-in">
-          <p class="font-medium">{{ movieStore.error }}</p>
+          class="fixed top-20 right-4 z-50 max-w-md bg-red-500/90 text-white p-4 rounded-xl backdrop-blur-md shadow-2xl animate-fade-in border border-red-400/40">
+          <p class="font-medium text-sm flex items-center gap-2">
+            <i class="mdi mdi-alert-circle text-lg"></i>
+            {{ movieStore.error }}
+          </p>
         </div>
 
         <!-- Loading Overlay -->
         <div v-if="movieStore.loading"
-          class="fixed inset-0 bg-primary/50 backdrop-blur-sm flex items-center justify-center z-50">
-          <div class="animate-spin rounded-full h-16 w-16 border-4 border-gold border-t-transparent"></div>
+          class="fixed inset-0 bg-[#080a14]/70 backdrop-blur-md flex items-center justify-center z-50">
+          <div class="flex flex-col items-center gap-4">
+            <div class="w-12 h-12 border-4 border-[#C8A96E]/20 border-t-[#C8A96E] rounded-full animate-spin"></div>
+            <p class="text-sm font-semibold text-[#F5D78E] tracking-wide">Carregant el cinema...</p>
+          </div>
         </div>
 
-        <!-- Featured Movies Carousel -->
-        <section v-if="movieStore.featuredMovies.length > 0" class="relative">
-          <div class="relative h-[420px] md:h-[600px]">
-            <div v-for="(movie, index) in movieStore.featuredMovies" :key="movie.id"
-              class="absolute inset-0 transition-opacity duration-700" :class="{ 'opacity-0': currentSlide !== index }">
-              <div class="relative h-full">
-                <img :src="movie.poster" :alt="movie.titulo" class="absolute inset-0 w-full h-full object-cover" />
-                <div class="absolute inset-0 bg-gradient-to-t from-primary via-primary/50 to-transparent">
-                  <div class="absolute bottom-0 left-0 right-0 p-6 md:p-12 space-y-4">
-                    <h2 class="text-3xl md:text-5xl font-bold text-light animate-fade-up">
-                      {{ movie.titulo }}
-                    </h2>
+        <!-- FEATURED HERO CAROUSEL -->
+        <section v-if="movieStore.featuredMovies.length > 0" class="hero-carousel-section">
+          <div class="carousel-viewport">
+            <div 
+              v-for="(movie, index) in movieStore.featuredMovies" 
+              :key="movie.id"
+              class="carousel-slide" 
+              :class="{ 'slide-active': currentSlide === index }"
+            >
+              <!-- Poster Image -->
+              <img 
+                :src="movie.poster" 
+                :alt="movie.titulo" 
+                class="carousel-img" 
+              />
 
-                    <div class="flex items-center space-x-4 animate-fade-up" style="animation-delay: 200ms">
-                      <span class="text-gold text-xl md:text-2xl font-bold">
-                        {{ movie.calificacion }}/10
-                      </span>
-                      <div class="flex">
-                        <template v-for="n in 5" :key="n">
-                          <svg v-if="n <= Math.floor(movie.calificacion / 2)" class="w-5 h-5 text-gold"
-                            fill="currentColor" viewBox="0 0 20 20">
-                            <path
-                              d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                          </svg>
-                          <svg v-else class="w-5 h-5 text-gold/40" fill="currentColor" viewBox="0 0 20 20">
-                            <path
-                              d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                          </svg>
-                        </template>
-                      </div>
+              <!-- Multi-directional Cinema Vignette Overlays -->
+              <div class="vignette-overlay top-vignette"></div>
+              <div class="vignette-overlay side-vignette"></div>
+              <div class="vignette-overlay bottom-vignette"></div>
+
+              <!-- Hero Content Info -->
+              <div class="hero-content-wrapper">
+                <div class="hero-content">
+                  <!-- VIP Premiere Tag -->
+                  <div class="hero-badge animate-fade-up">
+                    <i class="mdi mdi-star-shooting text-amber-300"></i>
+                    <span>ESTRENA DESTACADA EN CARTELLERA</span>
+                  </div>
+
+                  <!-- Movie Title -->
+                  <h1 class="hero-title animate-fade-up">
+                    {{ movie.titulo }}
+                  </h1>
+
+                  <!-- Rating & Meta Info -->
+                  <div class="hero-meta-row animate-fade-up" style="animation-delay: 150ms">
+                    <div class="rating-badge">
+                      <span class="rating-num">{{ movie.calificacion }}</span>
+                      <small class="text-xs text-amber-300">/10</small>
                     </div>
 
-                    <div class="flex space-x-4 animate-fade-up" style="animation-delay: 400ms">
-                      <button class="btn-primary">
-                        Comprar entrades
-                      </button>
-                      <button class="btn-secondary"
-                        @click="movieStore.navigateToMovieDetails(movieStore.featuredMovies[currentSlide], router)">
-                        Detalls
-                      </button>
+                    <div class="star-rating">
+                      <template v-for="n in 5" :key="n">
+                        <i 
+                          v-if="n <= Math.floor(movie.calificacion / 2)" 
+                          class="mdi mdi-star star-filled"
+                        ></i>
+                        <i 
+                          v-else 
+                          class="mdi mdi-star-outline star-empty"
+                        ></i>
+                      </template>
                     </div>
+
+                    <span class="meta-dot">•</span>
+                    <span class="meta-item">Cinema 4K & VIP</span>
+                  </div>
+
+                  <!-- CTA Actions -->
+                  <div class="hero-actions-row animate-fade-up" style="animation-delay: 300ms">
+                    <button 
+                      class="btn-hero-primary"
+                      @click="movieStore.navigateToMovieDetails(movieStore.featuredMovies[currentSlide], router)"
+                    >
+                      <i class="mdi mdi-ticket-confirmation"></i>
+                      <span>Comprar entrades</span>
+                    </button>
+                    <button 
+                      class="btn-hero-secondary"
+                      @click="movieStore.navigateToMovieDetails(movieStore.featuredMovies[currentSlide], router)"
+                    >
+                      <i class="mdi mdi-information-outline"></i>
+                      <span>Veure Detalls</span>
+                    </button>
                   </div>
                 </div>
               </div>
             </div>
-          </div>
 
-          <!-- Carousel Controls -->
-          <div class="absolute bottom-4 left-1/2 -translate-x-1/2 flex space-x-2">
-            <button v-for="(_, index) in movieStore.featuredMovies" :key="index" @click="currentSlide = index"
-              class="w-2 h-2 rounded-full transition-all duration-300"
-              :class="currentSlide === index ? 'bg-gold w-8' : 'bg-light/50 hover:bg-light'"></button>
+            <!-- Left / Right Carousel Nav Arrows -->
+            <button 
+              type="button" 
+              class="carousel-nav-arrow arrow-left" 
+              @click="prevSlide" 
+              aria-label="Anterior"
+            >
+              <i class="mdi mdi-chevron-left"></i>
+            </button>
+            <button 
+              type="button" 
+              class="carousel-nav-arrow arrow-right" 
+              @click="nextSlide" 
+              aria-label="Següent"
+            >
+              <i class="mdi mdi-chevron-right"></i>
+            </button>
+
+            <!-- Carousel Pagination Indicators -->
+            <div class="carousel-indicators">
+              <button 
+                v-for="(_, index) in movieStore.featuredMovies" 
+                :key="index" 
+                @click="currentSlide = index"
+                class="carousel-dot"
+                :class="{ active: currentSlide === index }"
+                :aria-label="`Slide ${index + 1}`"
+              ></button>
+            </div>
           </div>
         </section>
 
-        <!-- Now Playing Movies -->
-        <section class="container mx-auto px-4 py-12">
-          <div class="flex flex-col md:flex-row justify-between items-center mb-8">
-            <h2 class="text-2xl md:text-4xl font-bold text-light mb-4 md:mb-0">
-              Sessions de pel·lícula
-            </h2>
-            <button class="btn-primary" @click="$router.push('/')">
-              Veure més sessions
-            </button>
-          </div>
+        <!-- WHY FILMGALAXY PERKS BAR -->
+        <section class="perks-banner-section">
+          <div class="section-container">
+            <div class="perks-banner-grid">
+              <div class="perk-box">
+                <div class="perk-box-icon gold">
+                  <i class="mdi mdi-ticket-percent-outline"></i>
+                </div>
+                <div class="perk-box-text">
+                  <strong>Dia de l'Espectador</strong>
+                  <span>Preu reduït de 4€ tots els dimecres</span>
+                </div>
+              </div>
 
-          <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6">
-            <div v-for="session in combinedSessions" :key="session.id"
-              class="group relative bg-light/10 rounded-xl overflow-hidden backdrop-blur-sm transition-transform duration-300 hover:scale-105">
-              <!-- Movie Poster -->
-              <div class="relative aspect-[2/3]">
-                <img :src="session.movie.imagen" :alt="session.movie.titulo" class="w-full h-full object-cover" />
-                <div class="absolute top-4 right-4 bg-gold text-primary px-3 py-1 rounded-full text-sm font-medium">
-                  {{ session.hora }}
+              <div class="perk-box">
+                <div class="perk-box-icon purple">
+                  <i class="mdi mdi-seat-recline-extra"></i>
                 </div>
-                <!-- Indicador d'estat (a punt d'acabar) -->
-                <div v-if="isSessionEndingSoon(session)"
-                  class="absolute top-4 left-4 bg-red-500 text-white px-3 py-1 rounded-full text-sm font-medium animate-pulse">
-                  Acaba aviat
+                <div class="perk-box-text">
+                  <strong>Butaques VIP Reclinables</strong>
+                  <span>Màxim confort a totes les nostres sales</span>
                 </div>
-                <div
-                  class="absolute inset-0 bg-gradient-to-t from-primary/90 via-primary/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                  <div class="absolute bottom-0 left-0 right-0 p-4">
-                    <p class="text-light text-sm mb-2">
+              </div>
+
+              <div class="perk-box">
+                <div class="perk-box-icon blue">
+                  <i class="mdi mdi-surround-sound"></i>
+                </div>
+                <div class="perk-box-text">
+                  <strong>So Dolby Atmos & 4K</strong>
+                  <span>Una experiència acústica i visual pura</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- SESSIONS DE PEL·LÍCULA (NOW PLAYING) -->
+        <section class="sessions-section">
+          <div class="section-container">
+            <!-- Header -->
+            <div class="section-header">
+              <div class="header-left">
+                <div class="section-tag">
+                  <i class="mdi mdi-clock-outline"></i>
+                  <span>HORARIS DISPONIBLES</span>
+                </div>
+                <h2 class="section-heading">
+                  Sessions de pel·lícula
+                </h2>
+              </div>
+              <button class="btn-view-all" @click="router.push('/movieDetails/moviSession')">
+                <span>Veure totes les sessions</span>
+                <i class="mdi mdi-arrow-right"></i>
+              </button>
+            </div>
+
+            <!-- Sessions Grid -->
+            <div class="movies-cards-grid">
+              <div 
+                v-for="session in combinedSessions" 
+                :key="session.id"
+                class="movie-card group"
+              >
+                <!-- Poster Thumbnail -->
+                <div class="card-poster-wrapper">
+                  <img 
+                    :src="session.movie.imagen" 
+                    :alt="session.movie.titulo" 
+                    class="card-poster-img" 
+                  />
+
+                  <!-- Time Badge -->
+                  <div class="card-time-badge">
+                    <i class="mdi mdi-clock-time-four-outline"></i>
+                    <span>{{ session.hora }}</span>
+                  </div>
+
+                  <!-- Ending Soon Badge -->
+                  <div 
+                    v-if="isSessionEndingSoon(session)"
+                    class="card-ending-badge animate-pulse"
+                  >
+                    Acaba aviat
+                  </div>
+
+                  <!-- Hover Backdrop Overlay -->
+                  <div class="card-hover-overlay">
+                    <p class="hover-info-line">
                       {{ formatDuration(session.movie.duracion) }} • {{ session.movie.genero }}
                     </p>
-                    <p class="text-light text-sm">
-                      {{ formatReleaseDate(session.fecha) }} • {{ getSessionTimeInfo(session) }}
+                    <p class="hover-info-sub">
+                      {{ formatDateHeader(session.fecha) }}
                     </p>
                   </div>
                 </div>
-              </div>
 
-              <!-- Movie Info -->
-              <div class="p-4 space-y-3">
-                <h3 class="text-lg font-bold text-light line-clamp-2">
-                  {{ session.movie.titulo }}
-                </h3>
-                <!-- Nova línia per mostrar dia, data i hora -->
-                <p class="text-sm text-light">
-                  {{ formatDateHeader(session.fecha) }} - {{ session.hora }}
-                </p>
-                <div class="flex gap-2">
-                  <button @click="router.push(`/billets/${session.id}`)"
-                    class="flex-1 bg-gold hover:bg-gold/80 text-primary font-medium py-2 px-3 rounded-lg text-sm transition-colors duration-300">
-                    Comprar
-                  </button>
-                  <button
-                    class="flex-1 bg-accent hover:bg-accent/80 text-light font-medium py-2 px-3 rounded-lg text-sm transition-colors duration-300"
-                    @click="movieStore.navigateToMovieDetails(session.movie, router)">
-                    Detalls
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
-        </section>
+                <!-- Info and Actions -->
+                <div class="card-body">
+                  <h3 class="card-movie-title line-clamp-2">
+                    {{ session.movie.titulo }}
+                  </h3>
+                  <p class="card-date-line">
+                    <i class="mdi mdi-calendar-blank-outline"></i>
+                    <span>{{ formatDateHeader(session.fecha) }} • {{ session.hora }}</span>
+                  </p>
 
-        <!-- Pròximament Info de Pel·lícules -->
-        <section class="container mx-auto px-4 py-12">
-          <div class="flex flex-col md:flex-row justify-between items-center mb-8">
-            <h2 class="text-2xl md:text-4xl font-bold text-light mb-4 md:mb-0">
-              Pròximament
-            </h2>
-            <button class="btn-primary" @click="$router.push('/movies')">
-              Veure més pel·lícules
-            </button>
-          </div>
-
-          <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6">
-            <div v-for="movie in movieStore.comingSoonMovies" :key="movie.id"
-              class="group relative bg-light/10 rounded-xl overflow-hidden backdrop-blur-sm transition-transform duration-300 hover:scale-105">
-              <!-- Movie Poster -->
-              <div class="relative aspect-[2/3]">
-                <img :src="movie.imagen" :alt="movie.titulo" class="w-full h-full object-cover" />
-
-                <div class="absolute top-4 right-4 bg-gold text-primary px-3 py-1 rounded-full text-sm font-medium">
-                  {{ formatReleaseDate(movie.fecha_estreno) }}
-                </div>
-
-                <div
-                  class="absolute inset-0 bg-gradient-to-t from-primary/90 via-primary/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                  <div class="absolute bottom-0 left-0 right-0 p-4">
-                    <p class="text-light text-sm">{{ movie.genero }}</p>
+                  <div class="card-buttons-row">
+                    <button 
+                      @click="router.push(`/billets/${session.id}`)"
+                      class="btn-card-buy"
+                    >
+                      <i class="mdi mdi-ticket"></i>
+                      <span>Comprar</span>
+                    </button>
+                    <button 
+                      class="btn-card-details"
+                      @click="movieStore.navigateToMovieDetails(session.movie, router)"
+                    >
+                      <span>Detalls</span>
+                    </button>
                   </div>
                 </div>
               </div>
+            </div>
+          </div>
+        </section>
 
-              <div class="p-4">
-                <h3 class="text-lg font-bold text-light line-clamp-2">
-                  {{ movie.titulo }}
-                </h3>
-                <button
-                  class="w-full mt-3 bg-accent hover:bg-accent/80 text-light font-medium py-2 px-3 rounded-lg text-sm transition-colors duration-300"
-                  @click="movieStore.navigateToMovieDetails(movie, router)">
-                  Detalls
-                </button>
+        <!-- PRÒXIMAMENT (COMING SOON) -->
+        <section class="coming-soon-section">
+          <div class="section-container">
+            <!-- Header -->
+            <div class="section-header">
+              <div class="header-left">
+                <div class="section-tag">
+                  <i class="mdi mdi-filmstrip"></i>
+                  <span>PROPERS LLANÇAMENTS</span>
+                </div>
+                <h2 class="section-heading">
+                  Pròximament al cinema
+                </h2>
+              </div>
+              <button class="btn-view-all" @click="router.push('/movies')">
+                <span>Veure cartellera completa</span>
+                <i class="mdi mdi-arrow-right"></i>
+              </button>
+            </div>
+
+            <!-- Coming Soon Grid -->
+            <div class="movies-cards-grid">
+              <div 
+                v-for="movie in movieStore.comingSoonMovies" 
+                :key="movie.id"
+                class="movie-card group"
+              >
+                <!-- Poster Thumbnail -->
+                <div class="card-poster-wrapper">
+                  <img 
+                    :src="movie.imagen" 
+                    :alt="movie.titulo" 
+                    class="card-poster-img" 
+                  />
+
+                  <!-- Release Date Badge -->
+                  <div class="card-release-badge">
+                    <i class="mdi mdi-calendar-star"></i>
+                    <span>Estrena: {{ formatReleaseDate(movie.fecha_estreno) }}</span>
+                  </div>
+
+                  <!-- Hover Backdrop Overlay -->
+                  <div class="card-hover-overlay">
+                    <p class="hover-info-line">{{ movie.genero }}</p>
+                  </div>
+                </div>
+
+                <!-- Info and Actions -->
+                <div class="card-body">
+                  <h3 class="card-movie-title line-clamp-2">
+                    {{ movie.titulo }}
+                  </h3>
+                  <button
+                    class="btn-card-details-full"
+                    @click="movieStore.navigateToMovieDetails(movie, router)"
+                  >
+                    <i class="mdi mdi-information-outline"></i>
+                    <span>Més informació</span>
+                  </button>
+                </div>
               </div>
             </div>
           </div>
         </section>
 
+        <!-- Redesigned Modern Cinema Footer -->
         <Footer />
       </main>
     </div>
@@ -190,6 +340,8 @@ import { ref, onMounted, computed, onUnmounted } from 'vue';
 import { useRouter } from 'vue-router';
 import { useMovieStore } from '~/stores/movieStore';
 import { useSessionsStore } from '~/stores/sessionsStore';
+import Navbar from '@/components/Navbar.vue';
+import Footer from '@/components/Footer.vue';
 
 const router = useRouter();
 const movieStore = useMovieStore();
@@ -198,18 +350,23 @@ const currentSlide = ref(0);
 
 // Auto advance carousel
 let carouselInterval;
-onMounted(() => {
-  movieStore.fetchMovies();
-  sessionsStore.fetchSessions();
-  startCarousel();
-});
+let checkSessionsInterval;
+
+const nextSlide = () => {
+  if (movieStore.featuredMovies.length > 0) {
+    currentSlide.value = (currentSlide.value + 1) % movieStore.featuredMovies.length;
+  }
+};
+
+const prevSlide = () => {
+  if (movieStore.featuredMovies.length > 0) {
+    currentSlide.value = (currentSlide.value - 1 + movieStore.featuredMovies.length) % movieStore.featuredMovies.length;
+  }
+};
 
 function startCarousel() {
-  carouselInterval = setInterval(() => {
-    if (movieStore.featuredMovies.length > 0) {
-      currentSlide.value = (currentSlide.value + 1) % movieStore.featuredMovies.length;
-    }
-  }, 5000);
+  if (carouselInterval) clearInterval(carouselInterval);
+  carouselInterval = setInterval(nextSlide, 5000);
 }
 
 // Sessions imminents per als propers 4 dies
@@ -218,12 +375,10 @@ const combinedSessions = computed(() => {
   const today = new Date(now);
   today.setHours(0, 0, 0, 0);
 
-  // Inicialment buscar en els propers 4 dies
   let maxDate = new Date(today);
   maxDate.setDate(maxDate.getDate() + 4);
 
   let sessions = sessionsStore.availableSessions.filter(session => {
-    // Convertir la data i hora de la sessió a un objecte Date
     const sessionDate = new Date(session.fecha);
     const sessionTime = session.hora.split(':');
     const sessionDateTime = new Date(sessionDate);
@@ -233,19 +388,16 @@ const combinedSessions = computed(() => {
       0, 0
     );
 
-    // Verificar si la sessió ja ha acabat
     const movieDurationMinutes = session.movie?.duracion ? parseInt(session.movie.duracion) : 120;
     const sessionEndTime = new Date(sessionDateTime);
     sessionEndTime.setMinutes(sessionEndTime.getMinutes() + movieDurationMinutes);
 
-    // Només mostrar sessions que encara no han acabat
     return sessionEndTime > now && sessionDate <= maxDate;
   });
 
-  // Si hi ha menys de 4 sessions, augmentar el rang de dies fins a trobar almenys 4
   if (sessions.length < 4) {
-    let extendedDays = 5; // Començar amb un dia addicional
-    while (sessions.length < 4 && extendedDays <= 30) { // Limitar a 30 dies
+    let extendedDays = 5;
+    while (sessions.length < 4 && extendedDays <= 30) {
       maxDate = new Date(today);
       maxDate.setDate(maxDate.getDate() + extendedDays);
 
@@ -270,29 +422,20 @@ const combinedSessions = computed(() => {
     }
   }
 
-  // Ordenar sessions primer per data i després per hora
   sessions.sort((a, b) => {
     const dateA = new Date(a.fecha);
     const dateB = new Date(b.fecha);
-
-    // Si les dates són diferents, ordenar per data
     if (dateA.getTime() !== dateB.getTime()) {
       return dateA - dateB;
     }
-
-    // Si les dates són iguals, ordenar per hora
     return a.hora.localeCompare(b.hora);
   });
 
-  // Devolver màxim 8 sessions per mostrar
   return sessions.slice(0, 8);
 });
 
-// Comprovar periòdicament si hi ha sessions que han acabat i actualitzar la llista
 const checkExpiredSessions = () => {
   const now = new Date();
-
-  // Comptar quantes sessions han acabat
   const expiredSessionsCount = sessionsStore.sessions.filter(session => {
     const sessionDate = new Date(session.fecha);
     const sessionTime = session.hora.split(':');
@@ -310,33 +453,25 @@ const checkExpiredSessions = () => {
     return sessionEndTime <= now;
   }).length;
 
-  // Si més del 50% de les sessions han acabat o no hi ha sessions visibles, recarregar
   if (expiredSessionsCount > sessionsStore.sessions.length / 2 || combinedSessions.value.length === 0) {
     sessionsStore.fetchSessions();
   }
 };
 
-// Configurar un interval per comprovar sessions acabades cada 5 minuts
-let checkSessionsInterval;
 onMounted(() => {
   movieStore.fetchMovies();
   sessionsStore.fetchSessions();
   startCarousel();
 
-  // Comprovar periòdicament si hi ha sessions acabades (cada 5 minuts)
   checkSessionsInterval = setInterval(checkExpiredSessions, 300000);
-
-  // També comprovar en carregar la pàgina
   checkExpiredSessions();
 });
 
-// Netejar intervals al desmuntar
 onUnmounted(() => {
   if (carouselInterval) clearInterval(carouselInterval);
   if (checkSessionsInterval) clearInterval(checkSessionsInterval);
 });
 
-// Helpers per formatejar dates i durada
 const formatReleaseDate = (dateString) => {
   if (!dateString) return '';
   const date = new Date(dateString);
@@ -346,10 +481,7 @@ const formatReleaseDate = (dateString) => {
 };
 
 const formatDateHeader = (dateString) => {
-  // La data ve en format "yyyy-mmm-dd" (ex: "2025-mar.-18")
   const date = new Date(dateString);
-
-  // Verificar si és avui, demà o passat demà
   const today = new Date();
   today.setHours(0, 0, 0, 0);
 
@@ -359,25 +491,24 @@ const formatDateHeader = (dateString) => {
   const dayAfterTomorrow = new Date(today);
   dayAfterTomorrow.setDate(dayAfterTomorrow.getDate() + 2);
 
-  // Convertir a dates sense hora per comparar
   const dateOnly = new Date(date);
   dateOnly.setHours(0, 0, 0, 0);
 
   if (dateOnly.getTime() === today.getTime()) {
     return 'Avui - ' + date.toLocaleDateString('ca-ES', {
-      weekday: 'long', day: 'numeric', month: 'long'
+      weekday: 'short', day: 'numeric', month: 'short'
     });
   } else if (dateOnly.getTime() === tomorrow.getTime()) {
     return 'Demà - ' + date.toLocaleDateString('ca-ES', {
-      weekday: 'long', day: 'numeric', month: 'long'
+      weekday: 'short', day: 'numeric', month: 'short'
     });
   } else if (dateOnly.getTime() === dayAfterTomorrow.getTime()) {
     return 'Passat demà - ' + date.toLocaleDateString('ca-ES', {
-      weekday: 'long', day: 'numeric', month: 'long'
+      weekday: 'short', day: 'numeric', month: 'short'
     });
   } else {
     return date.toLocaleDateString('ca-ES', {
-      weekday: 'long', day: 'numeric', month: 'long', year: 'numeric'
+      weekday: 'short', day: 'numeric', month: 'short'
     });
   }
 };
@@ -391,7 +522,6 @@ const formatDuration = (minutes) => {
   return `${hours}h ${remainingMins.toString().padStart(2, '0')}min`;
 };
 
-// Indicar si una sessió està a punt d'acabar
 const isSessionEndingSoon = (session) => {
   const now = new Date();
   const sessionDate = new Date(session.fecha);
@@ -407,149 +537,696 @@ const isSessionEndingSoon = (session) => {
   const sessionEndTime = new Date(sessionDateTime);
   sessionEndTime.setMinutes(sessionEndTime.getMinutes() + movieDurationMinutes);
 
-  const timeDiff = (sessionEndTime - now) / 1000 / 60; // minuts
-
-  return timeDiff < 30; // menys de 30 minuts per acabar
-};
-
-// Indicar si una sessió està a punt de començar
-const isSessionStartingSoon = (session) => {
-  const now = new Date();
-  const sessionDate = new Date(session.fecha);
-  const sessionTime = session.hora.split(':');
-  const sessionDateTime = new Date(sessionDate);
-  sessionDateTime.setHours(
-    parseInt(sessionTime[0]),
-    parseInt(sessionTime[1]),
-    0, 0
-  );
-
-  const timeDiff = (sessionDateTime - now) / 1000 / 60; // minuts
-
-  return timeDiff < 30; // menys de 30 minuts per començar
-};
-
-// Obtenir informació del temps restant per a una sessió
-const getSessionTimeInfo = (session) => {
-  const now = new Date();
-  const sessionDate = new Date(session.fecha);
-  const sessionTime = session.hora.split(':');
-  const sessionDateTime = new Date(sessionDate);
-  sessionDateTime.setHours(
-    parseInt(sessionTime[0]),
-    parseInt(sessionTime[1]),
-    0, 0
-  );
-
-  const movieDurationMinutes = session.movie?.duracion ? parseInt(session.movie.duracion) : 120;
-  const sessionEndTime = new Date(sessionDateTime);
-  sessionEndTime.setMinutes(sessionEndTime.getMinutes() + movieDurationMinutes);
-
-  // Si la sessió ja ha començat
-  if (now > sessionDateTime) {
-    const timeDiff = (sessionEndTime - now) / 1000 / 60; // minuts fins al final
-    if (timeDiff <= 0) {
-      return `Sessió finalitzada`;
-    } else if (timeDiff < 30) {
-      return `Acaba en ${Math.floor(timeDiff)} min`;
-    } else {
-      return `En curs (${Math.floor(timeDiff)} min restants)`;
-    }
-  } else {
-    // Si la sessió no ha començat
-    const timeDiff = (sessionDateTime - now) / 1000 / 60; // minuts fins a l'inici
-    if (timeDiff < 60) {
-      return `Comença en ${Math.floor(timeDiff)} min`;
-    } else if (timeDiff < 1440) { // menys de 24 hores
-      return `Comença a les ${session.hora}`;
-    } else {
-      return `${formatReleaseDate(session.fecha)} a les ${session.hora}`;
-    }
-  }
+  const timeDiff = (sessionEndTime - now) / 1000 / 60;
+  return timeDiff < 30;
 };
 </script>
 
-<style>
-.custom-bg {
-  background: linear-gradient(135deg, #22223B 10%, #EAE0D5 100%);
+<style scoped>
+/* Page Root */
+.cinema-app-root {
+  background: #080a14 !important;
 }
 
-/* Animació per fade-up */
-@keyframes fade-up {
-  from {
-    opacity: 0;
-    transform: translateY(20px);
-  }
+:deep(.v-application__wrap) {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background: transparent !important;
+}
 
-  to {
-    opacity: 1;
-    transform: translateY(0);
+.cinema-page-wrapper {
+  min-height: 100vh;
+  background: radial-gradient(circle at 50% 0%, #1a203a 0%, #0c0f1c 45%, #06070e 100%);
+  color: #F2E9E4;
+}
+
+/* Hero Carousel */
+.hero-main {
+  position: relative;
+  /* Negative margin so hero starts under the transparent navbar */
+  margin-top: -76px;
+}
+
+.hero-carousel-section {
+  position: relative;
+  width: 100%;
+  overflow: hidden;
+}
+
+.carousel-viewport {
+  position: relative;
+  width: 100%;
+  height: 560px;
+}
+
+@media (min-width: 768px) {
+  .carousel-viewport {
+    height: 640px;
   }
+}
+
+.carousel-slide {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.carousel-slide.slide-active {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.carousel-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center top;
+}
+
+/* Vignette Gradients */
+.vignette-overlay {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.top-vignette {
+  background: linear-gradient(180deg, rgba(6, 7, 14, 0.7) 0%, transparent 40%);
+}
+
+.side-vignette {
+  background: linear-gradient(90deg, rgba(6, 7, 14, 0.9) 0%, rgba(6, 7, 14, 0.4) 45%, transparent 100%);
+}
+
+.bottom-vignette {
+  background: linear-gradient(0deg, #0c0f1c 0%, rgba(12, 15, 28, 0.8) 25%, transparent 70%);
+}
+
+/* Hero Content */
+.hero-content-wrapper {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: flex-end;
+  max-width: 1350px;
+  margin: 0 auto;
+  padding: 0 2rem 5rem 2rem;
+  z-index: 5;
+}
+
+.hero-content {
+  max-width: 650px;
+}
+
+.hero-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.35rem 0.85rem;
+  background: rgba(200, 169, 110, 0.18);
+  border: 1px solid rgba(200, 169, 110, 0.4);
+  border-radius: 9999px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 1px;
+  color: #F5D78E;
+  margin-bottom: 1rem;
+  backdrop-filter: blur(8px);
+}
+
+.hero-title {
+  font-size: 2.5rem;
+  font-weight: 900;
+  line-height: 1.15;
+  color: #F2E9E4;
+  margin-bottom: 0.85rem;
+  text-shadow: 0 4px 15px rgba(0, 0, 0, 0.8);
+}
+
+@media (min-width: 768px) {
+  .hero-title {
+    font-size: 3.5rem;
+  }
+}
+
+.hero-meta-row {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 1.5rem;
+  flex-wrap: wrap;
+}
+
+.rating-badge {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 2px;
+  padding: 0.25rem 0.65rem;
+  background: rgba(200, 169, 110, 0.2);
+  border: 1px solid rgba(200, 169, 110, 0.35);
+  border-radius: 8px;
+}
+
+.rating-num {
+  font-size: 1.1rem;
+  font-weight: 800;
+  color: #F5D78E;
+}
+
+.star-rating {
+  display: flex;
+  gap: 2px;
+}
+
+.star-filled {
+  color: #F5D78E;
+  font-size: 1.15rem;
+}
+
+.star-empty {
+  color: rgba(200, 169, 110, 0.3);
+  font-size: 1.15rem;
+}
+
+.meta-dot {
+  color: #6c7293;
+}
+
+.meta-item {
+  color: #C9ADA7;
+  font-size: 0.9rem;
+  font-weight: 500;
+}
+
+/* Hero CTA Buttons */
+.hero-actions-row {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.btn-hero-primary {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.85rem 1.6rem;
+  background: linear-gradient(135deg, #F5D78E 0%, #C8A96E 50%, #B89659 100%);
+  color: #121526;
+  font-weight: 800;
+  font-size: 0.95rem;
+  border-radius: 14px;
+  border: none;
+  cursor: pointer;
+  box-shadow: 0 6px 20px rgba(200, 169, 110, 0.35);
+  transition: all 0.25s ease;
+}
+
+.btn-hero-primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 25px rgba(200, 169, 110, 0.5);
+  background: linear-gradient(135deg, #FFF0B8 0%, #D4B679 50%, #C8A96E 100%);
+}
+
+.btn-hero-secondary {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.85rem 1.4rem;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: #F2E9E4;
+  font-weight: 600;
+  font-size: 0.95rem;
+  border-radius: 14px;
+  cursor: pointer;
+  backdrop-filter: blur(8px);
+  transition: all 0.25s ease;
+}
+
+.btn-hero-secondary:hover {
+  background: rgba(255, 255, 255, 0.16);
+  border-color: #F5D78E;
+  color: #F5D78E;
+  transform: translateY(-2px);
+}
+
+/* Carousel Navigation Arrows */
+.carousel-nav-arrow {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: rgba(12, 15, 28, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  color: #F2E9E4;
+  font-size: 1.75rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  z-index: 10;
+  backdrop-filter: blur(8px);
+  transition: all 0.25s ease;
+}
+
+.carousel-nav-arrow:hover {
+  background: rgba(200, 169, 110, 0.3);
+  border-color: #C8A96E;
+  color: #F5D78E;
+}
+
+.arrow-left { left: 1.5rem; }
+.arrow-right { right: 1.5rem; }
+
+/* Carousel Dots */
+.carousel-indicators {
+  position: absolute;
+  bottom: 1.5rem;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  z-index: 10;
+}
+
+.carousel-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 9999px;
+  background: rgba(255, 255, 255, 0.35);
+  border: none;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.carousel-dot.active {
+  width: 28px;
+  background: #C8A96E;
+  box-shadow: 0 0 8px #C8A96E;
+}
+
+/* PERKS BANNER SECTION */
+.perks-banner-section {
+  position: relative;
+  z-index: 10;
+  margin-top: -2rem;
+  margin-bottom: 2rem;
+}
+
+.section-container {
+  max-width: 1350px;
+  margin: 0 auto;
+  padding: 0 1.5rem;
+}
+
+.perks-banner-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1.25rem;
+}
+
+.perk-box {
+  background: rgba(22, 26, 46, 0.75);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 18px;
+  padding: 1.25rem 1.5rem;
+  display: flex;
+  align-items: center;
+  gap: 1.15rem;
+  backdrop-filter: blur(16px);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+  transition: all 0.25s ease;
+}
+
+.perk-box:hover {
+  background: rgba(22, 26, 46, 0.95);
+  border-color: rgba(200, 169, 110, 0.35);
+  transform: translateY(-3px);
+  box-shadow: 0 15px 35px rgba(0, 0, 0, 0.4);
+}
+
+.perk-box-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.5rem;
+  flex-shrink: 0;
+}
+
+.perk-box-icon.gold {
+  background: rgba(200, 169, 110, 0.15);
+  border: 1px solid rgba(200, 169, 110, 0.3);
+  color: #C8A96E;
+}
+
+.perk-box-icon.purple {
+  background: rgba(147, 51, 234, 0.15);
+  border: 1px solid rgba(147, 51, 234, 0.3);
+  color: #c084fc;
+}
+
+.perk-box-icon.blue {
+  background: rgba(59, 130, 246, 0.15);
+  border: 1px solid rgba(59, 130, 246, 0.3);
+  color: #60a5fa;
+}
+
+.perk-box-text {
+  display: flex;
+  flex-direction: column;
+}
+
+.perk-box-text strong {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: #F2E9E4;
+}
+
+.perk-box-text span {
+  font-size: 0.8rem;
+  color: #9A8C98;
+}
+
+/* SESSIONS & COMING SOON SECTIONS */
+.sessions-section,
+.coming-soon-section {
+  padding: 3rem 0;
+}
+
+.section-header {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  margin-bottom: 2rem;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.section-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  color: #C8A96E;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 1px;
+  margin-bottom: 0.4rem;
+}
+
+.section-heading {
+  font-size: 1.85rem;
+  font-weight: 800;
+  color: #F2E9E4;
+  letter-spacing: -0.3px;
+}
+
+.btn-view-all {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0.55rem 1.15rem;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  color: #F5D78E;
+  font-size: 0.88rem;
+  font-weight: 600;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.25s ease;
+}
+
+.btn-view-all:hover {
+  background: rgba(200, 169, 110, 0.15);
+  border-color: #C8A96E;
+  transform: translateX(2px);
+}
+
+/* CARDS GRID */
+.movies-cards-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1.25rem;
+}
+
+@media (min-width: 768px) {
+  .movies-cards-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+@media (min-width: 1024px) {
+  .movies-cards-grid {
+    grid-template-columns: repeat(4, 1fr);
+    gap: 1.5rem;
+  }
+}
+
+.movie-card {
+  background: rgba(22, 26, 46, 0.7);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 20px;
+  overflow: hidden;
+  backdrop-filter: blur(12px);
+  display: flex;
+  flex-direction: column;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+}
+
+.movie-card:hover {
+  transform: translateY(-5px);
+  border-color: rgba(200, 169, 110, 0.4);
+  box-shadow: 0 15px 35px rgba(0, 0, 0, 0.5), 0 0 25px rgba(200, 169, 110, 0.1);
+}
+
+.card-poster-wrapper {
+  position: relative;
+  aspect-ratio: 2/3;
+  overflow: hidden;
+}
+
+.card-poster-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.5s ease;
+}
+
+.movie-card:hover .card-poster-img {
+  transform: scale(1.06);
+}
+
+.card-time-badge {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.3rem 0.65rem;
+  background: linear-gradient(135deg, #F5D78E 0%, #C8A96E 100%);
+  color: #121526;
+  font-size: 0.8rem;
+  font-weight: 800;
+  border-radius: 9999px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.4);
+  z-index: 2;
+}
+
+.card-ending-badge {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  background: #f43f5e;
+  color: #fff;
+  font-size: 0.75rem;
+  font-weight: 700;
+  padding: 0.25rem 0.6rem;
+  border-radius: 8px;
+  z-index: 2;
+  box-shadow: 0 2px 8px rgba(244, 63, 94, 0.5);
+}
+
+.card-release-badge {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.3rem 0.65rem;
+  background: rgba(18, 21, 38, 0.85);
+  border: 1px solid rgba(200, 169, 110, 0.4);
+  color: #F5D78E;
+  font-size: 0.775rem;
+  font-weight: 700;
+  border-radius: 9999px;
+  backdrop-filter: blur(8px);
+  z-index: 2;
+}
+
+.card-hover-overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(0deg, rgba(12, 15, 28, 0.95) 0%, rgba(12, 15, 28, 0.4) 50%, transparent 100%);
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  padding: 1.25rem;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  z-index: 1;
+}
+
+.movie-card:hover .card-hover-overlay {
+  opacity: 1;
+}
+
+.hover-info-line {
+  color: #F5D78E;
+  font-size: 0.85rem;
+  font-weight: 600;
+  margin-bottom: 0.2rem;
+}
+
+.hover-info-sub {
+  color: #C9ADA7;
+  font-size: 0.78rem;
+}
+
+/* Card Body */
+.card-body {
+  padding: 1.15rem;
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+}
+
+.card-movie-title {
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: #F2E9E4;
+  margin-bottom: 0.4rem;
+  line-height: 1.35;
+}
+
+.card-date-line {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  color: #9A8C98;
+  font-size: 0.825rem;
+  margin-bottom: 1rem;
+}
+
+.card-buttons-row {
+  display: flex;
+  gap: 0.6rem;
+  margin-top: auto;
+}
+
+.btn-card-buy {
+  flex: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.35rem;
+  padding: 0.55rem 0.85rem;
+  background: linear-gradient(135deg, #F5D78E 0%, #C8A96E 100%);
+  color: #121526;
+  font-size: 0.85rem;
+  font-weight: 700;
+  border-radius: 10px;
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-card-buy:hover {
+  background: linear-gradient(135deg, #FFF0B8 0%, #D4B679 100%);
+  transform: translateY(-1px);
+}
+
+.btn-card-details {
+  flex: 1;
+  padding: 0.55rem 0.85rem;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  color: #F2E9E4;
+  font-size: 0.85rem;
+  font-weight: 600;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-card-details:hover {
+  background: rgba(255, 255, 255, 0.14);
+  border-color: #F5D78E;
+  color: #F5D78E;
+}
+
+.btn-card-details-full {
+  width: 100%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  padding: 0.65rem 1rem;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  color: #F2E9E4;
+  font-size: 0.85rem;
+  font-weight: 600;
+  border-radius: 10px;
+  cursor: pointer;
+  margin-top: auto;
+  transition: all 0.2s ease;
+}
+
+.btn-card-details-full:hover {
+  background: rgba(200, 169, 110, 0.15);
+  border-color: #C8A96E;
+  color: #F5D78E;
+}
+
+/* Animations */
+@keyframes fade-up {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 
 .animate-fade-up {
   animation: fade-up 0.6s ease-out forwards;
 }
 
-/* Animació per fade-in */
 @keyframes fade-in {
-  from {
-    opacity: 0;
-  }
-
-  to {
-    opacity: 1;
-  }
+  from { opacity: 0; }
+  to { opacity: 1; }
 }
 
 .animate-fade-in {
   animation: fade-in 0.3s ease-out forwards;
 }
 
-/* Animació per pulse-subtle */
-@keyframes pulse-subtle {
-  from {
-    transform: scale(1);
+/* Responsive adjustments */
+@media (max-width: 960px) {
+  .perks-banner-grid {
+    grid-template-columns: 1fr;
   }
 
-  to {
-    transform: scale(1.05);
+  .hero-content-wrapper {
+    padding-bottom: 4rem;
   }
-}
-
-.animate-pulse-subtle {
-  animation: pulse-subtle 1s ease-out infinite;
-}
-
-/* Barra de desplaçament personalitzada */
-::-webkit-scrollbar {
-  width: 10px;
-}
-
-::-webkit-scrollbar-track {
-  background: #1a202c;
-}
-
-::-webkit-scrollbar-thumb {
-  background: #d4af37;
-  border-radius: 5px;
-}
-
-::-webkit-scrollbar-thumb:hover {
-  background: rgba(212, 175, 55, 0.8);
-}
-
-* {
-  scrollbar-width: thin;
-  scrollbar-color: #d4af37 #1a202c;
-}
-
-/* Truncament de text en 2 línies */
-.line-clamp-2 {
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  line-clamp: 2;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
 }
 </style>
