@@ -146,13 +146,15 @@
                     </button>
                   </div>
                 </form>
+              </div>
             </div>
           </div>
         </div>
       </div>
-      <Footer />
     </div>
-  </v-app>
+    <Footer />
+  </div>
+</v-app>
 </template>
 
 <script setup>
