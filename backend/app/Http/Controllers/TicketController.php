@@ -17,6 +17,17 @@ use SimpleSoftwareIO\QrCode\Facades\QrCode;
 
 class TicketController extends Controller
 {
+    // Obtiene los tickets del usuario autenticado
+    public function getUserTickets(Request $request)
+    {
+        $userId = $request->user()->id;
+        $tickets = Ticket::where('user_id', $userId)
+            ->with(['movieSession.movie', 'seat', 'payment'])
+            ->latest('created_at')
+            ->get();
+        return response()->json($tickets);
+    }
+
     // Función para obtener los tickets de una sesión
     public function getSessionTickets($sessionId)
     {

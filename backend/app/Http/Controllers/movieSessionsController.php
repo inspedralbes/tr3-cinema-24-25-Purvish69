@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Movie;
 use App\Models\MovieSession;
 use App\Models\Seat;
+use App\Services\MovieSessionService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Validator;
@@ -120,6 +121,33 @@ class MovieSessionsController extends Controller
                 'message' => $message
             ], 201);
         }
+        return redirect()->route('movieSessions.index')->with('success', $message);
+    }
+    
+    // Genera sesiones automáticas para días actuales
+    public function generate(Request $request, MovieSessionService $sessionService)
+    {
+        // Solo los administradores pueden generar sesiones
+        if (Auth::user()->rol !== 'admin') {
+            if ($request->wantsJson()) {
+                return response()->json(['message' => 'Acceso denegado'], 403);
+            }
+            return redirect()->back()->with('error', 'Acceso denegado');
+        }
+
+        $days = $request->filled('days') ? (int) $request->input('days') : null;
+        $fresh = $request->boolean('fresh', false);
+
+        $created = $sessionService->generateSessions($days, $fresh);
+
+        $message = "Se han generado {$created} sesiones exitosamente con fechas actuales.";
+        if ($request->wantsJson()) {
+            return response()->json([
+                'message' => $message,
+                'created' => $created
+            ], 200);
+        }
+
         return redirect()->route('movieSessions.index')->with('success', $message);
     }
     

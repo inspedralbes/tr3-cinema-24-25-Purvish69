@@ -6,7 +6,30 @@
     <div class="container">
         <h1 class="mb-4">Sesiones de Película</h1>
 
-        <a href="{{ route('movieSessions.create') }}" class="btn btn-custom mb-3">Crear Nueva Sesión</a>
+        @if(session('success'))
+            <div class="alert alert-success alert-dismissible fade show" role="alert">
+                {{ session('success') }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        @endif
+
+        @if(session('error'))
+            <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                {{ session('error') }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        @endif
+
+        <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+            <a href="{{ route('movieSessions.create') }}" class="btn btn-custom">Crear Nueva Sesión</a>
+
+            <form action="{{ route('movieSessions.generate') }}" method="POST" onsubmit="return confirm('¿Deseas generar sesiones automáticas con días actuales (hoy en adelante)?');">
+                @csrf
+                <button type="submit" class="btn btn-success">
+                    Generar Sesiones con Días Actuales
+                </button>
+            </form>
+        </div>
 
         <table class="table table-striped table-hover">
             <thead>
@@ -29,8 +52,7 @@
                         <td>{{ ucfirst($session->estado) }}</td>
                         <td>
                             <!-- Botón para ver detalles -->
-                            <a href="{{ route('movieSessions.show', $session->id) }}" class="btn btn-info btn-sm">Ver
-                                detalles</a>
+                            <a href="{{ route('movieSessions.show', $session->id) }}" class="btn btn-info btn-sm">Ver detalles</a>
                             <!-- Botón para editar -->
                             <a href="{{ route('movieSessions.edit', $session->id) }}" class="btn btn-warning btn-sm">Editar</a>
                             <!-- Botón para borrar -->

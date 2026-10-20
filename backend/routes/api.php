@@ -43,6 +43,7 @@ Route::get('/sessions/{id}/seats', [MovieSessionsController::class, 'getSeats'])
 
 Route::middleware('auth:sanctum')->group(function () {
     Route::post('/sessions', [MovieSessionsController::class, 'store']);
+    Route::post('/sessions/generate', [MovieSessionsController::class, 'generate']);
     Route::put('/sessions/{id}', [MovieSessionsController::class, 'update']);
     Route::delete('/sessions/{id}', [MovieSessionsController::class, 'destroy']);
     Route::get('movie-sessions/check-availability', [MovieSessionsController::class, 'checkAvailability']);

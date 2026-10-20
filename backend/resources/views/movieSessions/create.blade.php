@@ -31,8 +31,11 @@
     </div>
 
     <div class="mb-3">
-      <label for="fecha" class="form-label">Fecha</label>
-      <input type="date" name="fecha" id="fecha" class="form-control" value="{{ old('fecha') }}" required>
+      <label for="fecha" class="form-label">Fecha (Días actuales o futuros)</label>
+      <input type="date" name="fecha" id="fecha" class="form-control" 
+             value="{{ old('fecha', date('Y-m-d')) }}" 
+             min="{{ date('Y-m-d') }}" required>
+      <small class="text-muted">Fecha por defecto establecida a hoy.</small>
     </div>
 
     <div class="mb-3">
@@ -50,16 +53,49 @@
 
     <div class="form-check mb-3">
       <input class="form-check-input" type="checkbox" name="dia_espectador" id="dia_espectador" value="1" {{ old('dia_espectador') ? 'checked' : '' }}>
-      <label class="form-check-label" for="dia_espectador">Día del espectador</label>
+      <label class="form-check-label" for="dia_espectador">Día del espectador (Automático los miércoles)</label>
     </div>
 
     <div class="form-check mb-3">
       <input class="form-check-input" type="checkbox" name="fila_vip_activa" id="fila_vip_activa" value="1" {{ old('fila_vip_activa') ? 'checked' : '' }}>
-      <label class="form-check-label" for="fila_vip_activa">Activar fila VIP</label>
+      <label class="form-check-label" for="fila_vip_activa">Activar fila VIP (Fila F)</label>
     </div>
 
     <button type="submit" class="btn btn-custom">Crear Sesión</button>
     <a href="{{ route('movieSessions.index') }}" class="btn btn-secondary">Volver</a>
   </form>
 </div>
+
+<script>
+  document.addEventListener('DOMContentLoaded', function () {
+    const fechaInput = document.getElementById('fecha');
+    const espectadorCheckbox = document.getElementById('dia_espectador');
+    const horaSelect = document.getElementById('hora');
+    const vipCheckbox = document.getElementById('fila_vip_activa');
+
+    function checkDiaEspectador() {
+      if (fechaInput && fechaInput.value) {
+        const [year, month, day] = fechaInput.value.split('-').map(Number);
+        const date = new Date(year, month - 1, day);
+        if (date.getDay() === 3) {
+          espectadorCheckbox.checked = true;
+        }
+      }
+    }
+
+    function checkVipRow() {
+      if (horaSelect && horaSelect.value && horaSelect.value !== '16:00') {
+        vipCheckbox.checked = true;
+      }
+    }
+
+    if (fechaInput) {
+      fechaInput.addEventListener('change', checkDiaEspectador);
+      checkDiaEspectador();
+    }
+    if (horaSelect) {
+      horaSelect.addEventListener('change', checkVipRow);
+    }
+  });
+</script>
 @endsection

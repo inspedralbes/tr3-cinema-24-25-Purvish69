@@ -34,7 +34,7 @@
 
     <div class="mb-3">
       <label for="fecha" class="form-label">Fecha</label>
-      <input type="date" name="fecha" id="fecha" class="form-control" value="{{ old('fecha', $session->fecha->format('Y-m-d')) }}" required>
+      <input type="date" name="fecha" id="fecha" class="form-control" value="{{ old('fecha', $session->fecha->format('Y-m-d')) }}" min="{{ date('Y-m-d') }}" required>
     </div>
 
     <div class="mb-3">

@@ -66,16 +66,13 @@
                     </div>
 
                     <div class="star-rating">
-                      <template v-for="n in 5" :key="n">
-                        <i 
-                          v-if="n <= Math.floor(movie.calificacion / 2)" 
-                          class="mdi mdi-star star-filled"
-                        ></i>
-                        <i 
-                          v-else 
-                          class="mdi mdi-star-outline star-empty"
-                        ></i>
-                      </template>
+                      <i
+                        v-for="n in 5"
+                        :key="n"
+                        :class="n <= Math.floor(movie.calificacion / 2)
+                          ? 'mdi mdi-star star-filled'
+                          : 'mdi mdi-star-outline star-empty'"
+                      ></i>
                     </div>
 
                     <span class="meta-dot">•</span>

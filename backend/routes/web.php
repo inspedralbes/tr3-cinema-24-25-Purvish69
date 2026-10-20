@@ -45,14 +45,15 @@ Route::middleware('auth')->group(function () {
 
 
     // Rutas para movieSessions (Sesiones de Películas)
-    Route::get('/movieSessions', [App\Http\Controllers\MovieSessionsController::class, 'index'])->name('movieSessions.index');
-    Route::get('/movieSessions/create', [App\Http\Controllers\MovieSessionsController::class, 'create'])->name('movieSessions.create');
-    Route::post('/movieSessions', [App\Http\Controllers\MovieSessionsController::class, 'store'])->name('movieSessions.store');
-    Route::get('/movieSessions/{id}', [App\Http\Controllers\MovieSessionsController::class, 'show'])->name('movieSessions.show');
-    Route::get('/movieSessions/{id}/edit', [App\Http\Controllers\MovieSessionsController::class, 'edit'])->name('movieSessions.edit');
-    Route::put('/movieSessions/{id}', [App\Http\Controllers\MovieSessionsController::class, 'update'])->name('movieSessions.update');
-    Route::get('/movieSessions/{id}/delete', [App\Http\Controllers\MovieSessionsController::class, 'delete'])->name('movieSessions.delete');
-    Route::delete('/movieSessions/{id}', [App\Http\Controllers\MovieSessionsController::class, 'destroy'])->name('movieSessions.destroy');
+    Route::get('/movieSessions', [MovieSessionsController::class, 'index'])->name('movieSessions.index');
+    Route::get('/movieSessions/create', [MovieSessionsController::class, 'create'])->name('movieSessions.create');
+    Route::post('/movieSessions', [MovieSessionsController::class, 'store'])->name('movieSessions.store');
+    Route::post('/movieSessions/generate', [MovieSessionsController::class, 'generate'])->name('movieSessions.generate');
+    Route::get('/movieSessions/{id}', [MovieSessionsController::class, 'show'])->name('movieSessions.show');
+    Route::get('/movieSessions/{id}/edit', [MovieSessionsController::class, 'edit'])->name('movieSessions.edit');
+    Route::put('/movieSessions/{id}', [MovieSessionsController::class, 'update'])->name('movieSessions.update');
+    Route::get('/movieSessions/{id}/delete', [MovieSessionsController::class, 'delete'])->name('movieSessions.delete');
+    Route::delete('/movieSessions/{id}', [MovieSessionsController::class, 'destroy'])->name('movieSessions.destroy');
 
     Route::post('/tickets/send-email/{userId}/{sessionId}', [TicketController::class, 'sendTicketsByEmail']);
 
