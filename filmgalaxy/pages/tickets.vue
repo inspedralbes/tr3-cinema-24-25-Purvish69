@@ -303,7 +303,8 @@ const processPayment = async () => {
         movieSession_id: ticketDetails.value.session.id,
         seat_id: seat.id,
         payment_id: paymentId,
-        precio: seat.tipo === 'vip' ? ticketDetails.value.prices.vip : ticketDetails.value.prices.normal
+        precio: seat.tipo === 'vip' ? ticketDetails.value.prices.vip : ticketDetails.value.prices.normal,
+        hold_token: ticketDetails.value?.hold_token || (typeof sessionStorage !== 'undefined' ? sessionStorage.getItem('hold_token') : null)
       }
 
       console.log('Creating ticket with data:', ticketData)

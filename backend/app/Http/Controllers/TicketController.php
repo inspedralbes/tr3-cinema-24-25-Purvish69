@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Ticket;
 use App\Models\MovieSession;
 use App\Models\Seat;
+use App\Models\SeatHold;
 use App\Models\Payment;
 use App\Models\User;
 use App\Models\Movie;
@@ -89,6 +90,7 @@ class TicketController extends Controller
             'seat_id'         => 'required',
             'payment_id'      => 'required|exists:payments,id',
             'precio'          => 'sometimes|numeric',
+            'hold_token'      => 'sometimes|string',
         ]);
 
         if ($validator->fails()) {
@@ -109,40 +111,99 @@ class TicketController extends Controller
 
         // Convertir seat_id a array si no lo es
         $seatIds = is_array($request->seat_id) ? $request->seat_id : [$request->seat_id];
-        $tickets = [];
+        $holdToken = $request->input('hold_token');
+
+        // Validar primero todos los asientos (bloqueo/holds y disponibilidad)
+        $conflicts = [];
+        $seatsToProcess = [];
 
         foreach ($seatIds as $seatId) {
-            // Verificar que la butaca pertenezca a la sesión y esté libre
             $seat = Seat::findOrFail($seatId);
+
             if ($seat->movieSession_id != $request->movieSession_id) {
                 return response()->json([
                     'error' => 'La butaca seleccionada no pertenece a la sesión indicada'
                 ], 422);
             }
+
+            $asientoCode = "{$seat->fila}-{$seat->numero}";
+
+            // 1. Comprobar que no esté ya comprado
             if ($seat->estado !== 'libre') {
-                return response()->json([
-                    'error' => 'La butaca seleccionada ya está ocupada'
-                ], 422);
+                $conflicts[] = $asientoCode;
+                continue;
             }
 
+            // 2. Si se proporciona hold_token, validar que sigue retenido por este token y no expirado
+            if ($holdToken) {
+                $isHeld = SeatHold::where('funcion_id', $request->movieSession_id)
+                    ->where('asiento', $asientoCode)
+                    ->where('hold_token', $holdToken)
+                    ->where('expires_at', '>', now())
+                    ->exists();
+
+                if (!$isHeld) {
+                    $conflicts[] = $asientoCode;
+                    continue;
+                }
+            } else {
+                // Si no viene hold_token, verificar que no esté retenido por nadie
+                $isHeldByAnyone = SeatHold::where('funcion_id', $request->movieSession_id)
+                    ->where('asiento', $asientoCode)
+                    ->where('expires_at', '>', now())
+                    ->exists();
+
+                if ($isHeldByAnyone) {
+                    $conflicts[] = $asientoCode;
+                    continue;
+                }
+            }
+
+            $seatsToProcess[] = [
+                'seat' => $seat,
+                'asiento' => $asientoCode,
+            ];
+        }
+
+        // Si alguno falla o está ocupado/expirado, devolver 409
+        if (!empty($conflicts)) {
+            return response()->json([
+                'message'   => 'Uno o más asientos ya no están disponibles o su reserva temporal ha expirado',
+                'conflicts' => array_values(array_unique($conflicts))
+            ], 409);
+        }
+
+        $tickets = [];
+        $confirmedAsientos = [];
+
+        foreach ($seatsToProcess as $item) {
+            $seat = $item['seat'];
+            $asientoCode = $item['asiento'];
+
             // Calcular el precio si no se envía
-            $precio = $request->has('precio') ? $request->precio : $this->calcularPrecio($request->movieSession_id, $seatId);
+            $precio = $request->has('precio') ? $request->precio : $this->calcularPrecio($request->movieSession_id, $seat->id);
 
             $data = [
-                'user_id'            => $request->user_id,
-                'movieSession_id'    => $request->movieSession_id,
-                'seat_id'            => $seatId,
-                'payment_id'         => $request->payment_id,
-                'precio'             => $precio,
+                'user_id'             => $request->user_id,
+                'movieSession_id'     => $request->movieSession_id,
+                'seat_id'             => $seat->id,
+                'payment_id'          => $request->payment_id,
+                'precio'              => $precio,
                 'codigo_confirmacion' => Str::uuid()
             ];
 
             $ticket = Ticket::create($data);
             $seat->update(['estado' => 'ocupada']);
             $tickets[] = $ticket;
+            $confirmedAsientos[] = $asientoCode;
         }
 
-        // Enviar correo con el PDF adjunto usando el último ticket creado (la función usa la sesión y el usuario para seleccionar el último ticket)
+        // Al confirmar, borrar los holds asociados
+        SeatHold::where('funcion_id', $request->movieSession_id)
+            ->whereIn('asiento', $confirmedAsientos)
+            ->delete();
+
+        // Enviar correo con el PDF adjunto usando el último ticket creado
         $this->sendTicketsByEmail($request->user_id, $request->movieSession_id);
 
         return response()->json([

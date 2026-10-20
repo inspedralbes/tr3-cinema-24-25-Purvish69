@@ -5,6 +5,7 @@ use Carbon\Carbon;
 use Illuminate\Foundation\Console\ClosureCommand;
 use Illuminate\Foundation\Inspiring;
 use Illuminate\Support\Facades\Artisan;
+use Illuminate\Support\Facades\Schedule;
 
 Artisan::command('inspire', function () {
     /** @var ClosureCommand $this */
@@ -23,3 +24,6 @@ Artisan::command('sessions:generate {--days= : Número de días a generar (por d
     $today = Carbon::today(config('app.timezone', 'Europe/Madrid'))->format('Y-m-d');
     $this->info("Se han generado {$created} sesiones exitosamente a partir de {$today}.");
 })->purpose('Generar sesiones de películas para días actuales');
+
+// Limpiar bloqueos de asientos caducados cada minuto
+Schedule::command('holds:clean')->everyMinute();

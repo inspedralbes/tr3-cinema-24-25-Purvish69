@@ -8,6 +8,7 @@ use App\Http\Controllers\MovieSessionsController;
 use App\Http\Controllers\PaymentController;
 use App\Http\Controllers\SeatController;
 use App\Http\Controllers\TicketController;
+use App\Http\Controllers\SeatHoldController;
 
 Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
     return $request->user();
@@ -49,6 +50,12 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('movie-sessions/check-availability', [MovieSessionsController::class, 'checkAvailability']);
 });
 Route::get('/sessions/{sessionId}/tickets', [TicketController::class, 'getSessionTickets']);
+
+// Rutas de bloqueos temporales de asientos (Seat Holds)
+Route::post('/holds', [SeatHoldController::class, 'store']);
+Route::delete('/holds', [SeatHoldController::class, 'destroy']);
+Route::get('/funciones/{id}/asientos', [SeatHoldController::class, 'getAsientos']);
+Route::get('/sessions/{id}/asientos', [SeatHoldController::class, 'getAsientos']);
 
 // Rutas de asientos
 Route::get('/seats', [SeatController::class, 'index']);
