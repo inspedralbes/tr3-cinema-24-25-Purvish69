@@ -25,7 +25,6 @@ export const useMovieStore = defineStore('movies', {
         if (response && !response.error && response.movies) {
           this.allMovies = response.movies;
           this.categorizeMovies();
-          console.log('Películas cargadas correctamente en el store');
         } else {
           this.error = response?.error || 'No se encontraron películas';
           console.error('Error al cargar películas:', this.error);
@@ -40,7 +39,6 @@ export const useMovieStore = defineStore('movies', {
     
     // Forzar recarga de películas (útil para desarrollo/pruebas)
     async reloadMovies() {
-      console.log('Forzando recarga de películas');
       await this.fetchMovies();
     },
     
@@ -124,7 +122,6 @@ export const useMovieStore = defineStore('movies', {
     },
     
     navigateToMovieDetails(movie, router) {
-      console.log('Navegando a detalles de la película:', JSON.stringify(movie));
       if (!movie || !movie.id) {
         console.error('El objeto película no contiene el id esperado:', movie);
         return;

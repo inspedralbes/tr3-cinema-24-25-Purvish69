@@ -27,7 +27,6 @@ export const useAuth = () => {
       token.value = data.token
     }
 
-    console.log('Datos recibidos:', data)
     return data
   }
 
@@ -66,7 +65,6 @@ export const useAuth = () => {
           }
         }
       }
-      console.log('Datos recibidos:', data)
       return data
     } catch (error) {
       console.error('Error en login:', error)
@@ -92,7 +90,7 @@ export const useAuth = () => {
       token.value = null
       userId.value = null
     }
-    console.log('Sesión cerrada', token.value)
+    
   }
 
   const getUserData = async () => {
@@ -118,7 +116,6 @@ export const useAuth = () => {
       }
 
       const data = await response.json();
-      console.log('Datos recibidos para profile:', data);
       return data.user;
     } catch (error) {
       console.error("Error al obtener los datos del usuario", error);

@@ -1,89 +1,132 @@
 <template>
-  <v-app class="cinema-app-root bg-[#0c0e1a]">
+  <v-app class="cinema-app-root bg-[#090b14] text-white">
     <Navbar />
-    <div class="min-h-screen bg-gradient-to-br custom-bg py-8">
-      <div class="container mx-auto px-4">
+
+    <div class="cinema-booking-page min-h-screen py-8">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+
         <!-- Estado de carga -->
-        <div v-if="loading" class="flex justify-center items-center h-[70vh]">
-          <div class="animate-pulse-slow">
-            <div class="w-16 h-16 border-4 border-gold border-t-transparent rounded-full animate-spin"></div>
+        <div v-if="loading" class="flex flex-col justify-center items-center h-[70vh] gap-4">
+          <div class="relative">
+            <div class="w-16 h-16 border-4 border-amber-400/20 border-t-amber-400 rounded-full animate-spin"></div>
+            <div class="absolute inset-0 flex items-center justify-center text-amber-400">
+              <i class="mdi mdi-filmstrip text-xl"></i>
+            </div>
           </div>
+          <p class="text-amber-200/80 font-medium tracking-wider text-sm animate-pulse">CARGANDO SALA Y BUTACAS...</p>
         </div>
 
         <!-- Muestra error en caso de fallo -->
-        <div v-else-if="error" class="max-w-md mx-auto glass-effect text-light p-8 rounded-xl">
-          <p class="text-center text-red-500">{{ error }}</p>
+        <div v-else-if="error" class="max-w-lg mx-auto glass-card p-8 rounded-2xl text-center border border-red-500/30 shadow-2xl mt-12">
+          <div class="w-16 h-16 bg-red-500/10 text-red-400 rounded-full flex items-center justify-center mx-auto mb-4 text-2xl">
+            <i class="mdi mdi-alert-circle"></i>
+          </div>
+          <h2 class="text-xl font-bold text-white mb-2">No se pudo cargar la sesión</h2>
+          <p class="text-gray-300 text-sm mb-6">{{ error }}</p>
+          <button
+            @click="router.push('/movieDetails/moviSession')"
+            class="px-6 py-2.5 rounded-full bg-amber-400 text-gray-950 font-bold hover:bg-amber-300 transition-all shadow-lg shadow-amber-400/20"
+          >
+            Ver otras sesiones
+          </button>
         </div>
 
         <!-- Contenido principal -->
-        <div v-else class="max-w-6xl mx-auto mt-12">
-          <!-- Tarjeta de información de la película y la sesión -->
-          <div class="glass-effect rounded-xl overflow-hidden mb-8 max-w-[800px] mx-auto">
-            <div class="flex flex-col md:flex-row">
+        <div v-else class="space-y-8 mt-4 animate-fade-in">
+
+          <!-- 1. BARRA SUPERIOR / BREADCRUMB -->
+          <div class="flex items-center justify-between flex-wrap gap-4">
+            <button
+              @click="router.push('/movieDetails/moviSession')"
+              class="flex items-center gap-2 text-sm text-gray-400 hover:text-amber-300 transition-colors py-1.5 px-3 rounded-lg hover:bg-white/5"
+            >
+              <i class="mdi mdi-arrow-left text-lg"></i>
+              <span>Volver a la cartelera</span>
+            </button>
+
+            <!-- Sincronización en vivo -->
+            <div class="flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-300 text-xs font-medium">
+              <span class="w-2 h-2 rounded-full bg-emerald-400 animate-ping"></span>
+              <span>Disponibilidad sincronizada en tiempo real</span>
+            </div>
+          </div>
+
+          <!-- 2. TARJETA CABECERA DE LA PELÍCULA Y SESIÓN -->
+          <div class="glass-card rounded-2xl overflow-hidden border border-white/10 shadow-2xl relative">
+            <div class="absolute inset-0 bg-gradient-to-r from-amber-500/5 via-purple-500/5 to-transparent pointer-events-none"></div>
+
+            <div class="flex flex-col md:flex-row items-center md:items-stretch">
               <!-- Cartel de la película -->
-              <div class="md:w-1/3">
-                <img :src="currentMovie?.imagen || 'https://via.placeholder.com/400x600?text=No+Poster'"
-                  :alt="currentMovie?.titulo" class="w-full h-full object-cover" />
+              <div class="w-full md:w-56 lg:w-64 h-64 md:h-auto flex-shrink-0 relative overflow-hidden group">
+                <img
+                  :src="currentMovie?.imagen || 'https://via.placeholder.com/400x600?text=Film+Galaxy'"
+                  :alt="currentMovie?.titulo"
+                  class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                />
+                <div class="absolute inset-0 bg-gradient-to-t md:bg-gradient-to-r from-[#0c0f1d] via-transparent to-transparent"></div>
               </div>
 
-              <!-- Detalles de la sesión -->
-              <div class="md:w-4/3 p-6 bg-primary/20">
-                <h1 class="text-3xl font-bold text-gold mb-4">{{ currentMovie?.titulo }}</h1>
+              <!-- Información de la sesión -->
+              <div class="p-6 md:p-8 flex-1 flex flex-col justify-between z-10 w-full">
+                <div>
+                  <div class="flex flex-wrap items-center gap-2 mb-2">
+                    <span class="px-2.5 py-0.5 rounded-full text-xs font-bold tracking-wider uppercase bg-amber-400/20 text-amber-300 border border-amber-400/30">
+                      {{ selectedSession?.sala || 'SALA VIP 1' }}
+                    </span>
+                    <span v-if="selectedSession?.dia_espectador" class="px-2.5 py-0.5 rounded-full text-xs font-bold tracking-wider uppercase bg-blue-500/20 text-blue-300 border border-blue-500/30 flex items-center gap-1 animate-pulse">
+                      <i class="mdi mdi-tag-star"></i>
+                      ¡Día del Espectador! Precios reducidos
+                    </span>
+                  </div>
 
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-light">
-                  <!-- Información de la película -->
-                  <div class="space-y-2">
-                    <div class="flex items-center space-x-3">
-                      <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gold" fill="none" viewBox="0 0 24 24"
-                        stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                          d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                      </svg>
-                      <p><span class="font-semibold">Duración:</span> {{ currentMovie?.duracion }} min</p>
+                  <h1 class="text-2xl sm:text-3xl lg:text-4xl font-extrabold text-white tracking-tight mb-3">
+                    {{ currentMovie?.titulo }}
+                  </h1>
+
+                  <p v-if="currentMovie?.descripcion" class="text-gray-400 text-sm line-clamp-2 mb-4 max-w-3xl">
+                    {{ currentMovie?.descripcion }}
+                  </p>
+                </div>
+
+                <!-- Pills con detalles de la proyección -->
+                <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-4 border-t border-white/10 text-xs sm:text-sm">
+                  <div class="flex items-center gap-2.5 text-gray-300">
+                    <div class="w-8 h-8 rounded-lg bg-amber-400/10 text-amber-400 flex items-center justify-center text-base">
+                      <i class="mdi mdi-calendar"></i>
                     </div>
-
-                    <div class="flex items-center space-x-3">
-                      <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gold" fill="currentColor"
-                        viewBox="0 0 24 24">
-                        <path d="M12 2l2.4 7.4h7.6l-6 4.6 2.3 7.2-6.3-4.2-6.3 4.2 2.3-7.2-6-4.6h7.6z" />
-                      </svg>
-                      <p><span class="font-semibold">Calificación:</span> {{ currentMovie?.calificacion }}/10</p>
+                    <div>
+                      <div class="text-[10px] text-gray-400 uppercase tracking-wider">Fecha</div>
+                      <div class="font-semibold text-white capitalize">{{ formatDate(selectedSession?.fecha) }}</div>
                     </div>
                   </div>
 
-                  <!-- Información de la sesión -->
-                  <div class="space-y-2">
-                    <div class="flex items-center space-x-3">
-                      <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gold" fill="none" viewBox="0 0 24 24"
-                        stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                          d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                      </svg>
-                      <p><span class="font-semibold">Fecha:</span> {{ formatDate(selectedSession?.fecha) }}</p>
+                  <div class="flex items-center gap-2.5 text-gray-300">
+                    <div class="w-8 h-8 rounded-lg bg-amber-400/10 text-amber-400 flex items-center justify-center text-base">
+                      <i class="mdi mdi-clock-outline"></i>
                     </div>
-
-                    <div class="flex items-center space-x-3">
-                      <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gold" fill="none" viewBox="0 0 24 24"
-                        stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                          d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                      </svg>
-                      <p><span class="font-semibold">Hora:</span> {{ selectedSession?.hora }}</p>
+                    <div>
+                      <div class="text-[10px] text-gray-400 uppercase tracking-wider">Hora</div>
+                      <div class="font-semibold text-white">{{ selectedSession?.hora }}</div>
                     </div>
+                  </div>
 
-                    <div class="flex items-center space-x-3">
-                      <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gold" fill="none" viewBox="0 0 24 24"
-                        stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                          d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2z" />
-                      </svg>
-                      <p><span class="font-semibold">Sala:</span> {{ selectedSession?.sala || 'Sala Principal' }}</p>
+                  <div class="flex items-center gap-2.5 text-gray-300">
+                    <div class="w-8 h-8 rounded-lg bg-amber-400/10 text-amber-400 flex items-center justify-center text-base">
+                      <i class="mdi mdi-timer-outline"></i>
                     </div>
+                    <div>
+                      <div class="text-[10px] text-gray-400 uppercase tracking-wider">Duración</div>
+                      <div class="font-semibold text-white">{{ currentMovie?.duracion || 120 }} min</div>
+                    </div>
+                  </div>
 
-                    <div v-if="selectedSession?.dia_espectador" class="mt-2">
-                      <span class="bg-blue-500/30 text-blue-300 text-sm font-medium px-4 py-2 rounded-full">
-                        ¡Día del espectador!
-                      </span>
+                  <div class="flex items-center gap-2.5 text-gray-300">
+                    <div class="w-8 h-8 rounded-lg bg-amber-400/10 text-amber-400 flex items-center justify-center text-base">
+                      <i class="mdi mdi-star"></i>
+                    </div>
+                    <div>
+                      <div class="text-[10px] text-gray-400 uppercase tracking-wider">Calificación</div>
+                      <div class="font-semibold text-amber-300">{{ currentMovie?.calificacion || '8.5' }} / 10</div>
                     </div>
                   </div>
                 </div>
@@ -91,138 +134,345 @@
             </div>
           </div>
 
-          <!-- Selección de asientos -->
-          <div class="glass-effect p-6 rounded-xl">
-            <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4">
-              <h2 class="text-2xl font-semibold text-gold">Seleccionar Asientos</h2>
-              <span v-if="selectedSeats.length > 0" class="text-xs text-light/80 mt-1 sm:mt-0 flex items-center gap-1">
-                <i class="mdi mdi-timer-sand text-gold"></i>
-                Bloqueo temporal activo (5 min)
-              </span>
-            </div>
+          <!-- 3. CONTENEDOR PRINCIPAL: SALA DE CINE + BILLETE INTERACTIVO -->
+          <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
 
-            <!-- Leyenda de estados -->
-            <div class="flex flex-wrap gap-4 sm:gap-6 mb-6 text-sm">
-              <div class="flex items-center gap-2">
-                <div class="w-6 h-6 bg-gray-500 rounded"></div>
-                <span class="text-light">Disponible</span>
-              </div>
-              <div class="flex items-center gap-2">
-                <div class="w-6 h-6 bg-gold rounded"></div>
-                <span class="text-light">VIP</span>
-              </div>
-              <div class="flex items-center gap-2">
-                <div class="w-6 h-6 bg-green-500 rounded"></div>
-                <span class="text-light">Seleccionado</span>
-              </div>
-              <div class="flex items-center gap-2">
-                <div class="w-6 h-6 bg-orange-500 rounded"></div>
-                <span class="text-light">En proceso de reserva</span>
-              </div>
-              <div class="flex items-center gap-2">
-                <div class="w-6 h-6 bg-gray-600 opacity-60 rounded"></div>
-                <span class="text-light">Comprado</span>
-              </div>
-            </div>
-
-            <!-- Pantalla de la sala -->
-            <div class="w-full h-8 bg-gray-800 rounded-t-full mb-12 text-center text-sm text-light/50 flex items-center justify-center font-bold tracking-widest">
-              PANTALLA
-            </div>
-
-            <!-- Cuadrícula de asientos con filas verticales y números horizontales -->
-            <div class="flex justify-center mb-12 overflow-x-auto pb-4">
-              <!-- Etiquetas de filas (A,B,C...) en el lado izquierdo -->
-              <div class="flex flex-col mr-6">
-                <div class="h-8 flex items-center justify-center"></div> <!-- Espacio vacío para alinear -->
-                <template v-for="rowLetter in uniqueRows" :key="rowLetter">
-                  <div class="h-10 w-8 flex items-center justify-center text-light font-bold mb-5">
-                    {{ rowLetter }}
-                  </div>
-                </template>
-              </div>
-
-              <div>
-                <!-- Números de asiento en la parte superior -->
-                <div class="flex mb-4">
-                  <div v-for="seatNumber in uniqueNumbers" :key="seatNumber"
-                    class="w-10 h-8 flex items-center justify-center text-light font-bold mx-2">
-                    {{ seatNumber }}
-                  </div>
+            <!-- COLUMNA IZQUIERDA: PANTALLA Y MAPA DE BUTACAS (8 COLS) -->
+            <div class="lg:col-span-8 glass-card p-6 sm:p-8 rounded-2xl border border-white/10 shadow-2xl relative overflow-hidden">
+              <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between pb-6 border-b border-white/10 gap-3">
+                <div>
+                  <h2 class="text-xl sm:text-2xl font-bold text-white flex items-center gap-2">
+                    <i class="mdi mdi-seat-recline-extra text-amber-400"></i>
+                    Selecciona tus Butacas
+                  </h2>
+                  <p class="text-xs text-gray-400 mt-1">Haz clic en los asientos disponibles para reservarlos</p>
                 </div>
 
-                <!-- Cuadrícula de asientos organizada por filas -->
-                <div>
-                  <div v-for="rowLetter in uniqueRows" :key="rowLetter" class="flex mb-5">
+                <!-- Temporizador de bloqueo si hay asientos seleccionados -->
+                <div
+                  v-if="selectedSeats.length > 0"
+                  class="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-amber-400/10 border border-amber-400/30 text-amber-300 text-xs font-semibold"
+                >
+                  <i class="mdi mdi-timer-sand text-base animate-spin-slow"></i>
+                  <span>Bloqueo temporal activo: <strong>{{ formattedHoldTime }}</strong></span>
+                </div>
+              </div>
+
+              <!-- LEYENDA MODERNA CON BUTACAS MINIATURA -->
+              <div class="flex flex-wrap items-center justify-center gap-4 sm:gap-6 py-6 text-xs text-gray-300">
+                <div class="flex items-center gap-2">
+                  <div class="w-6 h-6">
+                    <SeatIcon status="normal" number="·" />
+                  </div>
+                  <span>Normal (€{{ prices.normal }})</span>
+                </div>
+
+                <div class="flex items-center gap-2">
+                  <div class="w-6 h-6">
+                    <SeatIcon status="vip" number="★" />
+                  </div>
+                  <span class="text-amber-300 font-medium">VIP (€{{ prices.vip }})</span>
+                </div>
+
+                <div class="flex items-center gap-2">
+                  <div class="w-6 h-6">
+                    <SeatIcon status="selected" number="✓" />
+                  </div>
+                  <span class="text-emerald-300 font-semibold">Tu selección</span>
+                </div>
+
+                <div class="flex items-center gap-2">
+                  <div class="w-6 h-6">
+                    <SeatIcon status="held" number="⏳" />
+                  </div>
+                  <span class="text-orange-300 font-medium">En reserva</span>
+                </div>
+
+                <div class="flex items-center gap-2">
+                  <div class="w-6 h-6">
+                    <SeatIcon status="bought" number="" />
+                  </div>
+                  <span class="text-gray-500">Ocupado</span>
+                </div>
+              </div>
+
+              <!-- PANTALLA DE CINE CINEMÁTICA CON LUZ DE PROYECCIÓN -->
+              <div class="relative max-w-xl mx-auto my-8 select-none">
+                <!-- Haz de luz del proyector -->
+                <div class="projection-beam"></div>
+
+                <!-- Pantalla curva con perspectiva -->
+                <div class="cinema-screen-curve">
+                  <div class="screen-light-bar"></div>
+                  <div class="flex items-center justify-center gap-2 py-2 text-xs font-black tracking-[0.3em] text-white/80 uppercase">
+                    <i class="mdi mdi-projector text-amber-400 text-sm"></i>
+                    <span>PANTALLA</span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- MAPA / CUADRÍCULA DE ASIENTOS CON SCROLL SUAVE -->
+              <div class="overflow-x-auto pb-6 pt-2 cinema-room-scroll">
+                <div class="min-w-max mx-auto px-4 flex flex-col items-center">
+
+                  <!-- Fila con números superiores como guía -->
+                  <div class="flex items-center mb-3">
+                    <div class="w-8 mr-3"></div> <!-- Espaciador para la letra de fila izq -->
+                    <div
+                      v-for="seatNumber in uniqueNumbers"
+                      :key="'col-' + seatNumber"
+                      class="w-11 sm:w-12 h-6 flex items-center justify-center text-[11px] font-bold text-gray-400 mx-1 select-none"
+                    >
+                      {{ seatNumber }}
+                    </div>
+                    <div class="w-8 ml-3"></div> <!-- Espaciador para la letra de fila der -->
+                  </div>
+
+                  <!-- Filas de butacas -->
+                  <div
+                    v-for="rowLetter in uniqueRows"
+                    :key="'row-' + rowLetter"
+                    class="flex items-center mb-3.5 group/row"
+                  >
+                    <!-- Indicador de Fila Izquierda -->
+                    <div class="w-8 h-8 mr-3 rounded-lg bg-white/5 border border-white/10 flex items-center justify-center text-xs font-black text-amber-300/80 group-hover/row:text-amber-400 group-hover/row:border-amber-400/40 select-none transition-all">
+                      {{ rowLetter }}
+                    </div>
+
+                    <!-- Butacas de la fila -->
                     <template v-for="seatNumber in uniqueNumbers" :key="`${rowLetter}-${seatNumber}`">
-                      <!-- Botón de asiento con Ícono que pinta de acuerdo al estado -->
-                      <div v-if="getSeat(rowLetter, seatNumber)" class="mx-2">
+                      <div v-if="getSeat(rowLetter, seatNumber)" class="mx-1">
                         <button
                           type="button"
                           @click="toggleSeat(getSeat(rowLetter, seatNumber))"
                           :disabled="isSeatBought(getSeat(rowLetter, seatNumber)) || isSeatHeldByOther(getSeat(rowLetter, seatNumber))"
-                          class="w-10 h-10 relative rounded transition-all flex items-center justify-center"
-                          :class="[
-                            // 1. Asiento comprado: gris bloqueado
-                            isSeatBought(getSeat(rowLetter, seatNumber))
-                              ? 'bg-gray-600 opacity-60 cursor-not-allowed'
-                              // 2. Retenido por otro usuario: naranja y no clicable
-                              : isSeatHeldByOther(getSeat(rowLetter, seatNumber))
-                                ? 'bg-orange-500 cursor-not-allowed'
-                                // 3. Seleccionado por el usuario actual: verde
-                                : isSeatSelected(getSeat(rowLetter, seatNumber))
-                                  ? 'bg-green-500 scale-105 shadow-md'
-                                  // 4. Disponible VIP o Normal
-                                  : getSeat(rowLetter, seatNumber).tipo === 'vip'
-                                    ? 'bg-gold hover:bg-gold/80'
-                                    : 'bg-gray-500 hover:bg-gray-400'
-                          ]"
-                          :title="
-                            isSeatBought(getSeat(rowLetter, seatNumber))
-                              ? 'Asiento ocupado / comprado'
-                              : isSeatHeldByOther(getSeat(rowLetter, seatNumber))
-                                ? 'Asiento en proceso de reserva por otro usuario'
-                                : isSeatSelected(getSeat(rowLetter, seatNumber))
-                                  ? 'Tu asiento seleccionado (retenido)'
-                                  : `Asiento ${rowLetter}-${seatNumber} (${getSeat(rowLetter, seatNumber).tipo})`
-                          "
+                          class="w-11 h-11 sm:w-12 sm:h-12 relative p-0.5 rounded-lg transition-transform focus:outline-none"
+                          :title="getSeatTooltip(getSeat(rowLetter, seatNumber))"
                         >
-                          <!-- Ícono de asiento -->
-                          <SeatIcon class="absolute inset-0 scale-75" />
+                          <SeatIcon
+                            :status="getSeatStatus(getSeat(rowLetter, seatNumber))"
+                            :number="seatNumber"
+                            :seat-id="getSeat(rowLetter, seatNumber).id"
+                          />
                         </button>
                       </div>
-                      <div v-else class="w-10 h-10 mx-2"></div> <!-- Espacio vacío si no hay asiento -->
+                      <!-- Pasillo / Espacio vacío si no hay asiento -->
+                      <div v-else class="w-11 sm:w-12 h-11 sm:h-12 mx-1 opacity-0 pointer-events-none"></div>
                     </template>
+
+                    <!-- Indicador de Fila Derecha -->
+                    <div class="w-8 h-8 ml-3 rounded-lg bg-white/5 border border-white/10 flex items-center justify-center text-xs font-black text-amber-300/80 group-hover/row:text-amber-400 group-hover/row:border-amber-400/40 select-none transition-all">
+                      {{ rowLetter }}
+                    </div>
+                  </div>
+
+                </div>
+              </div>
+
+              <!-- Aviso informativo inferior de la sala -->
+              <div class="mt-4 pt-4 border-t border-white/10 flex flex-wrap items-center justify-between text-xs text-gray-400 gap-2">
+                <span class="flex items-center gap-1.5">
+                  <i class="mdi mdi-information-outline text-amber-400"></i>
+                  Máximo 10 butacas por transacción
+                </span>
+                <span class="flex items-center gap-1.5">
+                  <i class="mdi mdi-wheelchair-accessibility text-blue-400"></i>
+                  Acceso habilitado para personas con movilidad reducida
+                </span>
+              </div>
+            </div>
+
+
+            <!-- COLUMNA DERECHA: BILLETE INTERACTIVO CON ANIMACIÓN (4 COLS) -->
+            <div class="lg:col-span-4 sticky top-6">
+              <div class="ticket-container relative rounded-3xl overflow-hidden shadow-2xl border border-amber-400/30">
+
+                <!-- Adorno holográfico y destellos -->
+                <div class="ticket-hologram"></div>
+
+                <!-- 1. CABECERA DEL BILLETE -->
+                <div class="ticket-header p-6 pb-5 relative bg-gradient-to-b from-[#191e33] to-[#121626] border-b border-dashed border-amber-400/30">
+                  <!-- Muescas del billete (Ticket notches) -->
+                  <div class="ticket-notch notch-left"></div>
+                  <div class="ticket-notch notch-right"></div>
+
+                  <div class="flex items-center justify-between mb-3">
+                    <div class="flex items-center gap-2">
+                      <div class="w-7 h-7 rounded-lg bg-gradient-to-tr from-amber-500 to-amber-300 text-gray-950 flex items-center justify-center font-black text-sm shadow-md">
+                        FG
+                      </div>
+                      <span class="font-black text-xs tracking-widest text-amber-300 uppercase">FILMGALAXY PASS</span>
+                    </div>
+
+                    <span class="text-[10px] font-mono text-gray-400 tracking-wider">
+                      #{{ selectedSession?.id ? `SES-${selectedSession.id}` : 'PASS' }}
+                    </span>
+                  </div>
+
+                  <h3 class="text-lg font-bold text-white leading-snug line-clamp-1 mb-1">
+                    {{ currentMovie?.titulo }}
+                  </h3>
+
+                  <div class="flex items-center gap-3 text-xs text-gray-300">
+                    <span class="flex items-center gap-1">
+                      <i class="mdi mdi-clock-outline text-amber-400"></i>
+                      {{ selectedSession?.hora }}
+                    </span>
+                    <span>•</span>
+                    <span class="flex items-center gap-1">
+                      <i class="mdi mdi-theater text-amber-400"></i>
+                      {{ selectedSession?.sala || 'Sala 1' }}
+                    </span>
                   </div>
                 </div>
-              </div>
-            </div>
 
-            <!-- Resumen de precios -->
-            <div class="p-6 rounded-xl bg-primary/20">
-              <h3 class="text-xl font-semibold text-gold mb-4">Resumen</h3>
-              <div class="space-y-2 text-light">
-                <p>Asientos seleccionados: <span class="font-bold text-gold">{{ selectedSeatsLabels }}</span></p>
-                <p>Asientos normales: {{ normalSeatsCount }} x €{{ prices.normal }} = €{{ normalSeatsTotal }}</p>
-                <p>Asientos VIP: {{ vipSeatsCount }} x €{{ prices.vip }} = €{{ vipSeatsTotal }}</p>
-                <div class="border-t border-gray-700 pt-2 mt-4">
-                  <p class="text-xl font-bold">Total: €{{ total }}</p>
+                <!-- 2. CUERPO DEL BILLETE (ASIENTOS Y RESUMEN) -->
+                <div class="ticket-body p-6 bg-[#0f1322] space-y-5">
+
+                  <!-- ALERTA DE TEMPORIZADOR DE RESERVA (SI HAY ASIENTOS) -->
+                  <div
+                    v-if="selectedSeats.length > 0"
+                    class="p-3 rounded-xl bg-amber-400/10 border border-amber-400/30 flex items-center justify-between animate-fade-in"
+                  >
+                    <div class="flex items-center gap-2 text-xs text-amber-300">
+                      <i class="mdi mdi-timer-outline text-base animate-spin-slow"></i>
+                      <div>
+                        <div class="font-bold">Reserva temporal activa</div>
+                        <div class="text-[10px] text-amber-200/80">Quedan {{ formattedHoldTime }} min para finalizar</div>
+                      </div>
+                    </div>
+                    <div class="text-xs font-mono font-bold px-2 py-1 rounded bg-amber-400 text-gray-950 shadow">
+                      {{ formattedHoldTime }}
+                    </div>
+                  </div>
+
+                  <!-- SELECCIÓN DE ASIENTOS: ESTADO VACÍO O LISTADO -->
+                  <div>
+                    <div class="flex items-center justify-between mb-2">
+                      <span class="text-xs uppercase tracking-wider font-bold text-gray-400">Butacas Elegidas</span>
+                      <span class="text-xs font-bold text-amber-400">
+                        {{ selectedSeats.length }} / 10
+                      </span>
+                    </div>
+
+                    <!-- ESTADO VACÍO CON ANIMACIÓN -->
+                    <div
+                      v-if="selectedSeats.length === 0"
+                      class="p-6 rounded-2xl border-2 border-dashed border-white/10 text-center flex flex-col items-center justify-center gap-3"
+                    >
+                      <div class="w-12 h-12 rounded-full bg-amber-400/10 text-amber-400 flex items-center justify-center text-2xl animate-bounce-gentle">
+                        <i class="mdi mdi-seat-outline"></i>
+                      </div>
+                      <p class="text-xs text-gray-400 max-w-[200px] leading-relaxed">
+                        Selecciona butacas en el mapa para emitir tu billete
+                      </p>
+                    </div>
+
+                    <!-- LISTA DE BUTACAS SELECCIONADAS CON CHIPS ANIMADOS -->
+                    <div v-else class="space-y-2 max-h-48 overflow-y-auto pr-1 cinema-custom-scroll">
+                      <div
+                        v-for="seat in selectedSeats"
+                        :key="'chip-' + seat.id"
+                        class="flex items-center justify-between p-2.5 rounded-xl bg-white/5 border border-white/10 hover:border-amber-400/40 transition-all group animate-pop"
+                      >
+                        <div class="flex items-center gap-2.5">
+                          <div
+                            class="w-7 h-7 rounded-lg flex items-center justify-center text-xs font-bold"
+                            :class="seat.tipo === 'vip' ? 'bg-amber-400 text-gray-950' : 'bg-emerald-500 text-white'"
+                          >
+                            <i :class="seat.tipo === 'vip' ? 'mdi mdi-crown' : 'mdi mdi-seat'"></i>
+                          </div>
+                          <div>
+                            <div class="text-xs font-bold text-white flex items-center gap-1.5">
+                              Fila {{ seat.fila }} • Asiento {{ seat.numero }}
+                              <span
+                                class="text-[9px] uppercase px-1.5 py-0.2 rounded font-black tracking-wider"
+                                :class="seat.tipo === 'vip' ? 'bg-amber-400/20 text-amber-300' : 'bg-gray-700 text-gray-300'"
+                              >
+                                {{ seat.tipo }}
+                              </span>
+                            </div>
+                            <div class="text-[10px] text-gray-400">
+                              €{{ seat.tipo === 'vip' ? prices.vip : prices.normal }}
+                            </div>
+                          </div>
+                        </div>
+
+                        <!-- Botón para quitar asiento -->
+                        <button
+                          type="button"
+                          @click="toggleSeat(seat)"
+                          class="w-6 h-6 rounded-full bg-white/10 hover:bg-red-500/20 hover:text-red-400 text-gray-400 flex items-center justify-center transition-all text-xs"
+                          title="Eliminar asiento"
+                        >
+                          <i class="mdi mdi-close"></i>
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- DESGLOSE DE PRECIOS -->
+                  <div class="pt-4 border-t border-white/10 space-y-2 text-xs">
+                    <div v-if="normalSeatsCount > 0" class="flex justify-between text-gray-300">
+                      <span>Normal ({{ normalSeatsCount }}x €{{ prices.normal }})</span>
+                      <span class="font-mono font-medium">€{{ normalSeatsTotal.toFixed(2) }}</span>
+                    </div>
+
+                    <div v-if="vipSeatsCount > 0" class="flex justify-between text-gray-300">
+                      <span class="text-amber-300">VIP ({{ vipSeatsCount }}x €{{ prices.vip }})</span>
+                      <span class="font-mono font-medium text-amber-300">€{{ vipSeatsTotal.toFixed(2) }}</span>
+                    </div>
+
+                    <div class="pt-3 border-t border-white/10 flex items-baseline justify-between">
+                      <div>
+                        <span class="text-sm font-bold text-white">Importe Total</span>
+                        <div class="text-[10px] text-gray-400">IVA incluido</div>
+                      </div>
+                      <div class="text-2xl font-black text-amber-400 font-mono tracking-tight">
+                        €{{ total.toFixed(2) }}
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- BOTÓN DE COMPRA / CONTINUAR CON ANIMACIÓN SHIMMER -->
+                  <div class="pt-2">
+                    <button
+                      type="button"
+                      @click="purchaseTickets"
+                      :disabled="selectedSeats.length === 0"
+                      class="w-full py-3.5 px-6 rounded-2xl font-black text-sm tracking-wide uppercase transition-all duration-300 flex items-center justify-center gap-2 relative overflow-hidden group shadow-xl"
+                      :class="selectedSeats.length === 0
+                        ? 'bg-gray-800 text-gray-500 cursor-not-allowed border border-white/5'
+                        : 'bg-gradient-to-r from-amber-400 via-amber-300 to-amber-500 text-gray-950 hover:shadow-amber-400/30 hover:scale-[1.02] active:scale-[0.98]'"
+                    >
+                      <!-- Efecto brillo sweep al pasar cursor -->
+                      <span v-if="selectedSeats.length > 0" class="ticket-button-shine"></span>
+
+                      <i class="mdi mdi-ticket-confirmation-outline text-lg"></i>
+                      <span>Continuar al Pago ({{ selectedSeats.length }})</span>
+                      <i class="mdi mdi-arrow-right text-lg transition-transform group-hover:translate-x-1"></i>
+                    </button>
+                  </div>
+
+                  <!-- CÓDIGO DE BARRAS DE ADORNO AL PIE DEL BILLETE -->
+                  <div class="pt-3 border-t border-dashed border-white/10 flex flex-col items-center justify-center opacity-40 select-none">
+                    <div class="ticket-barcode-strip"></div>
+                    <span class="text-[8px] font-mono tracking-widest text-gray-400 mt-1">
+                      FILMGALAXY • ENTRADA OFICIAL
+                    </span>
+                  </div>
+
                 </div>
               </div>
             </div>
 
-            <!-- Botón para comprar entradas -->
-            <div class="mt-6 text-center">
-              <button @click="purchaseTickets" :disabled="selectedSeats.length === 0"
-                class="bg-gold text-dark px-8 py-3 rounded-full font-semibold transition-all"
-                :class="selectedSeats.length === 0 ? 'opacity-50 cursor-not-allowed' : 'hover:bg-gold/80'">
-                Comprar Entradas
-              </button>
-            </div>
           </div>
+
         </div>
+
       </div>
     </div>
+
     <Footer />
 
     <!-- Notificación / Snackbar para avisos de reserva temporal -->
@@ -246,7 +496,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, onUnmounted } from 'vue'
+import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { usePeliculas } from '~/composables/communicationManagerPelicula'
 import { useSessionsStore } from '~/stores/sessionsStore'
@@ -272,6 +522,10 @@ const boughtSeats = ref([]) // array de códigos, ej: ["A-1", "A-2"]
 const heldByOtherSeats = ref([]) // array de códigos retenidos por otros
 const myHoldSeats = ref([]) // array de códigos retenidos por este hold_token
 let pollingInterval = null
+
+// Temporizador visual para el bloqueo de 5 minutos
+const holdSecondsLeft = ref(300)
+let holdTimer = null
 
 // Snackbar reactivo para notificaciones al usuario
 const snackbar = ref(false)
@@ -302,6 +556,41 @@ const prices = ref({
   vip: 8
 })
 
+// Control del temporizador de 5 minutos
+const startHoldTimer = () => {
+  holdSecondsLeft.value = 300
+  if (holdTimer) clearInterval(holdTimer)
+  holdTimer = setInterval(() => {
+    if (holdSecondsLeft.value > 0) {
+      holdSecondsLeft.value--
+    } else {
+      clearInterval(holdTimer)
+      fetchAsientosStatus()
+    }
+  }, 1000)
+}
+
+const stopHoldTimer = () => {
+  if (holdTimer) {
+    clearInterval(holdTimer)
+    holdTimer = null
+  }
+}
+
+watch(selectedSeats, (newVal) => {
+  if (newVal.length > 0) {
+    if (!holdTimer) startHoldTimer()
+  } else {
+    stopHoldTimer()
+  }
+}, { deep: true })
+
+const formattedHoldTime = computed(() => {
+  const m = Math.floor(holdSecondsLeft.value / 60)
+  const s = holdSecondsLeft.value % 60
+  return `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`
+})
+
 // Código representativo del asiento ej: "A-1"
 const getSeatCode = (seat) => {
   return seat ? `${seat.fila}-${seat.numero}` : ''
@@ -322,6 +611,25 @@ const isSeatHeldByOther = (seat) => {
 const isSeatSelected = (seat) => {
   if (!seat) return false
   return selectedSeats.value.some(s => s.id === seat.id)
+}
+
+const getSeatStatus = (seat) => {
+  if (!seat) return 'normal'
+  if (isSeatBought(seat)) return 'bought'
+  if (isSeatHeldByOther(seat)) return 'held'
+  if (isSeatSelected(seat)) return 'selected'
+  if (seat.tipo === 'vip') return 'vip'
+  return 'normal'
+}
+
+const getSeatTooltip = (seat) => {
+  if (!seat) return ''
+  const status = getSeatStatus(seat)
+  const typeLabel = seat.tipo === 'vip' ? `VIP (€${prices.value.vip})` : `Normal (€${prices.value.normal})`
+  if (status === 'bought') return `Fila ${seat.fila} • Butaca ${seat.numero} - Ocupado`
+  if (status === 'held') return `Fila ${seat.fila} • Butaca ${seat.numero} - En proceso de reserva por otro usuario`
+  if (status === 'selected') return `Fila ${seat.fila} • Butaca ${seat.numero} - Seleccionado (${typeLabel})`
+  return `Fila ${seat.fila} • Butaca ${seat.numero} (${typeLabel})`
 }
 
 // Obtener filas únicas (A, B, C, D,...)
@@ -360,11 +668,6 @@ const vipSeatsTotal = computed(() =>
 const total = computed(() =>
   normalSeatsTotal.value + vipSeatsTotal.value
 )
-
-const selectedSeatsLabels = computed(() => {
-  if (!selectedSeats.value.length) return 'Ninguno'
-  return selectedSeats.value.map(s => `${s.fila}${s.numero}`).join(', ')
-})
 
 const formatDate = (dateString) => {
   if (!dateString) return 'Fecha no disponible'
@@ -451,8 +754,10 @@ const toggleSeat = async (seat) => {
         return
       }
 
-      // Si fue exitoso, seleccionarlo
+      // Si fue exitoso, seleccionarlo y reiniciar el reloj de 5 min
       selectedSeats.value.push(seat)
+      startHoldTimer()
+
       if (!myHoldSeats.value.includes(seatCode)) {
         myHoldSeats.value.push(seatCode)
       }
@@ -608,30 +913,231 @@ onUnmounted(() => {
     clearInterval(pollingInterval)
     pollingInterval = null
   }
+  stopHoldTimer()
 })
 </script>
 
 <style scoped>
-.custom-bg {
-  background: linear-gradient(135deg, #22223B 10%, #EAE0D5 110%);
+/* Fondo ambiental de cine */
+.cinema-booking-page {
+  background: radial-gradient(circle at 50% 10%, rgba(30, 41, 59, 0.5) 0%, rgba(10, 13, 24, 0.98) 70%);
 }
 
-.glass-effect {
-  background: #4A4E69;
-  backdrop-filter: blur(10px);
+.glass-card {
+  background: rgba(18, 22, 36, 0.75);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
 }
 
-.animate-pulse-slow {
-  animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+/* Pantalla de cine curvada con proyección */
+.cinema-screen-curve {
+  position: relative;
+  height: 38px;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.18) 0%, rgba(255, 255, 255, 0.04) 100%);
+  border-top: 3px solid rgba(251, 191, 36, 0.8);
+  border-radius: 50% 50% 0 0 / 14px 14px 0 0;
+  box-shadow: 0 10px 25px -5px rgba(251, 191, 36, 0.25), inset 0 2px 8px rgba(255, 255, 255, 0.3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
-@keyframes pulse {
-  0%,
+.screen-light-bar {
+  position: absolute;
+  top: -2px;
+  left: 20%;
+  right: 20%;
+  height: 3px;
+  background: #fef08a;
+  filter: blur(2px);
+  box-shadow: 0 0 14px #fbbf24;
+}
+
+.projection-beam {
+  position: absolute;
+  top: 10px;
+  left: 10%;
+  right: 10%;
+  height: 80px;
+  background: linear-gradient(180deg, rgba(251, 191, 36, 0.12) 0%, rgba(56, 189, 248, 0.03) 60%, transparent 100%);
+  clip-path: polygon(15% 0%, 85% 0%, 100% 100%, 0% 100%);
+  pointer-events: none;
+}
+
+/* Billete estilizado */
+.ticket-container {
+  background: #0f1322;
+}
+
+.ticket-hologram {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: linear-gradient(90deg, #f59e0b, #ec4899, #8b5cf6, #3b82f6, #10b981, #f59e0b);
+  background-size: 200% auto;
+  animation: hologramShift 6s linear infinite;
+}
+
+.ticket-notch {
+  position: absolute;
+  bottom: -11px;
+  width: 22px;
+  height: 22px;
+  background: #090b14;
+  border-radius: 50%;
+  z-index: 20;
+}
+
+.notch-left {
+  left: -11px;
+  box-shadow: inset -2px 0 3px rgba(0, 0, 0, 0.4);
+}
+
+.notch-right {
+  right: -11px;
+  box-shadow: inset 2px 0 3px rgba(0, 0, 0, 0.4);
+}
+
+/* Código de barras decorativo */
+.ticket-barcode-strip {
+  width: 140px;
+  height: 22px;
+  background: repeating-linear-gradient(
+    90deg,
+    #ffffff,
+    #ffffff 2px,
+    transparent 2px,
+    transparent 4px,
+    #ffffff 4px,
+    #ffffff 7px,
+    transparent 7px,
+    transparent 9px,
+    #ffffff 9px,
+    #ffffff 10px,
+    transparent 10px,
+    transparent 13px
+  );
+  opacity: 0.7;
+}
+
+/* Brillo en botón de compra */
+.ticket-button-shine {
+  position: absolute;
+  top: -50%;
+  left: -60%;
+  width: 40%;
+  height: 200%;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.4),
+    transparent
+  );
+  transform: rotate(30deg);
+  animation: buttonSweep 3.5s infinite;
+}
+
+/* Animaciones */
+@keyframes hologramShift {
+  0% {
+    background-position: 0% 50%;
+  }
+  100% {
+    background-position: 200% 50%;
+  }
+}
+
+@keyframes buttonSweep {
+  0% {
+    left: -70%;
+  }
+  30%, 100% {
+    left: 140%;
+  }
+}
+
+@keyframes popIn {
+  0% {
+    opacity: 0;
+    transform: scale(0.9);
+  }
+  70% {
+    transform: scale(1.05);
+  }
   100% {
     opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.animate-pop {
+  animation: popIn 0.25s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.4s ease-out forwards;
+}
+
+.animate-spin-slow {
+  animation: spin 3s linear infinite;
+}
+
+.animate-bounce-gentle {
+  animation: bounceGentle 2.5s infinite ease-in-out;
+}
+
+@keyframes bounceGentle {
+  0%, 100% {
+    transform: translateY(0);
   }
   50% {
-    opacity: 0.5;
+    transform: translateY(-6px);
   }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Scrollbars personalizados */
+.cinema-room-scroll::-webkit-scrollbar,
+.cinema-custom-scroll::-webkit-scrollbar {
+  height: 6px;
+  width: 5px;
+}
+
+.cinema-room-scroll::-webkit-scrollbar-track,
+.cinema-custom-scroll::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.04);
+  border-radius: 999px;
+}
+
+.cinema-room-scroll::-webkit-scrollbar-thumb,
+.cinema-custom-scroll::-webkit-scrollbar-thumb {
+  background: rgba(251, 191, 36, 0.3);
+  border-radius: 999px;
+}
+
+.cinema-room-scroll::-webkit-scrollbar-thumb:hover,
+.cinema-custom-scroll::-webkit-scrollbar-thumb:hover {
+  background: rgba(251, 191, 36, 0.6);
 }
 </style>

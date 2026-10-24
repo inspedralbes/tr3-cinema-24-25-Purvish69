@@ -273,11 +273,9 @@ const processPayment = async () => {
       status: 'completed'
     }
 
-    console.log('Creating payment with data:', paymentData)
 
     const paymentResponse = await createPayment(paymentData)
 
-    console.log('Payment response:', paymentResponse)
 
     // Verificar si hay error en la respuesta
     if (paymentResponse.error) {
@@ -307,7 +305,6 @@ const processPayment = async () => {
         hold_token: ticketDetails.value?.hold_token || (typeof sessionStorage !== 'undefined' ? sessionStorage.getItem('hold_token') : null)
       }
 
-      console.log('Creating ticket with data:', ticketData)
 
       const ticketResponse = await createTicket(ticketData)
       if (ticketResponse.error) {
@@ -317,7 +314,6 @@ const processPayment = async () => {
     })
 
     const tickets = await Promise.all(ticketPromises)
-    console.log('Tickets created:', tickets)
 
     paymentSuccess.value = true
 

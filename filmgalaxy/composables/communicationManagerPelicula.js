@@ -104,7 +104,6 @@ export const usePeliculas = () => {
         },
         credentials: 'include'
       })
-      console.log('Datos de la sesion', response);
 
 
       if (!response.ok) {
@@ -263,7 +262,6 @@ export const usePeliculas = () => {
       } else {
         console.warn('No authentication token available')
       }
-      console.log('pago de user:', headers);
 
 
       const response = await fetch(`${API_URL}/payments`, {
@@ -273,7 +271,6 @@ export const usePeliculas = () => {
         body: JSON.stringify(paymentData)
       })
 
-      console.log('Payment response status:', response.status)
 
       if (!response.ok) {
         const errorData = await response.json()
@@ -282,7 +279,6 @@ export const usePeliculas = () => {
       }
 
       const data = await response.json()
-      console.log('Payment success data:', data)
       return data
     } catch (err) {
       console.error('Payment error:', err)
@@ -301,7 +297,6 @@ export const usePeliculas = () => {
         return { error: 'No se proporcionó ID del ticket' }
       }
 
-      console.log('getTicketWithUser: Requesting ticket ID:', ticketId)
       loading.value = true
 
       // Obtener el token desde localStorage
@@ -323,7 +318,6 @@ export const usePeliculas = () => {
         credentials: 'include'
       })
 
-      console.log('getTicketWithUser: Response status:', response.status)
 
       if (!response.ok) {
         let errorMessage = 'Error obteniendo información del ticket'
@@ -339,7 +333,6 @@ export const usePeliculas = () => {
       }
 
       const data = await response.json()
-      console.log('getTicketWithUser: Data received:', data)
 
       return data
     } catch (err) {

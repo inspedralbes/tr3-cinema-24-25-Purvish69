@@ -15,8 +15,15 @@ use Illuminate\Validation\ValidationException;
 class UserController extends Controller
 {
     // Para mostrar todos los usuarios en la página principal
-    public function index()
+    public function index(Request $request)
     {
+        if ($request->wantsJson() || $request->is('api/*')) {
+            $authUser = $request->user() ?: Auth::user();
+            if (!$authUser || $authUser->rol !== 'admin') {
+                return response()->json(['message' => 'Acceso denegado. Se requiere rol de administrador.'], 403);
+            }
+            return response()->json(['users' => User::all()]);
+        }
         $users = User::all();
         return view('users.index', ['users' => $users]);
     }
@@ -35,24 +42,22 @@ class UserController extends Controller
             'apellido' => 'required|string|max:255',
             'email'    => 'required|string|email|max:255|unique:users',
             'telefono' => 'required|string|max:15',
-            'password' => 'required|string',
+            'password' => 'required|string|min:6',
         ]);
 
         if ($validator->fails()) {
             return redirect()->back()->withErrors($validator)->withInput();
         }
 
-        // Determinar rol basado en el dominio del correo (@filmgalaxy.com = admin)
-        $rol = str_ends_with($request->email, '@filmgalaxy.com') ? 'admin' : 'user';
-
-        User::create([
+        $user = new User([
             'nombre'   => $request->nombre,
             'apellido' => $request->apellido,
             'email'    => $request->email,
             'telefono' => $request->telefono,
             'password' => Hash::make($request->password),
-            'rol'      => $rol,
         ]);
+        $user->rol = 'user';
+        $user->save();
 
         return redirect()->route('users.index')->with('success', 'Usuario creado con éxito.');
     }
@@ -79,26 +84,28 @@ class UserController extends Controller
             'apellido' => 'required|string|max:255',
             'email'    => 'required|string|email|max:255|unique:users',
             'telefono' => 'required|string|max:15',
-            'password' => 'required|string',
+            'password' => 'required|string|min:6',
         ]);
 
         if ($validator->fails()) {
             return response()->json(['errors' => $validator->errors()], 422);
         }
 
-        // Determinar rol basado en el dominio del correo (@filmgalaxy.com = admin)
-        $rol = str_ends_with($request->email, '@filmgalaxy.com') ? 'admin' : 'user';
-
-        $user = User::create([
+        $user = new User([
             'nombre'   => $request->nombre,
             'apellido' => $request->apellido,
             'email'    => $request->email,
             'telefono' => $request->telefono,
             'password' => Hash::make($request->password),
-            'rol'      => $rol,
         ]);
+        $user->rol = 'user';
+        $user->save();
 
-        Mail::to($user->email)->send(new SendMail($user));
+        try {
+            Mail::to($user->email)->send(new SendMail($user));
+        } catch (\Throwable $e) {
+            // No bloquear el registro si el servicio de correo no está disponible en desarrollo
+        }
 
         $token = $user->createToken('auth_token')->plainTextToken;
 
@@ -109,7 +116,7 @@ class UserController extends Controller
         ], 201);
     }
 
-    // login para obtener token y si es una apetecion de front envia en JSON si no hace return redirect para devolver 
+    // login para obtener token y si es una petición de front envía en JSON si no hace redirect
     public function login(Request $request)
     {
         try {
@@ -119,7 +126,7 @@ class UserController extends Controller
             ]);
 
             if (!Auth::attempt($request->only('email', 'password'))) {
-                if ($request->wantsJson()) {
+                if ($request->wantsJson() || $request->is('api/*')) {
                     return response()->json([
                         'status'  => 'error',
                         'message' => 'Las credenciales proporcionadas son incorrectas.'
@@ -131,7 +138,7 @@ class UserController extends Controller
             $user = User::where('email', $request->email)->firstOrFail();
             $token = $user->createToken('auth_token')->plainTextToken;
 
-            if ($request->wantsJson()) {
+            if ($request->wantsJson() || $request->is('api/*')) {
                 return response()->json([
                     'status'     => 'success',
                     'user'       => $user,
@@ -140,19 +147,17 @@ class UserController extends Controller
                 ]);
             }
 
-            // Redirigir a una ruta definida para los usuarios autenticados
             return redirect()->route('users.index')->with('success', 'Has iniciado sesión correctamente.');
         } catch (\Exception $e) {
-            if ($request->wantsJson()) {
+            if ($request->wantsJson() || $request->is('api/*')) {
                 return response()->json([
                     'status'  => 'error',
-                    'message' => $e->getMessage()
+                    'message' => 'Error de autenticación.'
                 ], 500);
             }
             return redirect()->back()->withErrors(['message' => $e->getMessage()]);
         }
     }
-
 
     public function logout(Request $request)
     {
@@ -162,15 +167,26 @@ class UserController extends Controller
 
         Auth::logout();
 
-        $request->session()->invalidate();
-        $request->session()->regenerateToken();
+        if ($request->hasSession()) {
+            $request->session()->invalidate();
+            $request->session()->regenerateToken();
+        }
+
+        if ($request->wantsJson() || $request->is('api/*')) {
+            return response()->json(['message' => 'Sesión cerrada correctamente']);
+        }
 
         return redirect('/login');
     }
 
-    // Mostrar usuario por ID (para API)
-    public function show($id)
+    // Mostrar usuario por ID (para API) con validación de autorización
+    public function show(Request $request, $id)
     {
+        $authUser = $request->user() ?: Auth::user();
+        if (!$authUser || ($authUser->id != $id && $authUser->rol !== 'admin')) {
+            return response()->json(['message' => 'Acceso no autorizado.'], 403);
+        }
+
         $user = User::findOrFail($id);
         return response()->json(['user' => $user]);
     }
@@ -179,9 +195,9 @@ class UserController extends Controller
     public function update(Request $request, $id)
     {
         $user = User::findOrFail($id);
+        $authUser = $request->user() ?: Auth::user();
 
-        // Para la web no necesitamos esta validación ya que usamos middleware
-        if ($request->wantsJson() && $request->user()->id !== $user->id && $request->user()->rol !== 'admin') {
+        if ($authUser && $authUser->id != $user->id && $authUser->rol !== 'admin') {
             return response()->json(['message' => 'No autorizado'], 403);
         }
 
@@ -190,11 +206,11 @@ class UserController extends Controller
             'apellido' => 'string|max:255',
             'email'    => 'string|email|max:255|unique:users,email,' . $user->id,
             'telefono' => 'string|max:15',
-            'password' => 'nullable|string',
+            'password' => 'nullable|string|min:6',
         ]);
 
         if ($validator->fails()) {
-            if ($request->wantsJson()) {
+            if ($request->wantsJson() || $request->is('api/*')) {
                 return response()->json(['errors' => $validator->errors()], 422);
             }
             return redirect()->back()->withErrors($validator)->withInput();
@@ -206,9 +222,14 @@ class UserController extends Controller
         if ($request->filled('telefono')) $user->telefono = $request->telefono;
         if ($request->filled('password')) $user->password = Hash::make($request->password);
 
+        // Solo un administrador puede modificar el rol
+        if ($request->has('rol') && $authUser && $authUser->rol === 'admin') {
+            $user->rol = $request->rol;
+        }
+
         $user->save();
 
-        if ($request->wantsJson()) {
+        if ($request->wantsJson() || $request->is('api/*')) {
             return response()->json(['user' => $user, 'message' => 'Usuario actualizado con éxito']);
         }
 
@@ -219,14 +240,15 @@ class UserController extends Controller
     public function destroy(Request $request, $id)
     {
         $user = User::findOrFail($id);
+        $authUser = $request->user() ?: Auth::user();
 
-        if ($request->wantsJson() && $request->user()->id !== $user->id && $request->user()->rol !== 'admin') {
+        if ($authUser && $authUser->id != $user->id && $authUser->rol !== 'admin') {
             return response()->json(['message' => 'No autorizado'], 403);
         }
 
         $user->delete();
 
-        if ($request->wantsJson()) {
+        if ($request->wantsJson() || $request->is('api/*')) {
             return response()->json(['message' => 'Usuario eliminado con éxito']);
         }
 

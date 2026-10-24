@@ -15,6 +15,7 @@ class User extends Authenticatable
 
     /**
      * The attributes that are mass assignable.
+     * Rol excluido de fillable para prevenir privilege escalation vía mass assignment.
      *
      * @var list<string>
      */
@@ -24,7 +25,6 @@ class User extends Authenticatable
         'email',
         'telefono',
         'password',
-        'rol',
     ];
 
     // Relaciones de tablas

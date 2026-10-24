@@ -23,7 +23,6 @@ export const useSessionsStore = defineStore('sessions', () => {
       loading.value = true
       error.value = null
       
-      console.log('Fetching sessions data...')
       
       const response = await fetch(`${API_URL}/sessions`, {
         method: 'GET',
@@ -47,7 +46,6 @@ export const useSessionsStore = defineStore('sessions', () => {
       }
       
       const data = await response.json()
-      console.log('Sessions fetched successfully:', data)
       
       // Asegurarse de que cada sesión tenga la información de la película
       const processedSessions = (data.sessions || []).map(session => ({
@@ -57,7 +55,6 @@ export const useSessionsStore = defineStore('sessions', () => {
       }))
       
       sessions.value = processedSessions
-      console.log('Sessions processed and stored in state:', processedSessions.length)
       return { sessions: processedSessions }
     } catch (err) {
       console.error('Error in fetchSessions:', err)
@@ -65,7 +62,6 @@ export const useSessionsStore = defineStore('sessions', () => {
       
       // Si hay un error de conexión y retry es true, intentar una vez más después de un tiempo
       if (retry && (err.message.includes('network') || err.message.includes('fetch'))) {
-        console.log('Retrying fetch in 2 seconds...')
         return new Promise((resolve) => {
           setTimeout(async () => {
             try {
@@ -153,7 +149,6 @@ export const useSessionsStore = defineStore('sessions', () => {
       }
       
       const data = await response.json()
-      console.log('Session details fetched successfully:', data)
       
       // Ensure we have a valid session object
       if (!data.session) {
@@ -178,7 +173,6 @@ export const useSessionsStore = defineStore('sessions', () => {
       
       // Si hay un error de conexión y retry es true, intentar una vez más después de un tiempo
       if (retry && (err.message.includes('network') || err.message.includes('fetch'))) {
-        console.log('Retrying fetch session by ID in 2 seconds...')
         return new Promise((resolve) => {
           setTimeout(async () => {
             try {

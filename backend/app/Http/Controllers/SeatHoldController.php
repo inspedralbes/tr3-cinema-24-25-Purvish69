@@ -25,9 +25,10 @@ class SeatHoldController extends Controller
     /**
      * POST /holds
      * Recibe funcion_id, asientos[], hold_token.
-     * Dentro de una transacción:
+     * Dentro de una transacción con lockForUpdate:
      * - Borra holds caducados de esa función.
      * - Comprueba que los asientos no estén comprados ni retenidos por otro token.
+     * - Limita el número máximo de holds activos por token a 10.
      * - Si alguno está ocupado/retenido por otro, devuelve 409 con los asientos en conflicto y no crea ninguno.
      * - Crea/renueva los holds (5 minutos).
      */
@@ -35,21 +36,22 @@ class SeatHoldController extends Controller
     {
         $validator = Validator::make($request->all(), [
             'funcion_id' => 'required|exists:movieSessions,id',
-            'asientos'   => 'required|array|min:1',
-            'asientos.*' => 'required|string',
-            'hold_token' => 'required|string|min:1',
+            'asientos'   => 'required|array|min:1|max:10',
+            'asientos.*' => ['required', 'string', 'max:10', 'regex:/^[A-Za-z]+-\d+$/'],
+            'hold_token' => 'required|string|max:64',
         ]);
 
         if ($validator->fails()) {
             return response()->json([
-                'status' => 'error',
-                'errors' => $validator->errors()
+                'status'  => 'error',
+                'message' => 'Parámetros de reserva no válidos',
+                'errors'  => $validator->errors()
             ], 422);
         }
 
-        $funcionId = $request->funcion_id;
-        $asientos = array_unique(array_map('trim', (array) $request->asientos));
-        $holdToken = $request->hold_token;
+        $funcionId = (int) $request->funcion_id;
+        $asientos = array_values(array_unique(array_map('trim', (array) $request->asientos)));
+        $holdToken = trim($request->hold_token);
 
         return DB::transaction(function () use ($funcionId, $asientos, $holdToken, $request) {
             // 1. Borrar holds caducados de esa función
@@ -57,18 +59,33 @@ class SeatHoldController extends Controller
                 ->where('expires_at', '<=', now())
                 ->delete();
 
+            // 2. Comprobar límite de holds activos por token (máximo 10)
+            $existingActiveHoldsCount = SeatHold::where('hold_token', $holdToken)
+                ->where('expires_at', '>', now())
+                ->whereNotIn('asiento', $asientos)
+                ->count();
+
+            if ($existingActiveHoldsCount + count($asientos) > 10) {
+                return response()->json([
+                    'status'  => 'error',
+                    'message' => 'Límite de 10 asientos retenidos simultáneamente alcanzado'
+                ], 422);
+            }
+
+            // 3. Bloqueo concurrente con lockForUpdate para evitar condiciones de carrera
             $conflicts = [];
 
             foreach ($asientos as $asiento) {
                 [$fila, $numero] = $this->parseSeatCode($asiento);
 
-                // Comprobar si ya está comprado
+                // Comprobar si ya está comprado en la base de datos (con lock)
                 $isBought = false;
                 if ($fila && $numero !== null) {
                     $isBought = Seat::where('movieSession_id', $funcionId)
                         ->where('fila', $fila)
                         ->where('numero', $numero)
                         ->where('estado', 'ocupada')
+                        ->lockForUpdate()
                         ->exists();
                 }
 
@@ -77,11 +94,12 @@ class SeatHoldController extends Controller
                     continue;
                 }
 
-                // Comprobar si está retenido por otro token activo
+                // Comprobar si está retenido por otro token activo (con lock)
                 $isHeldByOther = SeatHold::where('funcion_id', $funcionId)
                     ->where('asiento', $asiento)
                     ->where('hold_token', '!=', $holdToken)
                     ->where('expires_at', '>', now())
+                    ->lockForUpdate()
                     ->exists();
 
                 if ($isHeldByOther) {
@@ -89,7 +107,7 @@ class SeatHoldController extends Controller
                 }
             }
 
-            // Si alguno está ocupado, devuelve 409 con los asientos en conflicto y no crea ninguno
+            // Si alguno está ocupado o retenido por otro, devuelve 409
             if (!empty($conflicts)) {
                 return response()->json([
                     'message'   => 'Este asiento está en proceso de reserva por otro usuario',
@@ -132,9 +150,10 @@ class SeatHoldController extends Controller
     public function destroy(Request $request)
     {
         $validator = Validator::make($request->all(), [
-            'hold_token' => 'required|string',
+            'hold_token' => 'required|string|max:64',
             'funcion_id' => 'sometimes|exists:movieSessions,id',
             'asientos'   => 'sometimes|array',
+            'asientos.*' => ['string', 'max:10', 'regex:/^[A-Za-z]+-\d+$/'],
         ]);
 
         if ($validator->fails()) {
@@ -144,63 +163,63 @@ class SeatHoldController extends Controller
             ], 422);
         }
 
-        $query = SeatHold::where('hold_token', $request->hold_token);
+        $holdToken = trim($request->hold_token);
+        $query = SeatHold::where('hold_token', $holdToken);
 
         if ($request->filled('funcion_id')) {
             $query->where('funcion_id', $request->funcion_id);
         }
 
-        if ($request->filled('asientos')) {
-            $asientos = (array) $request->asientos;
+        if ($request->has('asientos') && is_array($request->asientos)) {
+            $asientos = array_map('trim', $request->asientos);
             $query->whereIn('asiento', $asientos);
         }
 
-        $deleted = $query->delete();
+        $deletedCount = $query->delete();
 
         return response()->json([
             'status'  => 'success',
-            'message' => 'Asientos liberados correctamente',
-            'deleted' => $deleted
+            'message' => 'Bloqueos liberados correctamente',
+            'deleted' => $deletedCount
         ], 200);
     }
 
     /**
      * GET /funciones/{id}/asientos
-     * Devuelve asientos comprados y asientos retenidos por otros (excluye los del propio token)
-     * ignorando holds caducados.
+     * Devuelve asientos comprados y asientos retenidos por otros ignorando holds caducados.
      */
     public function getAsientos(Request $request, $id)
     {
-        $session = MovieSession::findOrFail($id);
+        $holdToken = $request->query('hold_token', '');
+        $funcionId = (int) $id;
 
-        // Borrar holds caducados de esta función
-        SeatHold::where('funcion_id', $id)
+        // Limpiar holds caducados antes de responder
+        SeatHold::where('funcion_id', $funcionId)
             ->where('expires_at', '<=', now())
             ->delete();
 
-        // Asientos comprados (estado = ocupada)
-        $comprados = Seat::where('movieSession_id', $id)
+        // 1. Asientos comprados de la sesión
+        $comprados = Seat::where('movieSession_id', $funcionId)
             ->where('estado', 'ocupada')
-            ->get()
+            ->get(['fila', 'numero'])
             ->map(fn($s) => "{$s->fila}-{$s->numero}")
             ->values()
             ->all();
 
-        // Asientos retenidos por otros tokens
-        $holdToken = $request->query('hold_token');
-        $holdsQuery = SeatHold::where('funcion_id', $id)
+        // 2. Asientos retenidos por OTROS tokens activos
+        $retenidosQuery = SeatHold::where('funcion_id', $funcionId)
             ->where('expires_at', '>', now());
 
-        if ($holdToken) {
-            $holdsQuery->where('hold_token', '!=', $holdToken);
+        if (!empty($holdToken)) {
+            $retenidosQuery->where('hold_token', '!=', $holdToken);
         }
 
-        $retenidos = $holdsQuery->pluck('asiento')->values()->all();
+        $retenidos = $retenidosQuery->pluck('asiento')->unique()->values()->all();
 
-        // Asientos retenidos por el propio token (para que el frontend verifique si sus holds siguen vivos)
+        // 3. Asientos retenidos por el token del usuario actual
         $misHolds = [];
-        if ($holdToken) {
-            $misHolds = SeatHold::where('funcion_id', $id)
+        if (!empty($holdToken)) {
+            $misHolds = SeatHold::where('funcion_id', $funcionId)
                 ->where('hold_token', $holdToken)
                 ->where('expires_at', '>', now())
                 ->pluck('asiento')
@@ -209,7 +228,7 @@ class SeatHoldController extends Controller
         }
 
         return response()->json([
-            'funcion_id' => (int) $id,
+            'funcion_id' => $funcionId,
             'comprados'  => $comprados,
             'retenidos'  => $retenidos,
             'mis_holds'  => $misHolds,

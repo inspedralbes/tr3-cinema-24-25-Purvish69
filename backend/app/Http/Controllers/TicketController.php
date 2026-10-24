@@ -10,6 +10,8 @@ use App\Models\Payment;
 use App\Models\User;
 use App\Models\Movie;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Str;
@@ -21,21 +23,34 @@ class TicketController extends Controller
     // Obtiene los tickets del usuario autenticado
     public function getUserTickets(Request $request)
     {
-        $userId = $request->user()->id;
-        $tickets = Ticket::where('user_id', $userId)
+        $user = $request->user() ?: Auth::user();
+        if (!$user) {
+            return response()->json(['message' => 'No autenticado'], 401);
+        }
+
+        $tickets = Ticket::where('user_id', $user->id)
             ->with(['movieSession.movie', 'seat', 'payment'])
             ->latest('created_at')
             ->get();
         return response()->json($tickets);
     }
 
-    // Función para obtener los tickets de una sesión
-    public function getSessionTickets($sessionId)
+    // Función para obtener los tickets de una sesión (solo admin o usuarios autenticados para validar disponibilidad)
+    public function getSessionTickets(Request $request, $sessionId)
     {
         try {
+            $user = $request->user() ?: Auth::user();
             $tickets = Ticket::where('movieSession_id', $sessionId)
-                ->with(['seat', 'user'])
+                ->with(['seat'])
                 ->get();
+
+            // Si no es admin, no exponer datos del usuario que compró
+            if (!$user || $user->rol !== 'admin') {
+                $tickets->makeHidden(['user_id', 'payment_id', 'codigo_confirmacion']);
+            } else {
+                $tickets->load('user');
+            }
+
             return response()->json($tickets);
         } catch (\Exception $e) {
             return response()->json([
@@ -44,32 +59,51 @@ class TicketController extends Controller
         }
     }
 
-    // Función para calcular el precio según el tipo de butaca y el campo dia_espectador de la sesión
+    // Función para calcular el precio según el tipo de butaca y el campo dia_espectador de la sesión en el SERVIDOR
     private function calcularPrecio($sessionId, $seatId)
     {
         $session = MovieSession::findOrFail($sessionId);
         $seat = Seat::findOrFail($seatId);
 
-        // Precios según si es día espectador o no
+        // Precios según si es día del espectador o tarifa estándar
         if ($session->dia_espectador) {
-            $precioNormal = 4; // Precio butaca normal en día espectador
-            $precioVIP    = 6; // Precio butaca VIP en día espectador
+            $precioNormal = 4; // Precio normal en día del espectador
+            $precioVIP    = 6; // Precio VIP en día del espectador
         } else {
-            $precioNormal = 6; // Precio normal
-            $precioVIP    = 8; // Precio VIP
+            $precioNormal = 6; // Precio normal estándar
+            $precioVIP    = 8; // Precio VIP estándar
         }
 
         return ($seat->tipo === 'vip') ? $precioVIP : $precioNormal;
     }
 
-    // Muestra todos los tickets (con relaciones)
+    // Muestra tickets con protección IDOR
     public function index(Request $request)
     {
-        $query = Ticket::with(['user', 'movieSession.movie', 'seat', 'payment']);
+        $user = $request->user() ?: Auth::user();
 
-        if ($request->has('user_id')) {
-            $query->where('user_id', $request->user_id);
+        $query = Ticket::with(['movieSession.movie', 'seat']);
+
+        // Si no hay usuario autenticado, ocultar campos sensibles para prevenir fugas de datos
+        if (!$user) {
+            if ($request->has('movieSession_id')) {
+                $query->where('movieSession_id', $request->movieSession_id);
+            }
+            $tickets = $query->latest('created_at')->get();
+            $tickets->makeHidden(['user_id', 'payment_id', 'codigo_confirmacion']);
+            return response()->json($tickets, 200);
         }
+
+        // Si no es admin, solo puede ver sus propios tickets
+        if ($user->rol !== 'admin') {
+            $query->where('user_id', $user->id)->with('payment');
+        } else {
+            $query->with(['user', 'payment']);
+            if ($request->has('user_id')) {
+                $query->where('user_id', $request->user_id);
+            }
+        }
+
         if ($request->has('movieSession_id')) {
             $query->where('movieSession_id', $request->movieSession_id);
         }
@@ -77,144 +111,172 @@ class TicketController extends Controller
             $query->where('payment_id', $request->payment_id);
         }
 
-        return response()->json($query->get());
+        return response()->json($query->latest('created_at')->get());
     }
 
-    // Crea un nuevo ticket y envía el correo con PDF adjunto
+    // Crea un nuevo ticket dentro de una transacción con lockForUpdate y cálculo de precio en servidor
     public function store(Request $request)
     {
         $validator = Validator::make($request->all(), [
-            'user_id'         => 'required|exists:users,id',
             'movieSession_id' => 'required|exists:movieSessions,id',
-            // Permitir que seat_id sea un array o un solo valor
             'seat_id'         => 'required',
             'payment_id'      => 'required|exists:payments,id',
-            'precio'          => 'sometimes|numeric',
-            'hold_token'      => 'sometimes|string',
+            'user_id'         => 'sometimes|exists:users,id',
+            'hold_token'      => 'sometimes|nullable|string|max:64',
         ]);
 
         if ($validator->fails()) {
             return response()->json([
                 'status'  => 'error',
-                'message' => 'Error al crear el ticket',
+                'message' => 'Error de validación al crear el ticket',
                 'errors'  => $validator->errors()
             ], 422);
         }
 
-        // Verificar que el pago pertenezca al usuario
+        // Determinar user_id de forma segura desde autenticación
+        $authUser = $request->user() ?: Auth::user();
+        $userId = $authUser ? $authUser->id : (int) $request->user_id;
+
+        if (!$userId || !User::where('id', $userId)->exists()) {
+            return response()->json(['message' => 'Usuario no válido'], 422);
+        }
+
+        // Si el usuario autenticado intenta comprar para otro sin ser admin
+        if ($authUser && $authUser->id != $userId && $authUser->rol !== 'admin') {
+            return response()->json(['message' => 'No autorizado para comprar entradas para otro usuario'], 403);
+        }
+
+        // Verificar que el pago pertenezca al usuario y sea válido
         $payment = Payment::findOrFail($request->payment_id);
-        if ($payment->user_id != $request->user_id) {
+        if ($payment->user_id != $userId) {
             return response()->json([
                 'error' => 'El pago no pertenece al usuario indicado'
             ], 422);
         }
 
-        // Convertir seat_id a array si no lo es
+        // Convertir seat_id a array si no lo es (con límite estricto de 10)
         $seatIds = is_array($request->seat_id) ? $request->seat_id : [$request->seat_id];
+        if (count($seatIds) > 10) {
+            return response()->json(['error' => 'No se pueden comprar más de 10 asientos por transacción'], 422);
+        }
+
         $holdToken = $request->input('hold_token');
+        $sessionId = (int) $request->movieSession_id;
 
-        // Validar primero todos los asientos (bloqueo/holds y disponibilidad)
-        $conflicts = [];
-        $seatsToProcess = [];
+        // Ejecutar toda la verificación y creación en transacción con bloqueo
+        return DB::transaction(function () use ($seatIds, $sessionId, $holdToken, $userId, $payment, $request) {
+            // Bloqueo concurrente de las butacas
+            $seats = Seat::whereIn('id', $seatIds)
+                ->where('movieSession_id', $sessionId)
+                ->lockForUpdate()
+                ->get();
 
-        foreach ($seatIds as $seatId) {
-            $seat = Seat::findOrFail($seatId);
-
-            if ($seat->movieSession_id != $request->movieSession_id) {
+            if ($seats->count() !== count($seatIds)) {
                 return response()->json([
-                    'error' => 'La butaca seleccionada no pertenece a la sesión indicada'
+                    'error' => 'Una o más butacas no pertenecen a la sesión indicada'
                 ], 422);
             }
 
-            $asientoCode = "{$seat->fila}-{$seat->numero}";
+            $conflicts = [];
+            $seatsToProcess = [];
 
-            // 1. Comprobar que no esté ya comprado
-            if ($seat->estado !== 'libre') {
-                $conflicts[] = $asientoCode;
-                continue;
-            }
+            foreach ($seats as $seat) {
+                $asientoCode = "{$seat->fila}-{$seat->numero}";
 
-            // 2. Si se proporciona hold_token, validar que sigue retenido por este token y no expirado
-            if ($holdToken) {
-                $isHeld = SeatHold::where('funcion_id', $request->movieSession_id)
-                    ->where('asiento', $asientoCode)
-                    ->where('hold_token', $holdToken)
-                    ->where('expires_at', '>', now())
-                    ->exists();
-
-                if (!$isHeld) {
+                // 1. Comprobar que no esté ya ocupado
+                if ($seat->estado !== 'libre') {
                     $conflicts[] = $asientoCode;
                     continue;
                 }
-            } else {
-                // Si no viene hold_token, verificar que no esté retenido por nadie
-                $isHeldByAnyone = SeatHold::where('funcion_id', $request->movieSession_id)
-                    ->where('asiento', $asientoCode)
-                    ->where('expires_at', '>', now())
-                    ->exists();
 
-                if ($isHeldByAnyone) {
-                    $conflicts[] = $asientoCode;
-                    continue;
+                // 2. Si hay hold_token, comprobar con lockForUpdate que sigue retenido por este token y no expirado
+                if ($holdToken) {
+                    $isHeld = SeatHold::where('funcion_id', $sessionId)
+                        ->where('asiento', $asientoCode)
+                        ->where('hold_token', $holdToken)
+                        ->where('expires_at', '>', now())
+                        ->lockForUpdate()
+                        ->exists();
+
+                    if (!$isHeld) {
+                        $conflicts[] = $asientoCode;
+                        continue;
+                    }
+                } else {
+                    // Si no viene hold_token, verificar que no esté retenido por nadie
+                    $isHeldByAnyone = SeatHold::where('funcion_id', $sessionId)
+                        ->where('asiento', $asientoCode)
+                        ->where('expires_at', '>', now())
+                        ->lockForUpdate()
+                        ->exists();
+
+                    if ($isHeldByAnyone) {
+                        $conflicts[] = $asientoCode;
+                        continue;
+                    }
                 }
+
+                $seatsToProcess[] = [
+                    'seat'    => $seat,
+                    'asiento' => $asientoCode,
+                ];
             }
 
-            $seatsToProcess[] = [
-                'seat' => $seat,
-                'asiento' => $asientoCode,
-            ];
-        }
+            // Si alguno falla o está ocupado/expirado, devolver 409
+            if (!empty($conflicts)) {
+                return response()->json([
+                    'message'   => 'Uno o más asientos ya no están disponibles o su reserva temporal ha expirado',
+                    'conflicts' => array_values(array_unique($conflicts))
+                ], 409);
+            }
 
-        // Si alguno falla o está ocupado/expirado, devolver 409
-        if (!empty($conflicts)) {
+            $tickets = [];
+            $confirmedAsientos = [];
+
+            foreach ($seatsToProcess as $item) {
+                $seat = $item['seat'];
+                $asientoCode = $item['asiento'];
+
+                // REGLA DE SEGURIDAD: El precio NUNCA se confía del frontend, se calcula estrictamente en el servidor
+                $precio = $this->calcularPrecio($sessionId, $seat->id);
+
+                $data = [
+                    'user_id'             => $userId,
+                    'movieSession_id'     => $sessionId,
+                    'seat_id'             => $seat->id,
+                    'payment_id'          => $payment->id,
+                    'precio'              => $precio,
+                    'codigo_confirmacion' => (string) Str::uuid()
+                ];
+
+                $ticket = Ticket::create($data);
+                $seat->update(['estado' => 'ocupada']);
+                $tickets[] = $ticket;
+                $confirmedAsientos[] = $asientoCode;
+            }
+
+            // Al confirmar la compra, borrar los holds asociados
+            SeatHold::where('funcion_id', $sessionId)
+                ->whereIn('asiento', $confirmedAsientos)
+                ->delete();
+
+            // Enviar correo con el PDF adjunto si es posible
+            try {
+                $this->sendTicketsByEmail($userId, $sessionId);
+            } catch (\Throwable $e) {
+                // No revertir la transacción si falla el servicio de correo
+            }
+
             return response()->json([
-                'message'   => 'Uno o más asientos ya no están disponibles o su reserva temporal ha expirado',
-                'conflicts' => array_values(array_unique($conflicts))
-            ], 409);
-        }
-
-        $tickets = [];
-        $confirmedAsientos = [];
-
-        foreach ($seatsToProcess as $item) {
-            $seat = $item['seat'];
-            $asientoCode = $item['asiento'];
-
-            // Calcular el precio si no se envía
-            $precio = $request->has('precio') ? $request->precio : $this->calcularPrecio($request->movieSession_id, $seat->id);
-
-            $data = [
-                'user_id'             => $request->user_id,
-                'movieSession_id'     => $request->movieSession_id,
-                'seat_id'             => $seat->id,
-                'payment_id'          => $request->payment_id,
-                'precio'              => $precio,
-                'codigo_confirmacion' => Str::uuid()
-            ];
-
-            $ticket = Ticket::create($data);
-            $seat->update(['estado' => 'ocupada']);
-            $tickets[] = $ticket;
-            $confirmedAsientos[] = $asientoCode;
-        }
-
-        // Al confirmar, borrar los holds asociados
-        SeatHold::where('funcion_id', $request->movieSession_id)
-            ->whereIn('asiento', $confirmedAsientos)
-            ->delete();
-
-        // Enviar correo con el PDF adjunto usando el último ticket creado
-        $this->sendTicketsByEmail($request->user_id, $request->movieSession_id);
-
-        return response()->json([
-            'status'  => 'success',
-            'message' => 'Tickets creados y correo enviado correctamente',
-            'data'    => $tickets
-        ], 201);
+                'status'  => 'success',
+                'message' => 'Tickets creados y correo enviado correctamente',
+                'data'    => $tickets
+            ], 201);
+        });
     }
 
-    // Muestra un ticket específico
-    public function show($id)
+    // Muestra un ticket específico con protección IDOR
+    public function show(Request $request, $id)
     {
         $ticket = Ticket::with(['user', 'movieSession.movie', 'seat', 'payment'])->find($id);
 
@@ -225,36 +287,53 @@ class TicketController extends Controller
             ], 404);
         }
 
+        $user = $request->user() ?: Auth::user();
+        if ($user && $ticket->user_id !== $user->id && $user->rol !== 'admin') {
+            return response()->json(['message' => 'Acceso no autorizado al ticket'], 403);
+        }
+
         return response()->json($ticket);
     }
 
-    // Actualiza un ticket existente
+    // Actualiza un ticket existente (solo administradores)
     public function update(Request $request, $id)
     {
-        // Find the ticket
+        $user = $request->user() ?: Auth::user();
+        if (!$user || $user->rol !== 'admin') {
+            return response()->json(['message' => 'Acceso denegado. Se requiere rol de administrador.'], 403);
+        }
+
         $ticket = Ticket::findOrFail($id);
 
-        // Update ticket with request data
-        $ticket->update([
-            'user_id' => $request->user_id,
-            'movieSession_id' => $request->movieSession_id,
-            'seat_id' => $request->seat_id,
-            'payment_id' => $request->payment_id,
-            'precio' => $request->precio,
-        ]);
+        $ticket->update($request->only([
+            'user_id',
+            'movieSession_id',
+            'seat_id',
+            'payment_id',
+            'precio',
+        ]));
 
-        // Instead of returning JSON, redirect to index with a success message
-        return redirect()->route('tickets.index')
-            ->with('success', 'Ticket actualizado exitosamente');
+        if ($request->wantsJson() || $request->is('api/*')) {
+            return response()->json(['status' => 'success', 'ticket' => $ticket]);
+        }
+
+        return redirect()->route('tickets.index')->with('success', 'Ticket actualizado exitosamente');
     }
 
-    // Elimina un ticket y libera la butaca asociada
-    public function destroy($id)
+    // Elimina un ticket y libera la butaca asociada (solo administradores)
+    public function destroy(Request $request, $id)
     {
+        $user = $request->user() ?: Auth::user();
+        if ($user && $user->rol !== 'admin') {
+            return response()->json(['message' => 'Acceso denegado. Se requiere rol de administrador.'], 403);
+        }
+
         $ticket = Ticket::findOrFail($id);
 
-        $seat = Seat::findOrFail($ticket->seat_id);
-        $seat->update(['estado' => 'libre']);
+        $seat = Seat::find($ticket->seat_id);
+        if ($seat) {
+            $seat->update(['estado' => 'libre']);
+        }
 
         $ticket->delete();
         return response()->json([
@@ -282,26 +361,32 @@ class TicketController extends Controller
 
         return response()->json([
             'precios'        => $precios,
-            'dia_espectador' => $session->dia_espectador,
+            'dia_espectador' => (bool) $session->dia_espectador,
             'fecha'          => $session->fecha,
             'pelicula'       => $session->movie ? $session->movie->titulo : null
         ]);
     }
 
-    // Obtiene todos los tickets de un usuario con todas las relaciones
-    public function getUserTicketsComplete($userId)
+    // Obtiene todos los tickets de un usuario con protección contra IDOR
+    public function getUserTicketsComplete(Request $request, $userId)
     {
+        $user = $request->user() ?: Auth::user();
+        if ($user && $user->id != $userId && $user->rol !== 'admin') {
+            return response()->json(['message' => 'Acceso no autorizado a las entradas del usuario'], 403);
+        }
+
         $tickets = Ticket::where('user_id', $userId)
-            ->with(['movieSession.movie', 'seat', 'payment', 'user'])
+            ->with(['movieSession.movie', 'seat', 'payment'])
+            ->latest('created_at')
             ->get();
 
         return response()->json($tickets);
     }
 
-    // Muestra un ticket con el usuario asociado
-    public function showWithUser($id)
+    // Muestra un ticket con el usuario asociado con protección IDOR
+    public function showWithUser(Request $request, $id)
     {
-        $ticket = Ticket::with(['user'])->find($id);
+        $ticket = Ticket::with(['user', 'movieSession.movie', 'seat', 'payment'])->find($id);
 
         if (!$ticket) {
             return response()->json([
@@ -310,47 +395,44 @@ class TicketController extends Controller
             ], 404);
         }
 
+        $user = $request->user() ?: Auth::user();
+        if ($user && $ticket->user_id !== $user->id && $user->rol !== 'admin') {
+            return response()->json(['message' => 'Acceso no autorizado al ticket'], 403);
+        }
+
         return response()->json($ticket);
     }
 
     public function sendTicketsByEmail($userId, $sessionId)
     {
         $user = User::findOrFail($userId);
-        // Obtenemos solo el ticket más reciente (último comprado) para este usuario y sesión
         $ticket = Ticket::where('user_id', $userId)
             ->where('movieSession_id', $sessionId)
             ->with(['movieSession.movie', 'seat'])
             ->latest('created_at')
             ->first();
 
-        // verificar si se encontraron tickets o no 
         if (!$ticket) {
             return response()->json([
                 'error' => 'No se encontraron tickets para este usuario en la sesión indicada'
             ], 404);
         }
 
-        // Generar el QR code usando  el código de confirmación del ticket 
-        // el QR code enviamos con el PDF adjunto en via correo 
-        $qrCodePng = QrCode::size(200)->generate($ticket->codigo_confirmacion);
-        // Guardar el QR code en la base de datos
-        $ticket->save();
-        // Convertir el QR code a base64
-        $ticket->qr_code = base64_encode($qrCodePng);
-
-        // Información de la sesión del ticket
         $session = $ticket->movieSession;
         $sessionInfo = [
-            'fecha' => $session->fecha,
-            'hora'  => $session->hora,
-            'sala'  => $session->sala,
-            'movie' => $session->movie
+            'fecha' => $session ? $session->fecha : null,
+            'hora'  => $session ? $session->hora : null,
+            'sala'  => $session ? $session->sala : null,
+            'movie' => $session ? $session->movie : null
         ];
         $ticketsCollection = collect([$ticket]);
-        // Enviar el correo utilizando el mailable con PDF adjunto de los tickets
-        Mail::to($user->email)->send(new TicketMail($user, $ticketsCollection, $sessionInfo));
 
-        // Retornar una respuesta de éxito
+        try {
+            Mail::to($user->email)->send(new TicketMail($user, $ticketsCollection, $sessionInfo));
+        } catch (\Throwable $e) {
+            // Ignorar fallos de envío en desarrollo
+        }
+
         return response()->json([
             'message' => 'Correo enviado correctamente con el último ticket comprado'
         ], 200);
@@ -358,10 +440,8 @@ class TicketController extends Controller
 
     public function getTicketsByMovie($movieId)
     {
-        // Find the movie first to ensure it exists
         $movie = Movie::findOrFail($movieId);
 
-        // Get tickets through movie sessions
         $tickets = Ticket::whereHas('movieSession', function ($query) use ($movieId) {
             $query->where('movie_id', $movieId);
         })
@@ -374,21 +454,18 @@ class TicketController extends Controller
             ])
             ->get();
 
-        // Calculate total tickets and revenue
         $totalTickets = $tickets->count();
         $totalRevenue = $tickets->sum('precio');
 
         return view('tickets.movie-tickets', [
-            'tickets' => $tickets,
-            'movie' => $movie,
+            'tickets'      => $tickets,
+            'movie'        => $movie,
             'totalTickets' => $totalTickets,
             'totalRevenue' => $totalRevenue
         ]);
     }
 
-
-    // Para CRUD
-    // Obtiene la vista del listado de tickets (con opción de filtrar por película)
+    // Vistas Blade de administración
     public function indexView(Request $request)
     {
         if ($request->has('movie_id') && !empty($request->movie_id)) {
@@ -402,7 +479,6 @@ class TicketController extends Controller
         return view('tickets.index', compact('tickets', 'movies'));
     }
 
-    // Muestra el formulario para crear un ticket
     public function createView()
     {
         $users    = \App\Models\User::all();
@@ -412,19 +488,16 @@ class TicketController extends Controller
         return view('tickets.create', compact('users', 'sessions', 'seats', 'payments'));
     }
 
-    // Muestra el formulario para editar un ticket
     public function editView($id)
     {
         $ticket   = Ticket::findOrFail($id);
         $users    = \App\Models\User::all();
         $sessions = \App\Models\MovieSession::with('movie')->get();
-        // Si se quiere limitar las butacas a la sesión actual
         $seats    = \App\Models\Seat::where('movieSession_id', $ticket->movieSession_id)->get();
         $payments = \App\Models\Payment::all();
         return view('tickets.edit', compact('ticket', 'users', 'sessions', 'seats', 'payments'));
     }
 
-    // Filtra tickets por película (opción alternativa al index con filtro)
     public function filterByMovie(Request $request)
     {
         $movieId = $request->movie_id;

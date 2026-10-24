@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Seat;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Validator;
 
 class SeatController extends Controller
@@ -21,15 +22,20 @@ class SeatController extends Controller
         return response()->json($seats);
     }
 
-    // Crear un nuevo asiento
+    // Crear un nuevo asiento (solo admin)
     public function store(Request $request)
     {
+        $user = $request->user() ?: Auth::user();
+        if (!$user || $user->rol !== 'admin') {
+            return response()->json(['message' => 'Acceso denegado. Se requiere rol de administrador.'], 403);
+        }
+
         $validator = Validator::make($request->all(), [
             'movieSession_id' => 'required|exists:movieSessions,id',
-            'fila' => 'required|string|size:1|in:A,B,C,D,E,F,G,H,I,J,K,L',
-            'numero' => 'required|integer|min:1|max:10',
-            'tipo' => 'required|in:normal,vip',
-            'estado' => 'required|in:libre,ocupada',
+            'fila'            => 'required|string|size:1|in:A,B,C,D,E,F,G,H,I,J,K,L',
+            'numero'          => 'required|integer|min:1|max:10',
+            'tipo'            => 'required|in:normal,vip',
+            'estado'          => 'required|in:libre,ocupada',
         ]);
 
         if ($validator->fails()) {
@@ -49,7 +55,7 @@ class SeatController extends Controller
             ], 422);
         }
 
-        $seat = Seat::create($request->all());
+        $seat = Seat::create($request->only(['movieSession_id', 'fila', 'numero', 'tipo', 'estado']));
         return response()->json($seat, 201);
     }
 
@@ -60,35 +66,45 @@ class SeatController extends Controller
         return response()->json($seat);
     }
 
-    // Actualizar un asiento
+    // Actualizar un asiento (solo admin)
     public function update(Request $request, $id)
     {
+        $user = $request->user() ?: Auth::user();
+        if (!$user || $user->rol !== 'admin') {
+            return response()->json(['message' => 'Acceso denegado. Se requiere rol de administrador.'], 403);
+        }
+
         $seat = Seat::findOrFail($id);
 
         $validator = Validator::make($request->all(), [
             'movieSession_id' => 'sometimes|required|exists:movieSessions,id',
-            'fila' => 'sometimes|required|string|size:1|in:A,B,C,D,E,F,G,H,I,J,K,L',
-            'numero' => 'sometimes|required|integer|min:1|max:10',
-            'tipo' => 'sometimes|required|in:normal,vip',
-            'estado' => 'sometimes|required|in:libre,ocupada',
+            'fila'            => 'sometimes|required|string|size:1|in:A,B,C,D,E,F,G,H,I,J,K,L',
+            'numero'          => 'sometimes|required|integer|min:1|max:10',
+            'tipo'            => 'sometimes|required|in:normal,vip',
+            'estado'          => 'sometimes|required|in:libre,ocupada',
         ]);
 
         if ($validator->fails()) {
             return response()->json(['errors' => $validator->errors()], 422);
         }
 
-        $seat->update($request->all());
+        $seat->update($request->only(['movieSession_id', 'fila', 'numero', 'tipo', 'estado']));
 
         return response()->json([
-            'status' => 'success',
+            'status'  => 'success',
             'message' => 'Butaca actualizada exitosamente',
-            'data' => $seat
+            'data'    => $seat
         ]);
     }
 
-    // Eliminar un asiento
-    public function destroy($id)
+    // Eliminar un asiento (solo admin)
+    public function destroy(Request $request, $id)
     {
+        $user = $request->user() ?: Auth::user();
+        if (!$user || $user->rol !== 'admin') {
+            return response()->json(['message' => 'Acceso denegado. Se requiere rol de administrador.'], 403);
+        }
+
         $seat = Seat::findOrFail($id);
 
         // Verificar si tiene un ticket asociado
@@ -101,7 +117,7 @@ class SeatController extends Controller
         $seat->delete();
 
         return response()->json([
-            'status' => 'success',
+            'status'  => 'success',
             'message' => 'Butaca eliminada exitosamente'
         ]);
     }

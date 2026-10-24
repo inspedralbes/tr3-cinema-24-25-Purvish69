@@ -12,6 +12,8 @@ return [
         'http://localhost:3001',
         'http://127.0.0.1:3001',
         'http://filmgalaxy.daw.inspedralbes.cat',
+        'https://filmgalaxy.daw.inspedralbes.cat',
+        env('FRONTEND_URL', 'http://localhost:3000'),
     ],
 
     'allowed_origins_patterns' => [],
