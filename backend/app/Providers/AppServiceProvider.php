@@ -40,17 +40,15 @@ class AppServiceProvider extends ServiceProvider
         RateLimiter::for('holds', function (Request $request) {
             $token = $request->input('hold_token') ?: 'anonymous';
             return [
-                Limit::perMinute(20)->by($request->ip()),
-                Limit::perMinute(20)->by($token),
+                Limit::perMinute(60)->by('ip:' . $request->ip()),
+                Limit::perMinute(60)->by('token:' . $token),
             ];
         });
 
         RateLimiter::for('checkout', function (Request $request) {
-            $userOrIp = $request->user()?->id ?: $request->ip();
-            return [
-                Limit::perMinute(15)->by($request->ip()),
-                Limit::perMinute(15)->by($userOrIp),
-            ];
+            $userId = $request->user()?->id ?: $request->input('user_id');
+            $key = $userId ? "user:{$userId}" : "ip:{$request->ip()}";
+            return Limit::perMinute(60)->by($key);
         });
     }
 }

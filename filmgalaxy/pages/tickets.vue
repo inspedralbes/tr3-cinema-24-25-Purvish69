@@ -294,31 +294,30 @@ const processPayment = async () => {
       throw new Error('Error al crear el pago: no se recibió ID de pago')
     }
 
-    // Crear entradas usando el ID de pago obtenido
-    const ticketPromises = ticketDetails.value.seats.map(async (seat) => {
-      const ticketData = {
-        user_id: currentUserId,
-        movieSession_id: ticketDetails.value.session.id,
-        seat_id: seat.id,
-        payment_id: paymentId,
-        precio: seat.tipo === 'vip' ? ticketDetails.value.prices.vip : ticketDetails.value.prices.normal,
-        hold_token: ticketDetails.value?.hold_token || (typeof sessionStorage !== 'undefined' ? sessionStorage.getItem('hold_token') : null)
-      }
+    // Crear entradas usando el ID de pago obtenido (en una única llamada transaccional)
+    const seatIds = ticketDetails.value.seats.map(seat => seat.id)
+    const holdToken = ticketDetails.value?.hold_token || (typeof sessionStorage !== 'undefined' ? sessionStorage.getItem('hold_token') : null)
 
+    const ticketData = {
+      user_id: currentUserId,
+      movieSession_id: ticketDetails.value.session.id,
+      seat_id: seatIds,
+      payment_id: paymentId,
+      hold_token: holdToken
+    }
 
-      const ticketResponse = await createTicket(ticketData)
-      if (ticketResponse.error) {
-        throw new Error(ticketResponse.error)
-      }
-      return ticketResponse
-    })
-
-    const tickets = await Promise.all(ticketPromises)
+    const ticketResponse = await createTicket(ticketData)
+    if (ticketResponse.error) {
+      throw new Error(ticketResponse.error)
+    }
 
     paymentSuccess.value = true
 
-    // Limpiar detalles de compra almacenados
+    // Limpiar detalles de compra almacenados y token de hold
     localStorage.removeItem('ticketPurchaseDetails')
+    if (typeof sessionStorage !== 'undefined') {
+      sessionStorage.removeItem('hold_token')
+    }
   } catch (err) {
     console.error('Error al procesar el pago:', err)
     error.value = err.message || 'Ha ocurrido un error al procesar el pago. Por favor, inténtalo de nuevo.'

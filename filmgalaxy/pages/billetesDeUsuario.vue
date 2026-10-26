@@ -707,18 +707,17 @@ onMounted(async () => {
       return
     }
 
-    const allTickets = await getTickets()
+    const allTickets = await getTickets(userIdValue)
 
     if (!allTickets || allTickets.error) {
-      console.error('Error al carregar tickets:', allTickets?.error)
-      error.value = "Error en connectar amb el servidor d'entrades. Si us plau, torna-ho a provar."
+            error.value = "Error en connectar amb el servidor d'entrades. Si us plau, torna-ho a provar."
       loading.value = false
       return
     }
 
     // Filter by logged-in user
     let userTickets = Array.isArray(allTickets)
-      ? allTickets.filter((ticket) => Number(ticket.user_id) === Number(userIdValue))
+      ? allTickets.filter((ticket) => !ticket.user_id || Number(ticket.user_id) === Number(userIdValue))
       : []
 
     tickets.value = userTickets
@@ -726,8 +725,7 @@ onMounted(async () => {
     // Generate unique QR code for each ticket
     await generateQrCodes(userTickets)
   } catch (err) {
-    console.error('Error en carregar les entrades:', err)
-    error.value = 'Hi ha hagut un problema en carregar les teves entrades.'
+        error.value = 'Hi ha hagut un problema en carregar les teves entrades.'
   } finally {
     loading.value = false
   }

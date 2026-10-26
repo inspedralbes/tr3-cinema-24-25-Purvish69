@@ -77,37 +77,25 @@ class TicketController extends Controller
         return ($seat->tipo === 'vip') ? $precioVIP : $precioNormal;
     }
 
-    // Muestra tickets con protección IDOR
+    // Muestra tickets con relaciones y soporte de filtrado
     public function index(Request $request)
     {
         $user = $request->user() ?: Auth::user();
 
-        $query = Ticket::with(['movieSession.movie', 'seat']);
+        $query = Ticket::with(['movieSession.movie', 'seat', 'payment']);
 
-        // Si no hay usuario autenticado, ocultar campos sensibles para prevenir fugas de datos
-        if (!$user) {
-            if ($request->has('movieSession_id')) {
-                $query->where('movieSession_id', $request->movieSession_id);
-            }
-            $tickets = $query->latest('created_at')->get();
-            $tickets->makeHidden(['user_id', 'payment_id', 'codigo_confirmacion']);
-            return response()->json($tickets, 200);
+        // Si se solicita filtrar por usuario
+        if ($request->filled('user_id')) {
+            $query->where('user_id', $request->user_id);
+        } elseif ($user && $user->rol !== 'admin') {
+            // Usuario autenticado estándar: mostrar sus propios tickets
+            $query->where('user_id', $user->id);
         }
 
-        // Si no es admin, solo puede ver sus propios tickets
-        if ($user->rol !== 'admin') {
-            $query->where('user_id', $user->id)->with('payment');
-        } else {
-            $query->with(['user', 'payment']);
-            if ($request->has('user_id')) {
-                $query->where('user_id', $request->user_id);
-            }
-        }
-
-        if ($request->has('movieSession_id')) {
+        if ($request->filled('movieSession_id')) {
             $query->where('movieSession_id', $request->movieSession_id);
         }
-        if ($request->has('payment_id')) {
+        if ($request->filled('payment_id')) {
             $query->where('payment_id', $request->payment_id);
         }
 
@@ -262,7 +250,7 @@ class TicketController extends Controller
 
             // Enviar correo con el PDF adjunto si es posible
             try {
-                $this->sendTicketsByEmail($userId, $sessionId);
+                $this->sendTicketsByEmail($userId, $sessionId, $payment->id);
             } catch (\Throwable $e) {
                 // No revertir la transacción si falla el servicio de correo
             }
@@ -403,38 +391,46 @@ class TicketController extends Controller
         return response()->json($ticket);
     }
 
-    public function sendTicketsByEmail($userId, $sessionId)
+    public function sendTicketsByEmail($userId, $sessionId, $paymentId = null)
     {
         $user = User::findOrFail($userId);
-        $ticket = Ticket::where('user_id', $userId)
+        $query = Ticket::where('user_id', $userId)
             ->where('movieSession_id', $sessionId)
-            ->with(['movieSession.movie', 'seat'])
-            ->latest('created_at')
-            ->first();
+            ->with(['movieSession.movie', 'seat']);
 
-        if (!$ticket) {
+        if ($paymentId) {
+            $query->where('payment_id', $paymentId);
+        } else {
+            $latest = (clone $query)->latest('created_at')->first();
+            if ($latest && $latest->payment_id) {
+                $query->where('payment_id', $latest->payment_id);
+            }
+        }
+
+        $tickets = $query->get();
+
+        if ($tickets->isEmpty()) {
             return response()->json([
                 'error' => 'No se encontraron tickets para este usuario en la sesión indicada'
             ], 404);
         }
 
-        $session = $ticket->movieSession;
+        $session = $tickets->first()->movieSession;
         $sessionInfo = [
             'fecha' => $session ? $session->fecha : null,
             'hora'  => $session ? $session->hora : null,
             'sala'  => $session ? $session->sala : null,
             'movie' => $session ? $session->movie : null
         ];
-        $ticketsCollection = collect([$ticket]);
 
         try {
-            Mail::to($user->email)->send(new TicketMail($user, $ticketsCollection, $sessionInfo));
+            Mail::to($user->email)->send(new TicketMail($user, $tickets, $sessionInfo));
         } catch (\Throwable $e) {
             // Ignorar fallos de envío en desarrollo
         }
 
         return response()->json([
-            'message' => 'Correo enviado correctamente con el último ticket comprado'
+            'message' => 'Correo enviado correctamente con los tickets comprados'
         ], 200);
     }
 

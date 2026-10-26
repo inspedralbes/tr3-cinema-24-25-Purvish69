@@ -37,7 +37,7 @@ class SeatHoldController extends Controller
         $validator = Validator::make($request->all(), [
             'funcion_id' => 'required|exists:movieSessions,id',
             'asientos'   => 'required|array|min:1|max:10',
-            'asientos.*' => ['required', 'string', 'max:10', 'regex:/^[A-Za-z]+-\d+$/'],
+            'asientos.*' => ['required', 'string', 'max:10', 'regex:/^[A-Za-z]+-?\d+$/'],
             'hold_token' => 'required|string|max:64',
         ]);
 
@@ -50,17 +50,31 @@ class SeatHoldController extends Controller
         }
 
         $funcionId = (int) $request->funcion_id;
-        $asientos = array_values(array_unique(array_map('trim', (array) $request->asientos)));
+        $normalizedAsientos = [];
+        foreach ((array) $request->asientos as $a) {
+            [$fila, $numero] = $this->parseSeatCode((string) $a);
+            if ($fila && $numero !== null) {
+                $normalizedAsientos[] = "{$fila}-{$numero}";
+            }
+        }
+        $asientos = array_values(array_unique($normalizedAsientos));
+
+        if (empty($asientos)) {
+            return response()->json([
+                'status'  => 'error',
+                'message' => 'Parámetros de reserva no válidos',
+            ], 422);
+        }
+
         $holdToken = trim($request->hold_token);
 
         return DB::transaction(function () use ($funcionId, $asientos, $holdToken, $request) {
-            // 1. Borrar holds caducados de esa función
-            SeatHold::where('funcion_id', $funcionId)
-                ->where('expires_at', '<=', now())
-                ->delete();
+            // 1. Borrar todos los holds caducados globalmente
+            SeatHold::where('expires_at', '<=', now())->delete();
 
-            // 2. Comprobar límite de holds activos por token (máximo 10)
+            // 2. Comprobar límite de holds activos por token en esta función (máximo 10)
             $existingActiveHoldsCount = SeatHold::where('hold_token', $holdToken)
+                ->where('funcion_id', $funcionId)
                 ->where('expires_at', '>', now())
                 ->whereNotIn('asiento', $asientos)
                 ->count();
@@ -153,7 +167,7 @@ class SeatHoldController extends Controller
             'hold_token' => 'required|string|max:64',
             'funcion_id' => 'sometimes|exists:movieSessions,id',
             'asientos'   => 'sometimes|array',
-            'asientos.*' => ['string', 'max:10', 'regex:/^[A-Za-z]+-\d+$/'],
+            'asientos.*' => ['string', 'max:10', 'regex:/^[A-Za-z]+-?\d+$/'],
         ]);
 
         if ($validator->fails()) {
@@ -171,8 +185,14 @@ class SeatHoldController extends Controller
         }
 
         if ($request->has('asientos') && is_array($request->asientos)) {
-            $asientos = array_map('trim', $request->asientos);
-            $query->whereIn('asiento', $asientos);
+            $normalizedAsientos = [];
+            foreach ($request->asientos as $a) {
+                [$fila, $numero] = $this->parseSeatCode((string) $a);
+                if ($fila && $numero !== null) {
+                    $normalizedAsientos[] = "{$fila}-{$numero}";
+                }
+            }
+            $query->whereIn('asiento', $normalizedAsientos);
         }
 
         $deletedCount = $query->delete();
@@ -193,9 +213,8 @@ class SeatHoldController extends Controller
         $holdToken = $request->query('hold_token', '');
         $funcionId = (int) $id;
 
-        // Limpiar holds caducados antes de responder
-        SeatHold::where('funcion_id', $funcionId)
-            ->where('expires_at', '<=', now())
+        // Limpiar holds caducados globalmente antes de responder
+        SeatHold::where('expires_at', '<=', now())
             ->delete();
 
         // 1. Asientos comprados de la sesión

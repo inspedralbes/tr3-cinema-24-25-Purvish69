@@ -1,5 +1,7 @@
 <?php
 
+require_once __DIR__ . '/openssl_polyfill.php';
+
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
@@ -13,6 +15,12 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware) {
+        // Desactivar encriptación de cookies si el entorno carece de la extensión nativa de OpenSSL
+        $middleware->web(remove: [
+            \Illuminate\Cookie\Middleware\EncryptCookies::class,
+        ]);
+        $middleware->encryptCookies(except: ['*']);
+
         $middleware->alias([
             'admin' => \App\Http\Middleware\AdminCheck::class,
         ]);

@@ -593,7 +593,7 @@ const formattedHoldTime = computed(() => {
 
 // Código representativo del asiento ej: "A-1"
 const getSeatCode = (seat) => {
-  return seat ? `${seat.fila}-${seat.numero}` : ''
+  return seat && seat.fila && seat.numero ? `${seat.fila}-${seat.numero}` : ''
 }
 
 const isSeatBought = (seat) => {
@@ -678,7 +678,7 @@ const formatDate = (dateString) => {
 // 2. Al seleccionar un asiento, llama a POST /holds. Si responde 409, no lo selecciona
 // y muestra: "Este asiento está en proceso de reserva por otro usuario". Al deseleccionar, DELETE /holds.
 const toggleSeat = async (seat) => {
-  if (!seat) return
+  if (!seat || !seat.fila || !seat.numero) return
   if (!selectedSession.value?.id) return
 
   // Si ya está comprado, no hacer nada
@@ -691,6 +691,7 @@ const toggleSeat = async (seat) => {
   }
 
   const seatCode = getSeatCode(seat)
+  if (!seatCode) return
   const isSelected = isSeatSelected(seat)
 
   if (isSelected) {
@@ -800,7 +801,7 @@ const fetchAsientosStatus = async () => {
         const isHeldByOtherUser = heldByOtherSeats.value.includes(code)
         const isStillHeldByMe = myHoldSeats.value.includes(code)
 
-        if (isBought || isHeldByOtherUser || (!isStillHeldByMe && myHoldSeats.value.length >= 0)) {
+        if (isBought || isHeldByOtherUser || (!isStillHeldByMe && myHoldSeats.value.length > 0)) {
           expiredSeats.push(code)
         } else {
           remaining.push(seat)
