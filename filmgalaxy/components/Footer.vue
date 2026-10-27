@@ -446,27 +446,6 @@ const scrollToTop = () => {
   color: #F2E9E4;
 }
 
-.footer-badges {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-}
-
-.tech-badge {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.3rem;
-  background: rgba(255, 255, 255, 0.035);
-  border: 1px solid rgba(255, 255, 255, 0.07);
-  padding: 0.2rem 0.5rem;
-  border-radius: 6px;
-  color: #9A8C98;
-  font-size: 0.72rem;
-}
-
-.tech-badge i {
-  color: #C8A96E;
-}
 
 .back-to-top-btn {
   width: 30px;
@@ -510,9 +489,5 @@ const scrollToTop = () => {
     text-align: center;
   }
 
-  .footer-badges {
-    flex-wrap: wrap;
-    justify-content: center;
-  }
 }
 </style>
