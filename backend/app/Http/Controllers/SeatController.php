@@ -25,7 +25,7 @@ class SeatController extends Controller
     // Crear un nuevo asiento (solo admin)
     public function store(Request $request)
     {
-        $user = $request->user() ?: Auth::user();
+        $user = $request->user();
         if (!$user || $user->rol !== 'admin') {
             return response()->json(['message' => 'Acceso denegado. Se requiere rol de administrador.'], 403);
         }
@@ -69,7 +69,7 @@ class SeatController extends Controller
     // Actualizar un asiento (solo admin)
     public function update(Request $request, $id)
     {
-        $user = $request->user() ?: Auth::user();
+        $user = $request->user();
         if (!$user || $user->rol !== 'admin') {
             return response()->json(['message' => 'Acceso denegado. Se requiere rol de administrador.'], 403);
         }
@@ -100,7 +100,7 @@ class SeatController extends Controller
     // Eliminar un asiento (solo admin)
     public function destroy(Request $request, $id)
     {
-        $user = $request->user() ?: Auth::user();
+        $user = $request->user();
         if (!$user || $user->rol !== 'admin') {
             return response()->json(['message' => 'Acceso denegado. Se requiere rol de administrador.'], 403);
         }

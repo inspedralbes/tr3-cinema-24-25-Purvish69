@@ -231,11 +231,14 @@
             background: rgba(255, 255, 255, 0.07);
         }
 
-        .input-wrapper i {
+        .input-wrapper .input-icon {
             position: absolute;
             left: 14px;
+            top: 50%;
+            transform: translateY(-50%);
             color: #9A8C98;
             font-size: 1.25rem;
+            pointer-events: none;
         }
 
         .form-control {
@@ -245,7 +248,7 @@
             outline: none;
             color: #F2E9E4;
             font-size: 0.95rem;
-            padding: 0.9rem 1rem 0.9rem 46px;
+            padding: 0.9rem 46px 0.9rem 46px;
         }
 
         .form-control::placeholder {
@@ -253,13 +256,28 @@
         }
 
         .toggle-pwd {
+            position: absolute;
+            right: 12px;
+            top: 50%;
+            transform: translateY(-50%);
             background: transparent;
             border: none;
             color: #9A8C98;
             font-size: 1.25rem;
-            padding: 0 14px;
+            padding: 6px 8px;
             cursor: pointer;
             transition: color 0.2s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 5;
+        }
+
+        .toggle-pwd i {
+            position: static;
+            transform: none;
+            color: inherit;
+            font-size: 1.25rem;
         }
 
         .toggle-pwd:hover {
@@ -399,7 +417,7 @@
                 <div class="form-group">
                     <label for="email" class="form-label">Correu electrònic</label>
                     <div class="input-wrapper">
-                        <i class="mdi mdi-email-outline"></i>
+                        <i class="mdi mdi-email-outline input-icon"></i>
                         <input type="email" class="form-control" id="email" name="email"
                             placeholder="administrador@filmgalaxy.cat" required autocomplete="email">
                     </div>
@@ -408,10 +426,10 @@
                 <div class="form-group">
                     <label for="password" class="form-label">Contrasenya</label>
                     <div class="input-wrapper">
-                        <i class="mdi mdi-lock-outline"></i>
+                        <i class="mdi mdi-lock-outline input-icon"></i>
                         <input type="password" class="form-control" id="password" name="password"
                             placeholder="••••••••" required autocomplete="current-password">
-                        <button type="button" class="toggle-pwd" id="togglePasswordBtn">
+                        <button type="button" class="toggle-pwd" id="togglePasswordBtn" aria-label="Mostrar o amagar contrasenya">
                             <i class="mdi mdi-eye-outline" id="toggleIcon"></i>
                         </button>
                     </div>

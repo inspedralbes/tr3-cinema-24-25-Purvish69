@@ -9,17 +9,31 @@ export const usePeliculas = () => {
 
   // Función para obtener el token de autenticación
   const getAuthToken = () => {
+    // 1. Intentar desde useCookie de Nuxt
+    try {
+      const cookieToken = useCookie('token').value
+      if (cookieToken) {
+        return typeof cookieToken === 'string' ? cookieToken.replace(/^"(.*)"$/, '$1') : cookieToken
+      }
+    } catch (e) {}
+
     if (typeof window !== 'undefined') {
-      const localToken = localStorage.getItem('token')
+      // 2. Intentar desde localStorage
+      let localToken = localStorage.getItem('token')
       if (localToken) {
-        return localToken
+        return localToken.replace(/^"(.*)"$/, '$1')
       }
 
+      // 3. Fallback a document.cookie
       const cookies = document.cookie.split(';')
       for (const cookie of cookies) {
-        const [name, value] = cookie.trim().split('=')
+        const [name, ...valParts] = cookie.trim().split('=')
         if (name === 'token') {
-          return value
+          let val = valParts.join('=')
+          try {
+            val = decodeURIComponent(val)
+          } catch (e) {}
+          return val.replace(/^"(.*)"$/, '$1')
         }
       }
     }
@@ -193,16 +207,23 @@ export const usePeliculas = () => {
         headers['Authorization'] = `Bearer ${token}`
       }
 
-      let url = `${API_URL}/tickets`
-      if (userId) {
-        url += `?user_id=${encodeURIComponent(userId)}`
-      }
+      let url = userId
+        ? `${API_URL}/tickets/user/${encodeURIComponent(userId)}/complete`
+        : `${API_URL}/user/tickets`
 
-      const response = await fetch(url, {
+      let response = await fetch(url, {
         method: 'GET',
         headers,
         credentials: 'include'
       })
+
+      if (!response.ok && userId) {
+        response = await fetch(`${API_URL}/tickets?user_id=${encodeURIComponent(userId)}`, {
+          method: 'GET',
+          headers,
+          credentials: 'include'
+        })
+      }
 
       if (!response.ok) {
         const data = await response.json().catch(() => ({}))

@@ -108,11 +108,11 @@
                     <span>Butaques numerades i so Dolby Atmos</span>
                   </div>
                   <button 
-                    @click="goToBuy(movie.id)" 
+                    @click="goToSessions(movie.id)"
                     class="px-6 py-3.5 bg-gradient-to-r from-[#D4AF37] to-[#C8A96E] hover:from-[#E5C158] hover:to-[#D4AF37] text-[#0c0e1a] font-bold rounded-xl shadow-lg shadow-gold/20 hover:shadow-gold/40 transition-all duration-300 transform hover:-translate-y-0.5 flex items-center gap-2 cursor-pointer"
                   >
-                    <i class="mdi mdi-ticket-confirmation-outline text-xl"></i>
-                    <span>Comprar Entrades</span>
+                    <i class="mdi mdi-calendar-clock text-xl"></i>
+                    <span>Veure Sessions</span>
                   </button>
                 </div>
               </div>
@@ -188,7 +188,7 @@ onMounted(() => {
   fetchMovieDetails();
 });
 
-const goToBuy = (id) => {
-  router.push(`/billets/${id}`);
+const goToSessions = (id) => {
+  router.push({ path: '/movieDetails/moviSession', query: { movieId: id } });
 };
 </script>

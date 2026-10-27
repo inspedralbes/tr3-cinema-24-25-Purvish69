@@ -23,7 +23,7 @@ class TicketController extends Controller
     // Obtiene los tickets del usuario autenticado
     public function getUserTickets(Request $request)
     {
-        $user = $request->user() ?: Auth::user();
+        $user = $request->user();
         if (!$user) {
             return response()->json(['message' => 'No autenticado'], 401);
         }
@@ -39,7 +39,7 @@ class TicketController extends Controller
     public function getSessionTickets(Request $request, $sessionId)
     {
         try {
-            $user = $request->user() ?: Auth::user();
+            $user = $request->user();
             $tickets = Ticket::where('movieSession_id', $sessionId)
                 ->with(['seat'])
                 ->get();
@@ -80,12 +80,15 @@ class TicketController extends Controller
     // Muestra tickets con relaciones y soporte de filtrado
     public function index(Request $request)
     {
-        $user = $request->user() ?: Auth::user();
+        $user = $request->user() ?: auth('sanctum')->user();
 
         $query = Ticket::with(['movieSession.movie', 'seat', 'payment']);
 
         // Si se solicita filtrar por usuario
         if ($request->filled('user_id')) {
+            if (!$user || ($user->id != $request->user_id && $user->rol !== 'admin')) {
+                return response()->json(['message' => 'Acceso no autorizado'], 403);
+            }
             $query->where('user_id', $request->user_id);
         } elseif ($user && $user->rol !== 'admin') {
             // Usuario autenticado estándar: mostrar sus propios tickets
@@ -122,7 +125,7 @@ class TicketController extends Controller
         }
 
         // Determinar user_id de forma segura desde autenticación
-        $authUser = $request->user() ?: Auth::user();
+        $authUser = $request->user();
         $userId = $authUser ? $authUser->id : (int) $request->user_id;
 
         if (!$userId || !User::where('id', $userId)->exists()) {
@@ -275,7 +278,7 @@ class TicketController extends Controller
             ], 404);
         }
 
-        $user = $request->user() ?: Auth::user();
+        $user = $request->user();
         if ($user && $ticket->user_id !== $user->id && $user->rol !== 'admin') {
             return response()->json(['message' => 'Acceso no autorizado al ticket'], 403);
         }
@@ -286,7 +289,7 @@ class TicketController extends Controller
     // Actualiza un ticket existente (solo administradores)
     public function update(Request $request, $id)
     {
-        $user = $request->user() ?: Auth::user();
+        $user = $request->user();
         if (!$user || $user->rol !== 'admin') {
             return response()->json(['message' => 'Acceso denegado. Se requiere rol de administrador.'], 403);
         }
@@ -311,8 +314,8 @@ class TicketController extends Controller
     // Elimina un ticket y libera la butaca asociada (solo administradores)
     public function destroy(Request $request, $id)
     {
-        $user = $request->user() ?: Auth::user();
-        if ($user && $user->rol !== 'admin') {
+        $user = $request->user();
+        if (!$user || $user->rol !== 'admin') {
             return response()->json(['message' => 'Acceso denegado. Se requiere rol de administrador.'], 403);
         }
 
@@ -358,8 +361,8 @@ class TicketController extends Controller
     // Obtiene todos los tickets de un usuario con protección contra IDOR
     public function getUserTicketsComplete(Request $request, $userId)
     {
-        $user = $request->user() ?: Auth::user();
-        if ($user && $user->id != $userId && $user->rol !== 'admin') {
+        $user = $request->user();
+        if ($user->id != $userId && $user->rol !== 'admin') {
             return response()->json(['message' => 'Acceso no autorizado a las entradas del usuario'], 403);
         }
 
@@ -383,8 +386,8 @@ class TicketController extends Controller
             ], 404);
         }
 
-        $user = $request->user() ?: Auth::user();
-        if ($user && $ticket->user_id !== $user->id && $user->rol !== 'admin') {
+        $user = $request->user();
+        if ($ticket->user_id !== $user->id && $user->rol !== 'admin') {
             return response()->json(['message' => 'Acceso no autorizado al ticket'], 403);
         }
 
@@ -393,6 +396,11 @@ class TicketController extends Controller
 
     public function sendTicketsByEmail($userId, $sessionId, $paymentId = null)
     {
+        $authUser = request()->user();
+        if ($authUser && $authUser->id != $userId && $authUser->rol !== 'admin') {
+            return response()->json(['message' => 'No autorizado para enviar tickets de otro usuario'], 403);
+        }
+
         $user = User::findOrFail($userId);
         $query = Ticket::where('user_id', $userId)
             ->where('movieSession_id', $sessionId)

@@ -32,8 +32,15 @@ Route::middleware(['throttle:api'])->group(function () {
         // Listado de usuarios: solo accesible por administradores
         Route::get('/users-list', [UserController::class, 'index'])->middleware('admin');
 
-        // Entradas del usuario autenticado
+        // Entradas del usuario autenticado y protección IDOR
         Route::get('/user/tickets', [TicketController::class, 'getUserTickets']);
+        Route::get('/tickets/user/{userId}/complete', [TicketController::class, 'getUserTicketsComplete']);
+        Route::get('/tickets/{id}/with-user', [TicketController::class, 'showWithUser']);
+        Route::post('/tickets/send-email/{userId}/{sessionId}', [TicketController::class, 'sendTicketsByEmail']);
+
+        // Pagos del usuario autenticado (protección IDOR)
+        Route::get('/payments', [PaymentController::class, 'index']);
+        Route::get('/payments/{id}', [PaymentController::class, 'show']);
     });
 
     // 2. PELÍCULAS (Consulta pública, gestión protegida para admin)
@@ -86,22 +93,16 @@ Route::middleware(['throttle:api'])->group(function () {
         Route::post('/payments', [PaymentController::class, 'store']);
     });
 
-    // Rutas de tickets con protección IDOR
+    // Rutas públicas de consulta de tickets
     Route::get('/tickets', [TicketController::class, 'index']);
     Route::get('/tickets/{id}', [TicketController::class, 'show']);
-    Route::get('/tickets/{id}/with-user', [TicketController::class, 'showWithUser']);
-    Route::get('/tickets/user/{userId}/complete', [TicketController::class, 'getUserTicketsComplete']);
-    Route::post('/tickets/send-email/{userId}/{sessionId}', [TicketController::class, 'sendTicketsByEmail']);
 
     Route::middleware(['auth:sanctum', 'admin'])->group(function () {
         Route::put('/tickets/{id}', [TicketController::class, 'update']);
         Route::delete('/tickets/{id}', [TicketController::class, 'destroy']);
     });
 
-    // 7. PAGOS (Protección IDOR y roles)
-    Route::get('/payments', [PaymentController::class, 'index']);
-    Route::get('/payments/{id}', [PaymentController::class, 'show']);
-
+    // 7. PAGOS (Gestión administrativa)
     Route::middleware(['auth:sanctum', 'admin'])->group(function () {
         Route::put('/payments/{id}', [PaymentController::class, 'update']);
         Route::delete('/payments/{id}', [PaymentController::class, 'destroy']);

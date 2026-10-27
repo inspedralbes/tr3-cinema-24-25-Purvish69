@@ -710,7 +710,11 @@ onMounted(async () => {
     const allTickets = await getTickets(userIdValue)
 
     if (!allTickets || allTickets.error) {
-            error.value = "Error en connectar amb el servidor d'entrades. Si us plau, torna-ho a provar."
+      if (allTickets?.error?.includes('Unauthenticated') || allTickets?.error?.includes('No autenticado') || allTickets?.error?.includes('Acceso no autorizado')) {
+        error.value = "La teva sessió ha caducat o no tens permisos. Si us plau, torna a iniciar sessió."
+      } else {
+        error.value = "Error en connectar amb el servidor d'entrades. Si us plau, torna-ho a provar."
+      }
       loading.value = false
       return
     }

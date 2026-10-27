@@ -13,7 +13,7 @@ class PaymentController extends Controller
     // Mostrar pagos (solo del usuario autenticado a menos que sea admin)
     public function index(Request $request)
     {
-        $user = $request->user() ?: Auth::user();
+        $user = $request->user();
         if (!$user) {
             return response()->json(['message' => 'No autenticado'], 401);
         }
@@ -33,7 +33,7 @@ class PaymentController extends Controller
     // Crear un pago seguro
     public function store(Request $request)
     {
-        $user = $request->user() ?: Auth::user();
+        $user = $request->user();
         $userId = $user ? $user->id : $request->input('user_id');
 
         $validator = Validator::make($request->all(), [
@@ -76,10 +76,10 @@ class PaymentController extends Controller
     // Mostrar un pago asegurando autorización
     public function show(Request $request, $id)
     {
-        $user = $request->user() ?: Auth::user();
+        $user = $request->user();
         $payment = Payment::with(['user', 'ticket.movieSession.movie'])->findOrFail($id);
 
-        if ($user && $payment->user_id !== $user->id && $user->rol !== 'admin') {
+        if ($payment->user_id !== $user->id && $user->rol !== 'admin') {
             return response()->json(['message' => 'Acceso no autorizado al pago'], 403);
         }
 
@@ -89,7 +89,7 @@ class PaymentController extends Controller
     // Actualizar un pago (solo admin)
     public function update(Request $request, Payment $payment)
     {
-        $user = $request->user() ?: Auth::user();
+        $user = $request->user();
         if (!$user || $user->rol !== 'admin') {
             return response()->json(['message' => 'Acceso denegado'], 403);
         }
@@ -111,7 +111,7 @@ class PaymentController extends Controller
     // Eliminar un pago (solo admin)
     public function destroy(Request $request, Payment $payment)
     {
-        $user = $request->user() ?: Auth::user();
+        $user = $request->user();
         if (!$user || $user->rol !== 'admin') {
             return response()->json(['message' => 'Acceso denegado'], 403);
         }

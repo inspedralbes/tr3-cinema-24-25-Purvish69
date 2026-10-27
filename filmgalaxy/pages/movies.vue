@@ -150,10 +150,6 @@
                     <i class="mdi mdi-information-outline"></i>
                     <span>Detalls</span>
                   </button>
-                  <button @click="goToBuy(movie.id)" class="btn-buy">
-                    <i class="mdi mdi-ticket-confirmation-outline"></i>
-                    <span>Comprar</span>
-                  </button>
                 </div>
               </div>
             </div>
@@ -235,10 +231,6 @@ const truncateSynopsis = (text, maxLen = 100) => {
 
 const goToDetails = (id) => {
   router.push(`/movieDetails/${id}`);
-};
-
-const goToBuy = (id) => {
-  router.push(`/comprarEntrada/${id}`);
 };
 </script>
 
@@ -820,45 +812,28 @@ const goToBuy = (id) => {
   padding-top: 0.4rem;
 }
 
-.btn-details,
-.btn-buy {
-  flex: 1;
+.btn-details {
+  width: 100%;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 0.35rem;
-  padding: 0.62rem 0.5rem;
+  gap: 0.45rem;
+  padding: 0.7rem 0.5rem;
   border-radius: 12px;
-  font-size: 0.85rem;
+  font-size: 0.88rem;
   font-weight: 700;
   cursor: pointer;
-  border: none;
-  transition: all 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
-}
-
-.btn-details {
   background: rgba(255, 255, 255, 0.07);
   border: 1px solid rgba(255, 255, 255, 0.14);
   color: #F2E9E4;
+  transition: all 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
 .btn-details:hover {
-  background: rgba(255, 255, 255, 0.14);
+  background: rgba(200, 169, 110, 0.15);
   border-color: rgba(200, 169, 110, 0.5);
   color: #F5D78E;
   transform: translateY(-1px);
-}
-
-.btn-buy {
-  background: linear-gradient(135deg, #F5D78E 0%, #C8A96E 100%);
-  color: #121526;
-  box-shadow: 0 4px 12px rgba(200, 169, 110, 0.3);
-}
-
-.btn-buy:hover {
-  background: linear-gradient(135deg, #FFF0B8 0%, #D4B679 100%);
-  box-shadow: 0 6px 18px rgba(200, 169, 110, 0.5);
-  transform: translateY(-2px);
 }
 
 /* ─── RESPONSIVE TWEAKS ──────────────────────────────────────────────────────── */
@@ -885,10 +860,9 @@ const goToBuy = (id) => {
     font-size: 0.95rem;
   }
 
-  .btn-details,
-  .btn-buy {
-    font-size: 0.8rem;
-    padding: 0.55rem 0.35rem;
+  .btn-details {
+    font-size: 0.82rem;
+    padding: 0.6rem 0.4rem;
   }
 }
 

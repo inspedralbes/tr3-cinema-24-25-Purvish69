@@ -18,7 +18,7 @@ class UserController extends Controller
     public function index(Request $request)
     {
         if ($request->wantsJson() || $request->is('api/*')) {
-            $authUser = $request->user() ?: Auth::user();
+            $authUser = $request->user();
             if (!$authUser || $authUser->rol !== 'admin') {
                 return response()->json(['message' => 'Acceso denegado. Se requiere rol de administrador.'], 403);
             }
@@ -56,7 +56,14 @@ class UserController extends Controller
             'telefono' => $request->telefono,
             'password' => Hash::make($request->password),
         ]);
-        $user->rol = 'user';
+        
+        $authUser = $request->user();
+        if ($request->has('rol') && $authUser && $authUser->rol === 'admin') {
+            $user->rol = in_array($request->rol, ['admin', 'user']) ? $request->rol : 'user';
+        } else {
+            $user->rol = 'user';
+        }
+        
         $user->save();
 
         return redirect()->route('users.index')->with('success', 'Usuario creado con éxito.');
@@ -182,7 +189,7 @@ class UserController extends Controller
     // Mostrar usuario por ID (para API) con validación de autorización
     public function show(Request $request, $id)
     {
-        $authUser = $request->user() ?: Auth::user();
+        $authUser = $request->user();
         if (!$authUser || ($authUser->id != $id && $authUser->rol !== 'admin')) {
             return response()->json(['message' => 'Acceso no autorizado.'], 403);
         }
@@ -195,9 +202,9 @@ class UserController extends Controller
     public function update(Request $request, $id)
     {
         $user = User::findOrFail($id);
-        $authUser = $request->user() ?: Auth::user();
+        $authUser = $request->user();
 
-        if ($authUser && $authUser->id != $user->id && $authUser->rol !== 'admin') {
+        if (!$authUser || ($authUser->id != $user->id && $authUser->rol !== 'admin')) {
             return response()->json(['message' => 'No autorizado'], 403);
         }
 
@@ -240,9 +247,9 @@ class UserController extends Controller
     public function destroy(Request $request, $id)
     {
         $user = User::findOrFail($id);
-        $authUser = $request->user() ?: Auth::user();
+        $authUser = $request->user();
 
-        if ($authUser && $authUser->id != $user->id && $authUser->rol !== 'admin') {
+        if (!$authUser || ($authUser->id != $user->id && $authUser->rol !== 'admin')) {
             return response()->json(['message' => 'No autorizado'], 403);
         }
 
