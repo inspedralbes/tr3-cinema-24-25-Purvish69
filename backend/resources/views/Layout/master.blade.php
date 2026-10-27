@@ -319,13 +319,19 @@
       </div>
     </div>
   </nav>
-      </div>
-    </div>
-  </nav>
 
   <main class="py-4">
     @yield('content')
   </main>
+
+  <footer class="text-center py-4" style="font-size: 0.82rem;">
+    <div class="container">
+      <div class="d-inline-flex align-items-center gap-2 px-3 py-1.5 rounded-pill" style="background: rgba(22, 26, 46, 0.85); border: 1px solid rgba(200, 169, 110, 0.3); color: #EAE0D5;">
+        <i class="bi bi-info-circle-fill text-warning"></i>
+        <span><strong>FilmGalaxy Admin</strong> &bull; Projecte Acadèmic DAW (Sense validesa comercial)</span>
+      </div>
+    </div>
+  </footer>
 
   <!-- Bootstrap JS Bundle -->
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js"></script>

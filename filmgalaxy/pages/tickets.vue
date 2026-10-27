@@ -84,6 +84,17 @@
               <div class="glass-effect rounded-xl p-6">
                 <h2 class="text-xl font-semibold text-gold mb-6">Información de pago</h2>
 
+                <!-- Demo Project Notice Alert -->
+                <v-alert
+                  type="warning"
+                  variant="tonal"
+                  density="comfortable"
+                  class="mb-6 text-sm font-medium"
+                  icon="mdi-alert-circle-outline"
+                >
+                  Demo: no se realiza ningún cobro real. No introduzcas datos de tarjeta ni información personal real.
+                </v-alert>
+
                 <form @submit.prevent="processPayment" class="space-y-6">
                   <!-- Método de pago -->
                   <div class="space-y-2">
@@ -106,6 +117,12 @@
 
                   <!-- Formulario de tarjeta de crédito -->
                   <div v-if="paymentMethod === 'card'" class="space-y-4">
+                    <div class="p-3 bg-yellow-500/10 border border-yellow-500/30 rounded-lg text-xs text-yellow-200/90 flex items-center gap-2">
+                      <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-yellow-400 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      </svg>
+                      <span><strong>Simulación de pago:</strong> Puedes usar datos de prueba (ej: 4000 1234 5678 9010). Los datos de tarjeta no se guardan ni se envían al servidor.</span>
+                    </div>
                     <div class="space-y-2">
                       <label for="cardHolder" class="block text-light text-sm font-medium">Titular de la tarjeta</label>
                       <input id="cardHolder" v-model="cardInfo.holder" type="text"

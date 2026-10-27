@@ -1,9 +1,10 @@
 <template>
   <footer class="cinema-footer">
-    <!-- Top Ambient Accent Line -->
+    <!-- Top Accent Line -->
     <div class="footer-ambient-line"></div>
 
     <div class="footer-container">
+      <!-- 4 Columnas Compactas con Toda la Información -->
       <div class="footer-grid">
         <!-- Columna 1: Brand & Descripció -->
         <div class="footer-col brand-col">
@@ -15,7 +16,7 @@
             />
           </NuxtLink>
           <p class="brand-description">
-            El teu cinema galàctic de referència. Gaudeix de les millors estrenes a la gran pantalla amb butaques VIP reclinables i so envoltant d'última generació.
+            El teu cinema galàctic de referència. Estrenes a la gran pantalla amb butaques VIP i so envoltant d'última generació.
           </p>
           <div class="social-links-row">
             <a href="https://github.com/inspedralbes/tr3-cinema-24-25-Purvish69" target="_blank" rel="noopener" class="social-icon" title="GitHub">
@@ -49,7 +50,7 @@
             <li>
               <NuxtLink to="/movies" class="footer-link">
                 <i class="mdi mdi-chevron-right"></i>
-                Cartellera de Pel·lícules
+                Cartellera
               </NuxtLink>
             </li>
             <li>
@@ -83,7 +84,7 @@
             <!-- Dia de l'Espectador -->
             <div class="price-mini-card highlight">
               <div class="price-header">
-                <strong>Dimecres (Dia d'Espectador)</strong>
+                <strong>Dimecres (Dia Espectador)</strong>
                 <span class="badge-promo">-30%</span>
               </div>
               <div class="price-body">
@@ -95,7 +96,7 @@
             <!-- Cap de setmana / Normal -->
             <div class="price-mini-card">
               <div class="price-header">
-                <strong>Tarifa Normal & Caps de Setmana</strong>
+                <strong>Tarifa Normal & Caps Setmana</strong>
               </div>
               <div class="price-body">
                 <span>Normal: <strong>6,00€</strong></span>
@@ -122,32 +123,42 @@
             </li>
             <li class="contact-item">
               <i class="mdi mdi-map-marker-outline"></i>
-              <span>Carrer Gran Via de les Corts Catalanes, Barcelona</span>
+              <span>Gran Via de les Corts Catalanes, Barcelona</span>
             </li>
             <li class="contact-item">
               <i class="mdi mdi-clock-time-four-outline"></i>
-              <span>Dilluns a Diumenge: 15:30h - 23:30h</span>
+              <span>Dilluns - Diumenge: 16:00 - 23:30</span>
             </li>
           </ul>
         </div>
       </div>
 
-      <!-- Bottom Bar -->
+      <!-- Franja d'Avís Demo Educatiu -->
+      <div class="academic-disclaimer-compact">
+        <div class="disclaimer-icon">
+          <i class="mdi mdi-school-outline"></i>
+        </div>
+        <div class="disclaimer-text">
+          <span class="disclaimer-badge">AVÍS DE PROJECTE DEMO</span>
+          <p>
+            FilmGalaxy és un projecte educatiu de portfolio (DAW Pedralbes). No és un cinema real ni una web oficial. No es realitza cap cobrament real ni les entrades tenen validesa.
+          </p>
+        </div>
+      </div>
+
+      <!-- Barra Inferior de Copyright & Badges -->
       <div class="footer-bottom">
         <p class="copyright-text">
-          &copy; {{ new Date().getFullYear() }} <strong>FilmGalaxy</strong>. Tots els drets reservats.
+          &copy; {{ new Date().getFullYear() }} <strong>FilmGalaxy</strong> &bull; Projecte Desenvolupament d'Aplicacions Web
         </p>
-        <div class="footer-badges">
-          <span class="tech-badge">
-            <i class="mdi mdi-dolby"></i>
-            Dolby Atmos & 4K
-          </span>
-          <span class="tech-badge">
-            <i class="mdi mdi-star-shooting"></i>
-            Projecte DAW Cinema
-          </span>
-        </div>
-        <button type="button" class="back-to-top-btn" @click="scrollToTop" title="Tornar a dalt">
+
+        <button 
+          type="button"
+          class="back-to-top-btn" 
+          @click="scrollToTop" 
+          title="Tornar a dalt"
+          aria-label="Tornar a dalt"
+        >
           <i class="mdi mdi-arrow-up"></i>
         </button>
       </div>
@@ -158,19 +169,21 @@
 <script setup>
 const scrollToTop = () => {
   if (typeof window !== 'undefined') {
-    window.scrollTo({ top: 0, behavior: 'smooth' })
+    window.scrollTo({
+      top: 0,
+      behavior: 'smooth'
+    })
   }
 }
 </script>
 
 <style scoped>
-/* Main Footer */
 .cinema-footer {
-  position: relative;
-  background: linear-gradient(180deg, #101426 0%, #080a14 100%);
-  color: #F2E9E4;
-  overflow: hidden;
+  background: #090c18;
   border-top: 1px solid rgba(255, 255, 255, 0.08);
+  color: #EAE0D5;
+  position: relative;
+  font-family: inherit;
 }
 
 .footer-ambient-line {
@@ -182,20 +195,21 @@ const scrollToTop = () => {
   background: linear-gradient(90deg, transparent 0%, rgba(200, 169, 110, 0.4) 50%, transparent 100%);
 }
 
+/* Espaiat global compactat: padding reduït de 4rem a 1.75rem */
 .footer-container {
-  max-width: 1350px;
+  max-width: 1320px;
   margin: 0 auto;
-  padding: 4rem 1.5rem 2rem 1.5rem;
+  padding: 1.75rem 1.25rem 1rem 1.25rem;
 }
 
+/* Grid de 4 columnes amb separació ajustada */
 .footer-grid {
   display: grid;
-  grid-template-columns: 1.3fr 0.9fr 1.1fr 1fr;
-  gap: 2.5rem;
-  margin-bottom: 3.5rem;
+  grid-template-columns: 1.25fr 0.9fr 1.1fr 1.15fr;
+  gap: 1.5rem;
+  margin-bottom: 1.25rem;
 }
 
-/* Column general */
 .footer-col {
   display: flex;
   flex-direction: column;
@@ -204,48 +218,48 @@ const scrollToTop = () => {
 .col-title {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
-  font-size: 1.1rem;
+  gap: 0.4rem;
+  font-size: 0.95rem;
   font-weight: 700;
   color: #F2E9E4;
-  margin-bottom: 1.25rem;
+  margin-bottom: 0.75rem;
   letter-spacing: 0.3px;
 }
 
 .col-title i {
   color: #C8A96E;
-  font-size: 1.25rem;
+  font-size: 1.1rem;
 }
 
-/* Brand Column */
+/* Logo & Descripció */
 .footer-logo-link {
   display: inline-block;
-  margin-bottom: 1rem;
+  margin-bottom: 0.5rem;
 }
 
 .footer-logo {
-  height: 48px;
+  height: 32px;
   width: auto;
   object-fit: contain;
-  filter: drop-shadow(0 2px 8px rgba(200, 169, 110, 0.3));
+  filter: drop-shadow(0 2px 6px rgba(200, 169, 110, 0.25));
 }
 
 .brand-description {
   color: #9A8C98;
-  font-size: 0.9rem;
-  line-height: 1.6;
-  margin-bottom: 1.5rem;
+  font-size: 0.82rem;
+  line-height: 1.45;
+  margin-bottom: 0.75rem;
 }
 
 .social-links-row {
   display: flex;
   align-items: center;
-  gap: 0.75rem;
+  gap: 0.5rem;
 }
 
 .social-icon {
-  width: 38px;
-  height: 38px;
+  width: 30px;
+  height: 30px;
   border-radius: 50%;
   background: rgba(255, 255, 255, 0.05);
   border: 1px solid rgba(255, 255, 255, 0.1);
@@ -253,9 +267,9 @@ const scrollToTop = () => {
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 1.15rem;
+  font-size: 0.95rem;
   text-decoration: none;
-  transition: all 0.25s ease;
+  transition: all 0.2s ease;
 }
 
 .social-icon:hover {
@@ -263,86 +277,85 @@ const scrollToTop = () => {
   border-color: #C8A96E;
   color: #F5D78E;
   transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(200, 169, 110, 0.25);
 }
 
-/* Navigation Links */
+/* Enllaços Explora */
 .footer-links-list {
   list-style: none;
   padding: 0;
   margin: 0;
   display: flex;
   flex-direction: column;
-  gap: 0.65rem;
+  gap: 0.4rem;
 }
 
 .footer-link {
   display: inline-flex;
   align-items: center;
-  gap: 0.35rem;
+  gap: 0.25rem;
   color: #9A8C98;
   text-decoration: none;
-  font-size: 0.925rem;
-  transition: all 0.25s ease;
+  font-size: 0.84rem;
+  transition: all 0.2s ease;
 }
 
 .footer-link i {
   color: #6c7293;
-  font-size: 1rem;
+  font-size: 0.95rem;
   transition: transform 0.2s ease, color 0.2s ease;
 }
 
 .footer-link:hover {
   color: #F5D78E;
-  transform: translateX(4px);
+  transform: translateX(3px);
 }
 
 .footer-link:hover i {
   color: #C8A96E;
 }
 
-/* Pricing Mini Cards */
+/* Targetes de Tarifes compactades */
 .pricing-cards {
   display: flex;
   flex-direction: column;
-  gap: 0.75rem;
+  gap: 0.45rem;
 }
 
 .price-mini-card {
-  background: rgba(255, 255, 255, 0.035);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 14px;
-  padding: 0.85rem 1rem;
-  transition: all 0.25s ease;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  border-radius: 10px;
+  padding: 0.5rem 0.75rem;
+  transition: all 0.2s ease;
 }
 
 .price-mini-card.highlight {
-  background: rgba(200, 169, 110, 0.08);
-  border-color: rgba(200, 169, 110, 0.3);
+  background: rgba(200, 169, 110, 0.07);
+  border-color: rgba(200, 169, 110, 0.25);
 }
 
 .price-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 0.4rem;
-  font-size: 0.85rem;
+  margin-bottom: 0.25rem;
+  font-size: 0.8rem;
   color: #F2E9E4;
 }
 
 .badge-promo {
   background: linear-gradient(135deg, #F5D78E 0%, #C8A96E 100%);
   color: #121526;
-  font-size: 0.7rem;
+  font-size: 0.65rem;
   font-weight: 800;
-  padding: 0.15rem 0.5rem;
+  padding: 0.1rem 0.4rem;
   border-radius: 9999px;
 }
 
 .price-body {
   display: flex;
-  gap: 1rem;
-  font-size: 0.825rem;
+  gap: 0.85rem;
+  font-size: 0.78rem;
   color: #9A8C98;
 }
 
@@ -350,40 +363,82 @@ const scrollToTop = () => {
   color: #F5D78E;
 }
 
-/* Contact List */
+/* Contacte & Horaris */
 .contact-info-list {
   list-style: none;
   padding: 0;
   margin: 0;
   display: flex;
   flex-direction: column;
-  gap: 0.75rem;
+  gap: 0.45rem;
 }
 
 .contact-item {
   display: flex;
   align-items: flex-start;
-  gap: 0.65rem;
+  gap: 0.45rem;
   color: #9A8C98;
-  font-size: 0.9rem;
-  line-height: 1.4;
+  font-size: 0.82rem;
+  line-height: 1.35;
 }
 
 .contact-item i {
   color: #C8A96E;
-  font-size: 1.15rem;
+  font-size: 1rem;
   flex-shrink: 0;
   margin-top: 1px;
 }
 
-/* Bottom Bar */
+/* Avís Demo: més compacte i elegant */
+.academic-disclaimer-compact {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  background: rgba(200, 169, 110, 0.06);
+  border: 1px solid rgba(200, 169, 110, 0.2);
+  border-radius: 10px;
+  padding: 0.55rem 0.9rem;
+  margin-bottom: 1.15rem;
+}
+
+.disclaimer-icon i {
+  font-size: 1.3rem;
+  color: #C8A96E;
+}
+
+.disclaimer-text {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.4rem 0.6rem;
+}
+
+.disclaimer-badge {
+  background: rgba(200, 169, 110, 0.18);
+  color: #F5D78E;
+  border: 1px solid rgba(200, 169, 110, 0.35);
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  padding: 0.15rem 0.45rem;
+  border-radius: 4px;
+}
+
+.disclaimer-text p {
+  margin: 0;
+  color: #D6CCC2;
+  font-size: 0.78rem;
+  line-height: 1.35;
+}
+
+/* Barra Inferior */
 .footer-bottom {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding-top: 1.75rem;
+  padding-top: 0.85rem;
   border-top: 1px solid rgba(255, 255, 255, 0.08);
-  font-size: 0.85rem;
+  font-size: 0.78rem;
   color: #6c7293;
 }
 
@@ -394,19 +449,19 @@ const scrollToTop = () => {
 .footer-badges {
   display: flex;
   align-items: center;
-  gap: 0.75rem;
+  gap: 0.5rem;
 }
 
 .tech-badge {
   display: inline-flex;
   align-items: center;
-  gap: 0.35rem;
-  background: rgba(255, 255, 255, 0.04);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  padding: 0.25rem 0.65rem;
-  border-radius: 8px;
+  gap: 0.3rem;
+  background: rgba(255, 255, 255, 0.035);
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  padding: 0.2rem 0.5rem;
+  border-radius: 6px;
   color: #9A8C98;
-  font-size: 0.75rem;
+  font-size: 0.72rem;
 }
 
 .tech-badge i {
@@ -414,44 +469,44 @@ const scrollToTop = () => {
 }
 
 .back-to-top-btn {
-  width: 36px;
-  height: 36px;
-  border-radius: 10px;
+  width: 30px;
+  height: 30px;
+  border-radius: 8px;
   background: rgba(200, 169, 110, 0.12);
   border: 1px solid rgba(200, 169, 110, 0.3);
   color: #F5D78E;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 1.1rem;
+  font-size: 0.95rem;
   cursor: pointer;
-  transition: all 0.25s ease;
+  transition: all 0.2s ease;
 }
 
 .back-to-top-btn:hover {
   background: #C8A96E;
   color: #121526;
   transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(200, 169, 110, 0.3);
+  box-shadow: 0 4px 10px rgba(200, 169, 110, 0.25);
 }
 
 /* Responsive */
 @media (max-width: 1024px) {
   .footer-grid {
     grid-template-columns: repeat(2, 1fr);
-    gap: 2rem;
+    gap: 1.25rem;
   }
 }
 
 @media (max-width: 640px) {
   .footer-grid {
     grid-template-columns: 1fr;
-    gap: 2rem;
+    gap: 1.25rem;
   }
 
   .footer-bottom {
     flex-direction: column;
-    gap: 1rem;
+    gap: 0.75rem;
     text-align: center;
   }
 

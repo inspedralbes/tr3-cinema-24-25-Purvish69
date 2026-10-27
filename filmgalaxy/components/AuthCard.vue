@@ -235,6 +235,17 @@
                 <p class="form-subtitle">Crea el teu compte gratuït per reservar butaques i gaudir de descomptes</p>
               </div>
 
+              <!-- Demo Project Notice Alert -->
+              <v-alert
+                type="warning"
+                variant="tonal"
+                density="comfortable"
+                class="mb-4 text-sm font-medium"
+                icon="mdi-alert-circle-outline"
+              >
+                Demo: no se realiza ningún cobro real. No introduzcas datos de tarjeta ni información personal real.
+              </v-alert>
+
               <form @submit.prevent="handleRegisterSubmit" class="space-y-3.5">
                 <!-- Name & Surname (Grid 2 cols) -->
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
