@@ -17,10 +17,19 @@ class AdminCheck
      */
     public function handle(Request $request, Closure $next)
     {
-        if (Auth::check() && Auth::user()->rol === 'admin') {
+        $user = $request->user() ?: Auth::user();
+
+        if ($user && $user->rol === 'admin') {
             return $next($request);
         }
 
-        return redirect('/admin/login')->with('error', 'Acceso denegado. Solo administradores.');
+        if ($request->expectsJson() || $request->is('api/*')) {
+            return response()->json([
+                'status'  => 'error',
+                'message' => 'Acceso denegado. Se requieren permisos de administrador.'
+            ], 403);
+        }
+
+        return redirect('/login')->with('error', 'Acceso denegado. Solo administradores.');
     }
 }

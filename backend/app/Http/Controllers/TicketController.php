@@ -77,22 +77,24 @@ class TicketController extends Controller
         return ($seat->tipo === 'vip') ? $precioVIP : $precioNormal;
     }
 
-    // Muestra tickets con relaciones y soporte de filtrado
+    // Muestra tickets con relaciones y soporte de filtrado bajo auth:sanctum
     public function index(Request $request)
     {
-        $user = $request->user() ?: auth('sanctum')->user();
+        $user = $request->user();
+        if (!$user) {
+            return response()->json(['message' => 'No autenticado'], 401);
+        }
 
         $query = Ticket::with(['movieSession.movie', 'seat', 'payment']);
 
-        // Si se solicita filtrar por usuario
-        if ($request->filled('user_id')) {
-            if (!$user || ($user->id != $request->user_id && $user->rol !== 'admin')) {
-                return response()->json(['message' => 'Acceso no autorizado'], 403);
-            }
-            $query->where('user_id', $request->user_id);
-        } elseif ($user && $user->rol !== 'admin') {
-            // Usuario autenticado estándar: mostrar sus propios tickets
+        if ($user->rol !== 'admin') {
+            // No admin: forzar where('user_id', $request->user()->id) e ignorar el parámetro user_id
             $query->where('user_id', $user->id);
+        } else {
+            // Admin: puede filtrar por user_id
+            if ($request->filled('user_id')) {
+                $query->where('user_id', $request->user_id);
+            }
         }
 
         if ($request->filled('movieSession_id')) {
@@ -279,7 +281,7 @@ class TicketController extends Controller
         }
 
         $user = $request->user();
-        if ($user && $ticket->user_id !== $user->id && $user->rol !== 'admin') {
+        if (!$user || ($ticket->user_id !== $user->id && $user->rol !== 'admin')) {
             return response()->json(['message' => 'Acceso no autorizado al ticket'], 403);
         }
 
@@ -397,7 +399,7 @@ class TicketController extends Controller
     public function sendTicketsByEmail($userId, $sessionId, $paymentId = null)
     {
         $authUser = request()->user();
-        if ($authUser && $authUser->id != $userId && $authUser->rol !== 'admin') {
+        if (!$authUser || ($authUser->id != $userId && $authUser->rol !== 'admin')) {
             return response()->json(['message' => 'No autorizado para enviar tickets de otro usuario'], 403);
         }
 

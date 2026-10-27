@@ -79,7 +79,7 @@ class PaymentController extends Controller
         $user = $request->user();
         $payment = Payment::with(['user', 'ticket.movieSession.movie'])->findOrFail($id);
 
-        if ($payment->user_id !== $user->id && $user->rol !== 'admin') {
+        if (!$user || ($payment->user_id !== $user->id && $user->rol !== 'admin')) {
             return response()->json(['message' => 'Acceso no autorizado al pago'], 403);
         }
 

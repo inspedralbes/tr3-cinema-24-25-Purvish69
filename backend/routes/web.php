@@ -16,8 +16,8 @@ Route::get('/login', [UserController::class, 'showLoginForm'])->name('login');
 Route::post('/login', [UserController::class, 'login'])->name('login.process');
 Route::post('/logout', [UserController::class, 'logout'])->name('logout');
 
-// Rutas protegidas por autenticación
-Route::middleware('auth')->group(function () {
+// Rutas protegidas por autenticación y rol de administrador
+Route::middleware(['auth', 'admin'])->group(function () {
     // Ruta para estadísticas
     Route::get('/stats', [StatsController::class, 'index'])->name('stats.index');
 
@@ -57,14 +57,12 @@ Route::middleware('auth')->group(function () {
 
     Route::post('/tickets/send-email/{userId}/{sessionId}', [TicketController::class, 'sendTicketsByEmail']);
 
-
-    Route::middleware(['auth'])->group(function () {
-        Route::get('/tickets', [TicketController::class, 'indexView'])->name('tickets.index');
-        Route::get('/tickets/filter', [TicketController::class, 'filterByMovie'])->name('tickets.filter');
-        Route::get('/tickets/create', [TicketController::class, 'createView'])->name('tickets.create');
-        Route::post('/tickets', [TicketController::class, 'store'])->name('tickets.store');
-        Route::get('/tickets/{id}/edit', [TicketController::class, 'editView'])->name('tickets.edit');
-        Route::put('/tickets/{id}', [TicketController::class, 'update'])->name('tickets.update');
-        Route::delete('/tickets/{id}', [TicketController::class, 'destroy'])->name('tickets.destroy');
-    });
+    // Rutas para el CRUD de tickets en el panel admin
+    Route::get('/tickets', [TicketController::class, 'indexView'])->name('tickets.index');
+    Route::get('/tickets/filter', [TicketController::class, 'filterByMovie'])->name('tickets.filter');
+    Route::get('/tickets/create', [TicketController::class, 'createView'])->name('tickets.create');
+    Route::post('/tickets', [TicketController::class, 'store'])->name('tickets.store');
+    Route::get('/tickets/{id}/edit', [TicketController::class, 'editView'])->name('tickets.edit');
+    Route::put('/tickets/{id}', [TicketController::class, 'update'])->name('tickets.update');
+    Route::delete('/tickets/{id}', [TicketController::class, 'destroy'])->name('tickets.destroy');
 });

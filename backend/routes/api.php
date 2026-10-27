@@ -34,6 +34,8 @@ Route::middleware(['throttle:api'])->group(function () {
 
         // Entradas del usuario autenticado y protección IDOR
         Route::get('/user/tickets', [TicketController::class, 'getUserTickets']);
+        Route::get('/tickets', [TicketController::class, 'index']);
+        Route::get('/tickets/{id}', [TicketController::class, 'show']);
         Route::get('/tickets/user/{userId}/complete', [TicketController::class, 'getUserTicketsComplete']);
         Route::get('/tickets/{id}/with-user', [TicketController::class, 'showWithUser']);
         Route::post('/tickets/send-email/{userId}/{sessionId}', [TicketController::class, 'sendTicketsByEmail']);
@@ -92,10 +94,6 @@ Route::middleware(['throttle:api'])->group(function () {
         Route::post('/tickets', [TicketController::class, 'store']);
         Route::post('/payments', [PaymentController::class, 'store']);
     });
-
-    // Rutas públicas de consulta de tickets
-    Route::get('/tickets', [TicketController::class, 'index']);
-    Route::get('/tickets/{id}', [TicketController::class, 'show']);
 
     Route::middleware(['auth:sanctum', 'admin'])->group(function () {
         Route::put('/tickets/{id}', [TicketController::class, 'update']);

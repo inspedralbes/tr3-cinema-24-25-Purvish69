@@ -143,6 +143,19 @@ class UserController extends Controller
             }
 
             $user = User::where('email', $request->email)->firstOrFail();
+
+            // Si es petición web (panel de administración), rechazar usuarios no admin
+            if (!$request->wantsJson() && !$request->is('api/*')) {
+                if ($user->rol !== 'admin') {
+                    Auth::logout();
+                    if ($request->hasSession()) {
+                        $request->session()->invalidate();
+                        $request->session()->regenerateToken();
+                    }
+                    return redirect()->back()->withErrors(['message' => 'Acceso denegado. Se requieren permisos de administrador.']);
+                }
+            }
+
             $token = $user->createToken('auth_token')->plainTextToken;
 
             if ($request->wantsJson() || $request->is('api/*')) {

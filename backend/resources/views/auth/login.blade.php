@@ -404,6 +404,14 @@
             <form method="POST" action="{{ route('login.process') }}">
                 @csrf
 
+                @if(session('error'))
+                    <div class="error-message">
+                        <ul>
+                            <li><i class="mdi mdi-alert-circle-outline"></i> {{ session('error') }}</li>
+                        </ul>
+                    </div>
+                @endif
+
                 @if($errors->any())
                     <div class="error-message">
                         <ul>
