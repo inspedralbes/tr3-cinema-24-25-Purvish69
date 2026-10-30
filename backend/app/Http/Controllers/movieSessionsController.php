@@ -88,6 +88,17 @@ class MovieSessionsController extends Controller
             return redirect()->back()->with('error', $message)->withInput();
         }
 
+        $movieSessionsCount = MovieSession::where('fecha', $data['fecha'])
+            ->where('movie_id', $data['movie_id'])
+            ->count();
+        if ($movieSessionsCount >= 2) {
+            $message = 'Esta película ya tiene el máximo de 2 sesiones para ese día';
+            if ($request->wantsJson()) {
+                return response()->json(['message' => $message], 422);
+            }
+            return redirect()->back()->with('error', $message)->withInput();
+        }
+
         // Crear la sesión
         $session = MovieSession::create([
             'movie_id'        => $data['movie_id'],
@@ -222,6 +233,20 @@ class MovieSessionsController extends Controller
                 }
                 return redirect()->back()->with('error', $message)->withInput();
             }
+        }
+
+        $targetDate = $data['fecha'] ?? $session->fecha;
+        $targetMovieId = $data['movie_id'] ?? $session->movie_id;
+        $sameMovieSessionsCount = MovieSession::where('fecha', $targetDate)
+            ->where('movie_id', $targetMovieId)
+            ->where('id', '<>', $session->id)
+            ->count();
+        if ($sameMovieSessionsCount >= 2) {
+            $message = 'Esta película ya tiene el máximo de 2 sesiones para ese día';
+            if ($request->wantsJson()) {
+                return response()->json(['message' => $message], 422);
+            }
+            return redirect()->back()->with('error', $message)->withInput();
         }
 
         // Actualizar los campos de la sesión

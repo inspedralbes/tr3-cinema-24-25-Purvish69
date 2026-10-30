@@ -120,20 +120,35 @@
           </div>
 
           <!-- Trailer Section -->
-          <div v-if="trailerEmbedUrl" class="bg-[#161a2e]/90 border border-gold/20 p-6 md:p-8 rounded-2xl shadow-2xl backdrop-blur-md">
+          <div v-if="movie.trailer" class="bg-[#161a2e]/90 border border-gold/20 p-6 md:p-8 rounded-2xl shadow-2xl backdrop-blur-md">
             <h2 class="text-2xl font-bold mb-4 text-[#F2E9E4] flex items-center gap-2">
               <i class="mdi mdi-youtube text-red-500 text-3xl"></i>
               <span>Tràiler Oficial</span>
             </h2>
-            <div class="relative pb-[56.25%] overflow-hidden rounded-xl border border-white/10 shadow-2xl bg-black">
+            <div v-if="trailerEmbedUrl" class="relative pb-[56.25%] overflow-hidden rounded-xl border border-white/10 shadow-2xl bg-black">
               <iframe 
                 :src="trailerEmbedUrl" 
+                :title="`Tráiler de ${movie.titulo || 'la película'}`"
                 class="absolute top-0 left-0 w-full h-full" 
                 frameborder="0"
+                loading="lazy"
+                referrerpolicy="strict-origin-when-cross-origin"
                 allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
                 allowfullscreen
               ></iframe>
             </div>
+            <div v-else class="rounded-xl border border-white/10 bg-black/30 p-5 text-slate-300">
+              <p>El enlace guardado no tiene un formato de YouTube válido. Actualiza el enlace desde la gestión de películas.</p>
+            </div>
+            <a
+              v-if="trailerOpenUrl"
+              :href="trailerOpenUrl"
+              target="_blank"
+              rel="noopener noreferrer"
+              class="inline-flex mt-4 items-center gap-2 text-sm text-gold hover:text-yellow-200"
+            >
+              <i class="mdi mdi-open-in-new"></i> Abrir en YouTube
+            </a>
           </div>
         </div>
       </div>
@@ -156,15 +171,39 @@ const movie = ref({});
 const loading = ref(true);
 const error = ref(null);
 
-const trailerEmbedUrl = computed(() => {
-  if (!movie.value.trailer) return null;
-  const youtubeRegex = /(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/;
-  const match = movie.value.trailer.match(youtubeRegex);
-  if (match && match[1]) {
-    return `https://www.youtube.com/embed/${match[1]}`;
+const youtubeVideoId = computed(() => {
+  const rawUrl = movie.value.trailer?.trim()
+  if (!rawUrl) return null
+
+  try {
+    const url = new URL(rawUrl.startsWith('//') ? `https:${rawUrl}` : rawUrl)
+    if (!['http:', 'https:'].includes(url.protocol)) return null
+    const host = url.hostname.toLowerCase().replace(/^www\./, '')
+    let videoId = null
+
+    if (host === 'youtu.be') {
+      videoId = url.pathname.split('/').filter(Boolean)[0]
+    } else if (['youtube.com', 'm.youtube.com', 'music.youtube.com', 'youtube-nocookie.com'].includes(host)) {
+      videoId = url.searchParams.get('v')
+      if (!videoId) {
+        const pathMatch = url.pathname.match(/^\/(?:embed|shorts|live|v)\/([^/?#]+)/i)
+        videoId = pathMatch?.[1] || null
+      }
+    }
+
+    return videoId && /^[A-Za-z0-9_-]{11}$/.test(videoId) ? videoId : null
+  } catch {
+    return null
   }
-  return movie.value.trailer;
-});
+})
+
+const trailerEmbedUrl = computed(() => youtubeVideoId.value
+  ? `https://www.youtube-nocookie.com/embed/${youtubeVideoId.value}?rel=0&playsinline=1`
+  : null)
+
+const trailerOpenUrl = computed(() => youtubeVideoId.value
+  ? `https://www.youtube.com/watch?v=${youtubeVideoId.value}`
+  : null)
 
 const fetchMovieDetails = async () => {
   try {

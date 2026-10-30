@@ -95,7 +95,7 @@
                   Demo: no se realiza ningún cobro real. No introduzcas datos de tarjeta ni información personal real.
                 </v-alert>
 
-                <form @submit.prevent="processPayment" class="space-y-6">
+                <form @submit.prevent="processPayment" class="space-y-6" autocomplete="off">
                   <!-- Método de pago -->
                   <div class="space-y-2">
                     <label class="block text-light text-sm font-medium">Método de pago</label>
@@ -124,32 +124,32 @@
                       <span><strong>Simulación de pago:</strong> Puedes usar datos de prueba (ej: 4000 1234 5678 9010). Los datos de tarjeta no se guardan ni se envían al servidor.</span>
                     </div>
                     <div class="space-y-2">
-                      <label for="cardHolder" class="block text-light text-sm font-medium">Titular de la tarjeta</label>
-                      <input id="cardHolder" v-model="cardInfo.holder" type="text"
+                      <label for="demoHolder" class="block text-light text-sm font-medium">Nombre de prueba</label>
+                      <input id="demoHolder" v-model="cardInfo.holder" type="text"
                         :class="['w-full p-3 bg-gray-700 text-light rounded-lg focus:outline-none', cardHolderError ? 'border-red-500' : 'border border-gray-600 focus:border-gold']"
-                        placeholder="Nombre del titular" required />
+                        placeholder="Nombre del titular" autocomplete="off" required />
                     </div>
 
                     <div class="space-y-2">
-                      <label for="cardNumber" class="block text-light text-sm font-medium">Número de tarjeta</label>
-                      <input id="cardNumber" v-model="cardInfo.number" type="text"
+                      <label for="demoCode" class="block text-light text-sm font-medium">Código de prueba</label>
+                      <input id="demoCode" v-model="cardInfo.number" type="text"
                         :class="['w-full p-3 bg-gray-700 text-light rounded-lg focus:outline-none', cardNumberError ? 'border-red-500' : 'border border-gray-600 focus:border-gold']"
-                        placeholder="1234 5678 9012 3456" maxlength="19" @input="formatCardNumber" required />
+                        placeholder="1234 5678 9012 3456" maxlength="19" autocomplete="off" @input="formatCardNumber" required />
                     </div>
 
                     <div class="grid grid-cols-2 gap-4">
                       <div class="space-y-2">
-                        <label for="expiryDate" class="block text-light text-sm font-medium">Fecha de caducidad</label>
-                        <input id="expiryDate" v-model="cardInfo.expiry" type="text"
+                        <label for="demoExpiry" class="block text-light text-sm font-medium">Fecha de prueba</label>
+                        <input id="demoExpiry" v-model="cardInfo.expiry" type="text"
                           :class="['w-full p-3 bg-gray-700 text-light rounded-lg focus:outline-none', cardExpiryError ? 'border-red-500' : 'border border-gray-600 focus:border-gold']"
-                          placeholder="MM/AA" maxlength="5" @input="formatCardExpiry" required />
+                          placeholder="MM/AA" maxlength="5" autocomplete="off" @input="formatCardExpiry" required />
                       </div>
 
                       <div class="space-y-2">
-                        <label for="cvv" class="block text-light text-sm font-medium">CVV</label>
-                        <input id="cvv" v-model="cardInfo.cvv" type="text"
+                        <label for="demoVerification" class="block text-light text-sm font-medium">Código de verificación</label>
+                        <input id="demoVerification" v-model="cardInfo.cvv" type="text"
                           :class="['w-full p-3 bg-gray-700 text-light rounded-lg focus:outline-none', cardCvvError ? 'border-red-500' : 'border border-gray-600 focus:border-gold']"
-                          placeholder="123" maxlength="3" required />
+                          placeholder="123" maxlength="3" autocomplete="off" required />
                       </div>
                     </div>
                   </div>

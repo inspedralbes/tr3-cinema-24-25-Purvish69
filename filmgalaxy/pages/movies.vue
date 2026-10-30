@@ -180,9 +180,8 @@ const searchQuery = ref('');
 const filterLenguaje = ref('');
 
 onMounted(async () => {
-  if (movieStore.allMovies.length === 0) {
-    await movieStore.fetchMovies();
-  }
+  // Vuelve a consultar al entrar para reflejar películas añadidas después de cargar la app.
+  await movieStore.fetchMovies();
 });
 
 const filteredMovies = computed(() => {

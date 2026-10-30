@@ -538,16 +538,25 @@ const showNotice = (text, color = 'warning') => {
   snackbar.value = true
 }
 
-// 1. Genera un hold_token (UUID) y guárdalo en sessionStorage
+// Cada intento de compra tiene un token aleatorio, persistido mientras dura la reserva.
+const createHoldToken = () => typeof crypto !== 'undefined' && crypto.randomUUID
+  ? crypto.randomUUID()
+  : 'ht_' + Math.random().toString(36).substring(2) + Date.now().toString(36)
+
 const getHoldToken = () => {
   if (typeof window === 'undefined') return ''
   let token = sessionStorage.getItem('hold_token')
   if (!token) {
-    token = typeof crypto !== 'undefined' && crypto.randomUUID
-      ? crypto.randomUUID()
-      : 'ht_' + Math.random().toString(36).substring(2) + Date.now().toString(36)
+    token = createHoldToken()
     sessionStorage.setItem('hold_token', token)
   }
+  return token
+}
+
+const rotateHoldToken = () => {
+  if (typeof window === 'undefined') return ''
+  const token = createHoldToken()
+  sessionStorage.setItem('hold_token', token)
   return token
 }
 
@@ -792,7 +801,6 @@ const fetchAsientosStatus = async () => {
 
     // 4. Si alguno de los asientos seleccionados por el usuario expira o pasa a otro estado, deseleccionarlo
     if (selectedSeats.value.length > 0) {
-      const remaining = []
       const expiredSeats = []
 
       selectedSeats.value.forEach(seat => {
@@ -801,15 +809,29 @@ const fetchAsientosStatus = async () => {
         const isHeldByOtherUser = heldByOtherSeats.value.includes(code)
         const isStillHeldByMe = myHoldSeats.value.includes(code)
 
-        if (isBought || isHeldByOtherUser || (!isStillHeldByMe && myHoldSeats.value.length > 0)) {
+        if (isBought || isHeldByOtherUser) {
           expiredSeats.push(code)
-        } else {
-          remaining.push(seat)
+        } else if (!isStillHeldByMe) {
+          // La API solo devuelve holds activos; su ausencia indica que esta reserva caducó.
+          expiredSeats.push(code)
         }
       })
 
       if (expiredSeats.length > 0) {
-        selectedSeats.value = remaining
+        const oldToken = getHoldToken()
+        selectedSeats.value = []
+        myHoldSeats.value = []
+        stopHoldTimer()
+        holdSecondsLeft.value = 300
+        rotateHoldToken()
+
+        // Libera cualquier asiento de esta compra que aún siguiera retenido con el token anterior.
+        fetch(`${API_URL}/holds`, {
+          method: 'DELETE',
+          headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+          body: JSON.stringify({ funcion_id: selectedSession.value.id, hold_token: oldToken })
+        }).catch(err => console.warn('Error al liberar la reserva caducada:', err))
+
         showNotice(`El tiempo de reserva de tus asientos (${expiredSeats.join(', ')}) ha expirado y se han deseleccionado.`, 'warning')
       }
     }
