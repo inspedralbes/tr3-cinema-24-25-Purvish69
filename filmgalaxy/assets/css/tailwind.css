@@ -1,0 +1,65 @@
+@import "tailwindcss/base";
+@import "tailwindcss/components";
+@import "tailwindcss/utilities";
+
+/* ========================================================
+   GLOBAL CINEMA THEME - 100% Guaranteed Dark Cosmic Canvas
+   Completely prevents white backgrounds on all Vuetify pages
+   ======================================================== */
+html,
+body,
+#teleports,
+.v-application,
+.v-theme--light.v-application,
+.v-theme--dark.v-application {
+  background-color: #0c0e1a !important;
+  color: #F2E9E4 !important;
+}
+
+.v-application__wrap {
+  background-color: transparent !important;
+  min-height: 100vh !important;
+}
+
+/* Vuetify Toolbar / App Bar override: Never allow white surface or borders */
+.v-app-bar.v-toolbar,
+.v-app-bar.v-toolbar .v-toolbar__content,
+.v-app-bar.v-toolbar .v-toolbar__extension {
+  background: transparent !important;
+  border: none !important;
+  border-bottom: none !important;
+  box-shadow: none !important;
+}
+
+.v-toolbar__border {
+  display: none !important;
+  opacity: 0 !important;
+}
+
+/* Custom Cinema Base Styles */
+@layer base {
+  body {
+    @apply bg-[#0c0e1a] text-light;
+    background-color: #0c0e1a !important;
+  }
+}
+
+@layer components {
+  .btn-primary {
+    @apply px-4 py-2 bg-gold text-primary rounded-lg hover:bg-gold/80 transition-colors duration-300;
+  }
+  
+  .btn-secondary {
+    @apply px-4 py-2 bg-accent text-light rounded-lg hover:bg-accent/80 transition-colors duration-300;
+  }
+}
+
+@layer utilities {
+  .backdrop-blur-sm {
+    backdrop-filter: blur(4px);
+  }
+  
+  .backdrop-blur-md {
+    backdrop-filter: blur(8px);
+  }
+}
