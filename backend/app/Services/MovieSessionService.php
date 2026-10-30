@@ -43,14 +43,14 @@ class MovieSessionService
         }
 
         $createdCount = 0;
+        $movieSessionCounts = MovieSession::whereDate('fecha', '>=', $today->toDateString())
+            ->select('movie_id', DB::raw('COUNT(*) as sessions_count'))
+            ->groupBy('movie_id')
+            ->pluck('sessions_count', 'movie_id')
+            ->all();
 
         for ($sessionDate = $today->copy(); $sessionDate->lte($lastSessionDate); $sessionDate->addDay()) {
             $fechaStr = $sessionDate->format('Y-m-d');
-            $dailyMovieCounts = MovieSession::where('fecha', $fechaStr)
-                ->select('movie_id', DB::raw('COUNT(*) as sessions_count'))
-                ->groupBy('movie_id')
-                ->pluck('sessions_count', 'movie_id')
-                ->all();
 
             foreach ($hours as $hour) {
                 // Si ya existe una sesión en esta fecha y hora, no duplicar
@@ -58,10 +58,10 @@ class MovieSessionService
                     continue;
                 }
 
-                // No programar una película más de dos veces en el mismo día.
+                // No programar una película más de dos veces en la cartelera futura.
                 $availableMovieIds = array_values(array_filter(
                     $movieIds,
-                    fn ($movieId) => ($dailyMovieCounts[$movieId] ?? 0) < 2
+                    fn ($movieId) => ($movieSessionCounts[$movieId] ?? 0) < 2
                 ));
 
                 if (empty($availableMovieIds)) {
@@ -98,7 +98,7 @@ class MovieSessionService
                 }
 
                 DB::table('seats')->insert($seats);
-                $dailyMovieCounts[$movieId] = ($dailyMovieCounts[$movieId] ?? 0) + 1;
+                $movieSessionCounts[$movieId] = ($movieSessionCounts[$movieId] ?? 0) + 1;
                 $createdCount++;
             }
         }

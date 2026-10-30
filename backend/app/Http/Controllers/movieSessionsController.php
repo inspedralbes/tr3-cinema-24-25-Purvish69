@@ -88,11 +88,11 @@ class MovieSessionsController extends Controller
             return redirect()->back()->with('error', $message)->withInput();
         }
 
-        $movieSessionsCount = MovieSession::where('fecha', $data['fecha'])
-            ->where('movie_id', $data['movie_id'])
+        $movieSessionsCount = MovieSession::where('movie_id', $data['movie_id'])
+            ->whereDate('fecha', '>=', now()->toDateString())
             ->count();
         if ($movieSessionsCount >= 2) {
-            $message = 'Esta película ya tiene el máximo de 2 sesiones para ese día';
+            $message = 'Esta película ya tiene el máximo de 2 sesiones en la cartelera';
             if ($request->wantsJson()) {
                 return response()->json(['message' => $message], 422);
             }
@@ -235,14 +235,13 @@ class MovieSessionsController extends Controller
             }
         }
 
-        $targetDate = $data['fecha'] ?? $session->fecha;
         $targetMovieId = $data['movie_id'] ?? $session->movie_id;
-        $sameMovieSessionsCount = MovieSession::where('fecha', $targetDate)
-            ->where('movie_id', $targetMovieId)
+        $sameMovieSessionsCount = MovieSession::where('movie_id', $targetMovieId)
+            ->whereDate('fecha', '>=', now()->toDateString())
             ->where('id', '<>', $session->id)
             ->count();
         if ($sameMovieSessionsCount >= 2) {
-            $message = 'Esta película ya tiene el máximo de 2 sesiones para ese día';
+            $message = 'Esta película ya tiene el máximo de 2 sesiones en la cartelera';
             if ($request->wantsJson()) {
                 return response()->json(['message' => $message], 422);
             }

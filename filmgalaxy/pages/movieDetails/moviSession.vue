@@ -327,7 +327,7 @@ const uniqueDates = computed(() => {
 
 // Filtrado de sesiones
 const filteredSessions = computed(() => {
-  return sessionsStore.sessions.filter((session) => {
+  const matchesFilters = sessionsStore.sessions.filter((session) => {
     // Filtro por texto (título de película o género)
     if (searchQuery.value.trim()) {
       const q = searchQuery.value.toLowerCase().trim()
@@ -349,6 +349,23 @@ const filteredSessions = computed(() => {
 
     return true
   })
+
+  // Evita que una misma película ocupe más de dos tarjetas en esta cartelera.
+  const sessionsPerMovie = new Map()
+  return matchesFilters
+    .slice()
+    .sort((a, b) => {
+      const dateTimeA = `${a.fecha || ''} ${a.hora || ''}`
+      const dateTimeB = `${b.fecha || ''} ${b.hora || ''}`
+      return dateTimeA.localeCompare(dateTimeB)
+    })
+    .filter((session) => {
+      const movieKey = session.movie_id ?? session.movie?.id ?? `session-${session.id}`
+      const count = sessionsPerMovie.get(movieKey) || 0
+      if (count >= 2) return false
+      sessionsPerMovie.set(movieKey, count + 1)
+      return true
+    })
 })
 
 const resetFilters = () => {
